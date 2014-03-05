@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 2.8)
 # required for Visual Studio
-project (2DNonRigid)
+project (2DRigidMI)
 
 # loads a CMake file with a strategy for finding ITK. If fails, prompting for the directory with ITK is will ensue
 find_package(ITK REQUIRED)
@@ -11,7 +11,7 @@ find_package(ITK REQUIRED)
 include(${ITK_USE_FILE})
 
 # defines as its the first argument the name of hte executable will be produced, remaining arguments are the names of the source files to be complied and linked
-add_executable(2DNonRigid 2DNonRigidEx.cxx)
+add_executable(2DRigidMI 2DRigidMIExample.cxx)
 
 # specified which ITK libraries will be linked with this project
-target_link_libraries(2DNonRigid ${ITK_LIBRARIES})
+target_link_libraries(2DRigidMI ${ITK_LIBRARIES})
