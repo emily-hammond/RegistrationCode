@@ -11,17 +11,24 @@
 #include "itkImage.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
+#include "itkImageRegistrationMethod.h"
+#include "itkTranslationTransform.h"
+#include "itkLinearInterpolateImageFunction.h"
+#include "itkMattesMutualInformationImageToImageMetric.h"
+#include "itkRegularStepGradientDescentOptimizer.h"
+#include "itkResampleImageFilter.h"
+#include "itkCastImageFilter.h"
+#include "itkCheckerboardImageFilter.h"
 
 
 int main( int argc, char * argv[] )
 {
-  const unsigned int      Dimension = 3;
+  const unsigned int      Dimension = 2;
   typedef unsigned short  ShortPixelType;
-  typedef float		  FloatPixelType;
 
+  // set up data objects
   typedef itk::Image< ShortPixelType, Dimension >	FixedImageType;
   typedef itk::Image< ShortPixelType, Dimension >	MovingImageType;
-  typedef itk::Image< FloatPixelType, Dimension >	InternalImageType;
 
   typedef itk::ImageFileReader< FixedImageType >     FixedImageReaderType;
   typedef itk::ImageFileReader< MovingImageType >    MovingImageReaderType;
@@ -37,11 +44,52 @@ int main( int argc, char * argv[] )
   // set parameters of reader/writer objects
   fixedReader->SetFileName( argv[1] );
   movingReader->SetFileName( argv[2] );
-
   writer->SetFileName( argv[3] );
+  
+  // set up registration component objects
+  typedef itk::ImageRegistrationMethod< FixedImageType, MovingImageType > RegistrationType;
+  typedef itk::TranslationTransform< double, Dimension >		  TransformType;
+  typedef itk::LinearInterpolateImageFunction< MovingImageType, double >  InteroplatorType;
+  typedef itk::MattesMutualInformationImageToImageMetric< FixedImageType, MovingImageType > MetricType;
+  typedef itk::RegularStepGradientDescentOptimizer			  OptimizerType;
 
+  // instantiate registration objects
+  RegistrationType::Pointer 	registration = RegistrationType::New();
+  TransformType::Pointer 	transform = TransformType::New();
+  InterpolatorType::Pointer 	interoplator = InterpolatorType::New();
+  MetricType::Pointer 		metric = MetricType::New();
+  OptimizerType::Pointer 	optimizer = OptimizerType::New();
+
+  // put in parameters for registrator
+  registration->SetTransform( transform );
+  registration->SetInterpolator( interpolator );
+  registration->SetMetric( metric );
+  registration->SetOptimizer( optimizer );
+
+  // put in parameters for MI metric - number of bins and number of samples
+  metric->SetNumberOfHistogramBins( 24 );
+  metric->SetNumberOfSpatialSamples( 10000 );
+
+  // initialize the transform
+  typedef RegistrationType::ParametersType ParametersType;
+  //   create a variable of the type of parameters in the transform and initialize it the number of parameters objects
+  ParametersType initialParameters( transform->GetNumberOfParameters() );
+  //   set an initial offset in the x (0) and y (0) directions - dimensions in mm
+  initialParameters[0] = 0.0;
+  initialParameters[1] = 0.0;
+  //   input into registrator
+  registration->SetInitialTransformParameters( initialParameters );
+
+  
+  
   // set up pipeline
-  writer->SetInput( fixedReader->GetOutput() );
+
+  // set up registration inputs
+  registration->SetFixedImage( fixedReader->GetOutput() );
+  registration->SetMovingImage( movingReader->GetOutput() );
+  registration->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
+
+  writer->SetInput( registration->GetOutput() );
 
   try
   {
