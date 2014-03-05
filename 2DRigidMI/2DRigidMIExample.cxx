@@ -18,7 +18,7 @@
 #include "itkRegularStepGradientDescentOptimizer.h"
 #include "itkResampleImageFilter.h"
 #include "itkCastImageFilter.h"
-#include "itkCheckerboardImageFilter.h"
+//#include "itkCheckerBoardImageFilter.h"
 
 
 int main( int argc, char * argv[] )
@@ -44,14 +44,14 @@ int main( int argc, char * argv[] )
   // set up registration component objects
   typedef itk::ImageRegistrationMethod< FixedImageType, MovingImageType > RegistrationType;
   typedef itk::TranslationTransform< double, Dimension >		  TransformType;
-  typedef itk::LinearInterpolateImageFunction< MovingImageType, double >  InteroplatorType;
+  typedef itk::LinearInterpolateImageFunction< MovingImageType, double >  InterpolatorType;
   typedef itk::MattesMutualInformationImageToImageMetric< FixedImageType, MovingImageType > MetricType;
   typedef itk::RegularStepGradientDescentOptimizer			  OptimizerType;
 
   // instantiate registration objects
   RegistrationType::Pointer 	registration = RegistrationType::New();
   TransformType::Pointer 	transform = TransformType::New();
-  InterpolatorType::Pointer 	interoplator = InterpolatorType::New();
+  InterpolatorType::Pointer 	interpolator = InterpolatorType::New();
   MetricType::Pointer 		metric = MetricType::New();
   OptimizerType::Pointer 	optimizer = OptimizerType::New();
 
@@ -78,7 +78,7 @@ int main( int argc, char * argv[] )
   // set up the optimizer and put in its parameters
   optimizer->MinimizeOn();	// set optimizer up for minimization
   optimizer->SetMaximumStepLength( 2.00 );
-  optimizer->GetMinimumStepLength( 0.01 );
+  optimizer->SetMinimumStepLength( 0.01 );
   optimizer->SetNumberOfIterations( 200 );
   optimizer->SetRelaxationFactor( 0.8 );	// controls for the rate of step size reduction
   
@@ -96,7 +96,7 @@ int main( int argc, char * argv[] )
   }
   catch( itk::ExceptionObject & err )
   {
-      std::cerr << "ExceptionObject caught!\n;
+      std::cerr << "ExceptionObject caught!\n";
       std::cerr << err << std::endl;
       return EXIT_FAILURE;
   }
@@ -106,7 +106,7 @@ int main( int argc, char * argv[] )
   std::cout << "\nResults = \n";
   std::cout << " Translation X = " << finalParameters[0] << std::endl;
   std::cout << " Translation Y = " << finalParameters[1] << std::endl;
-  std::cout << " Iterations = " << optimizer->GetCurrentIterations() << std::endl;
+  std::cout << " Iterations = " << optimizer->GetCurrentIteration() << std::endl;
   std::cout << " Metric Value = " << optimizer->GetValue() << std::endl;
   std::cout << " Stop Condition = " << optimizer->GetStopCondition() << std::endl;
 
@@ -119,7 +119,7 @@ int main( int argc, char * argv[] )
   finalTransform->SetFixedParameters( transform->GetFixedParameters() );
 
   // instantiate a resample object and a new original fixed image
-  ResampleImageFilter::Pointer resample = ResampleImageFilter::New();
+  ResampleFilterType::Pointer resample = ResampleFilterType::New();
   FixedImageType::Pointer fixedImage = fixedReader->GetOutput();
   // set up parameters to be those of the transform and identical to those of the fixed image
   resample->SetTransform( finalTransform );
@@ -130,14 +130,14 @@ int main( int argc, char * argv[] )
   
   // instantiate an output image to write to
   typedef unsigned char  CharPixelType;
-  typedef itk::Image< CharPixelType, Dimension > OutputImageType;
-  typedef itk::ImageFileWriter< OutputImageType > WriterType;
+  typedef itk::Image< CharPixelType, Dimension > CharImageType;
+  typedef itk::ImageFileWriter< CharImageType > WriterType;
 
   WriterType::Pointer writer = WriterType::New();
   writer->SetFileName( argv[3] );
 
   // set up to cast the image from a short to a char
-  typedef itk::CastImageFilter< ShortPixelType, CharImageType > CastFilterType;
+  typedef itk::CastImageFilter< FixedImageType, CharImageType > CastFilterType;
   CastFilterType::Pointer caster = CastFilterType::New();
 
   // set up pipeline to casting and writing the image
