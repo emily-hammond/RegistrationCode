@@ -23,20 +23,21 @@
 
 int main( int argc, char * argv[] )
 {
-  std::string fixedFilename = "/user/e/ehammond/RegistrationCode/ExampleImages/2DMRBrain.png";
-  std::string movingFilename = "/user/e/ehammond/RegistrationCode/ExampleImages/BrainT1SliceBorder20.png";
+  std::string fixedFilename = "/user/e/ehammond/RegistrationCode/ExampleImages/subj1_PD_raw.nii.gz";
+  std::string movingFilename = "/user/e/ehammond/RegistrationCode/ExampleImages/subj1_T1_raw.nii.gz";
+  std::string outputFilename = "output.nii.gz";
 
-  const unsigned int      Dimension = 2;
-//  typedef unsigned short  ShortPixelType;
-  typedef unsigned char   CharPixelType;
+  const unsigned int      Dimension = 3;
+  typedef unsigned short  PixelType;
+  //typedef unsigned char   CharPixelType;
 
   // set up data objects
-  typedef itk::Image< CharPixelType, Dimension >	FixedImageType;
-  typedef itk::Image< CharPixelType, Dimension >	MovingImageType;
-  typedef itk::Image< CharPixelType, Dimension > 	CharImageType;
+  typedef itk::Image< PixelType, Dimension >	FixedImageType;
+  typedef itk::Image< PixelType, Dimension >	MovingImageType;
+  //typedef itk::Image< CharPixelType, Dimension > 	CharImageType;
 
-  typedef itk::ImageFileReader< CharImageType >     FixedImageReaderType;
-  typedef itk::ImageFileReader< CharImageType >    MovingImageReaderType;
+  typedef itk::ImageFileReader< FixedImageType >     FixedImageReaderType;
+  typedef itk::ImageFileReader< MovingImageType >    MovingImageReaderType;
 
   // instantiate reader objects
   FixedImageReaderType::Pointer fixedReader = FixedImageReaderType::New();
@@ -67,8 +68,11 @@ int main( int argc, char * argv[] )
   registration->SetOptimizer( optimizer );
 
   // put in parameters for MI metric - number of bins and number of samples
-  metric->SetNumberOfHistogramBins( 24 );
-  metric->SetNumberOfSpatialSamples( 100 );
+  unsigned int numberOfBins = 24;
+  unsigned int numberOfSamples = 1000;
+  metric->SetNumberOfHistogramBins( numberOfBins );
+  metric->SetNumberOfSpatialSamples( numberOfSamples );
+  //metric->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
 
   // initialize the transform
   typedef RegistrationType::ParametersType ParametersType;
@@ -92,6 +96,7 @@ int main( int argc, char * argv[] )
   registration->SetFixedImage( fixedReader->GetOutput() );
   registration->SetMovingImage( movingReader->GetOutput() );
   registration->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
+  registration->SetFixedImageRegionDefined( true );
 
   // perform the registration
   try
@@ -135,10 +140,11 @@ int main( int argc, char * argv[] )
   resample->SetDefaultPixelValue( 100 );
   
   // instantiate an output image to write to
-  typedef itk::ImageFileWriter< CharImageType > WriterType;
+  typedef itk::Image<PixelType, Dimension> WriterImageType;
+  typedef itk::ImageFileWriter< WriterImageType > WriterType;
 
   WriterType::Pointer writer = WriterType::New();
-  writer->SetFileName( argv[1] );
+  writer->SetFileName( outputFilename.c_str() );
 
   // set up to cast the image from a short to a char
 //  typedef itk::CastImageFilter< FixedImageType, CharImageType > Cast3FilterType;
