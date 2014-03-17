@@ -17,18 +17,18 @@
 #include "itkMattesMutualInformationImageToImageMetric.h"
 #include "itkRegularStepGradientDescentOptimizer.h"
 #include "itkResampleImageFilter.h"
-#include "itkCastImageFilter.h"
+//#include "itkCastImageFilter.h"
 //#include "itkCheckerBoardImageFilter.h"
 
 
 int main( int argc, char * argv[] )
 {
-  std::string fixedFilename = "/user/e/ehammond/RegistrationCode/ExampleImages/subj1_PD_raw.nii.gz";
-  std::string movingFilename = "/user/e/ehammond/RegistrationCode/ExampleImages/subj1_T1_raw.nii.gz";
+  std::string movingFilename = "/user/e/ehammond/RegistrationCode/ExampleImages/subj1_PD_raw.nii.gz";
+  std::string fixedFilename = "/user/e/ehammond/RegistrationCode/ExampleImages/subj1_T1_raw.nii.gz";
   std::string outputFilename = "output.nii.gz";
 
-  const unsigned int      Dimension = 3;
-  typedef unsigned short  PixelType;
+  const   unsigned int      Dimension = 3;
+  typedef unsigned short    PixelType;
   //typedef unsigned char   CharPixelType;
 
   // set up data objects
@@ -69,10 +69,20 @@ int main( int argc, char * argv[] )
 
   // put in parameters for MI metric - number of bins and number of samples
   unsigned int numberOfBins = 24;
-  unsigned int numberOfSamples = 1000;
+  unsigned int numberOfSamples = 10000;
   metric->SetNumberOfHistogramBins( numberOfBins );
   metric->SetNumberOfSpatialSamples( numberOfSamples );
   //metric->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
+  
+  // set up pipeline to perform registration
+  // set up registration inputs
+  registration->SetFixedImage( fixedReader->GetOutput() );
+  registration->SetMovingImage( movingReader->GetOutput() );
+  
+  fixedReader->Update();
+
+  registration->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
+  //registration->SetFixedImageRegionDefined( true );
 
   // initialize the transform
   typedef RegistrationType::ParametersType ParametersType;
@@ -90,19 +100,12 @@ int main( int argc, char * argv[] )
   optimizer->SetMinimumStepLength( 0.01 );
   optimizer->SetNumberOfIterations( 200 );
   optimizer->SetRelaxationFactor( 0.8 );	// controls for the rate of step size reduction
-  
-  // set up pipeline to perform registration
-  // set up registration inputs
-  registration->SetFixedImage( fixedReader->GetOutput() );
-  registration->SetMovingImage( movingReader->GetOutput() );
-  registration->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
-  registration->SetFixedImageRegionDefined( true );
 
   // perform the registration
   try
   {
       registration->Update();
-      std::cout << "OptimizerStepCondition: " << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+      std::cout << "OptimizerStopCondition: " << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
   }
   catch( itk::ExceptionObject & err )
   {
@@ -113,6 +116,7 @@ int main( int argc, char * argv[] )
 
   // obtain and print out the final results
   ParametersType finalParameters = registration->GetLastTransformParameters();
+
   std::cout << "\nResults = \n";
   std::cout << " Translation X = " << finalParameters[0] << std::endl;
   std::cout << " Translation Y = " << finalParameters[1] << std::endl;
@@ -130,14 +134,18 @@ int main( int argc, char * argv[] )
 
   // instantiate a resample object and a new original fixed image
   ResampleFilterType::Pointer resample = ResampleFilterType::New();
+  resample->SetTransform( finalTransform );
+  // set up pipeline to casting and writing the image
+  resample->SetInput( movingReader->GetOutput() );
   FixedImageType::Pointer fixedImage = fixedReader->GetOutput();
 
   // set up parameters to be those of the transform and identical to those of the fixed image
-  resample->SetTransform( finalTransform );
+  PixelType defaultPixelValue = 100;
   resample->SetSize( fixedImage->GetLargestPossibleRegion().GetSize() );
   resample->SetOutputOrigin( fixedImage->GetOrigin() );
   resample->SetOutputSpacing( fixedImage->GetSpacing() );
-  resample->SetDefaultPixelValue( 100 );
+  resample->SetOutputDirection (fixedImage->GetDirection() );
+  resample->SetDefaultPixelValue( defaultPixelValue );
   
   // instantiate an output image to write to
   typedef itk::Image<PixelType, Dimension> WriterImageType;
@@ -150,8 +158,7 @@ int main( int argc, char * argv[] )
 //  typedef itk::CastImageFilter< FixedImageType, CharImageType > Cast3FilterType;
 //  Cast3FilterType::Pointer caster3 = Cast3FilterType::New();
 
-  // set up pipeline to casting and writing the image
-  resample->SetInput( movingReader->GetOutput() );
+
 //  caster3->SetInput( resample->GetOutput() );
   writer->SetInput( resample->GetOutput() );
 
