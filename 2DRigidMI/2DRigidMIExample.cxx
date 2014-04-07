@@ -11,12 +11,18 @@
 #include "itkImage.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
+
 #include "itkImageRegistrationMethod.h"
-#include "itkTranslationTransform.h"
+
+#include "itkAffineTransform.h"
+#include "itkCenteredTransformInitializer.h"
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkMattesMutualInformationImageToImageMetric.h"
 #include "itkRegularStepGradientDescentOptimizer.h"
+
 #include "itkResampleImageFilter.h"
+#include "itkTimeProbesCollectorBase.h"
+
 //#include "itkCastImageFilter.h"
 //#include "itkCheckerBoardImageFilter.h"
 
@@ -47,9 +53,13 @@ int main( int argc, char * argv[] )
   fixedReader->SetFileName( fixedFilename.c_str() );
   movingReader->SetFileName( movingFilename.c_str() );
   
+  // set up a timing system for the program
+  itk::TimeProbesCollectorBase timer;
+  timer.Start( "Registration" );
+
   // set up registration component objects
   typedef itk::ImageRegistrationMethod< FixedImageType, MovingImageType > RegistrationType;
-  typedef itk::TranslationTransform< double, Dimension >		  TransformType;
+  typedef itk::AffineTransform< double, Dimension >		  	  TransformType;
   typedef itk::LinearInterpolateImageFunction< MovingImageType, double >  InterpolatorType;
   typedef itk::MattesMutualInformationImageToImageMetric< FixedImageType, MovingImageType > MetricType;
   typedef itk::RegularStepGradientDescentOptimizer			  OptimizerType;
@@ -84,7 +94,8 @@ int main( int argc, char * argv[] )
   registration->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
   //registration->SetFixedImageRegionDefined( true );
 
-  // initialize the transform
+/*
+  // initialize the transform (if using a translation transformation
   typedef RegistrationType::ParametersType ParametersType;
   //   create a variable of the type of parameters in the transform and initialize it the number of parameters objects
   ParametersType initialParameters( transform->GetNumberOfParameters() );
@@ -93,6 +104,25 @@ int main( int argc, char * argv[] )
   initialParameters[1] = 0.0;
   //   input into registrator
   registration->SetInitialTransformParameters( initialParameters );
+*/
+
+  // initialize the transform 
+  // (make sure the center of rotation is set to the center of mass of the object in the fixed image)
+  typedef itk::CenteredTransformInitializer<TransformType, FixedImageType, MovingImageType>	InitalizationType;
+  InitializationType::Pointer initializer = InitializationType::New();
+  // set proper parameters
+  initializer->SetTransform( transform );
+  initializer->SetFixedImage( fixedReader->GetOutput() );
+  initializer->SetMovingImage( movingReader->GetOutput() );
+  initializer->MomentsOn();
+  initializer->InitializeTransform();
+  // initialize the translation of the images
+  typedef RegistrationType::ParametersType ParametersType;
+  ParametersType initialParameters = transform->GetParameters();
+  initialParameters[4] = 0.0;
+  initialParameters[5] = 0.0;
+  // input in the registrator
+  registration->SetInitialTransformParameters( initialParameters );  
 
   // set up the optimizer and put in its parameters
   optimizer->MinimizeOn();	// set optimizer up for minimization
@@ -100,6 +130,8 @@ int main( int argc, char * argv[] )
   optimizer->SetMinimumStepLength( 0.01 );
   optimizer->SetNumberOfIterations( 200 );
   optimizer->SetRelaxationFactor( 0.8 );	// controls for the rate of step size reduction
+
+  timer.Stop( "Registration" );
 
   // perform the registration
   try
@@ -123,6 +155,8 @@ int main( int argc, char * argv[] )
   std::cout << " Iterations = " << optimizer->GetCurrentIteration() << std::endl;
   std::cout << " Metric Value = " << optimizer->GetValue() << std::endl;
   std::cout << " Stop Condition = " << optimizer->GetStopCondition() << std::endl;
+
+  timer.Report( std::cout );
 
   // apply the resulting transform to the moving image using the ResampleImageFilter
   typedef itk::ResampleImageFilter< MovingImageType, FixedImageType > ResampleFilterType;
