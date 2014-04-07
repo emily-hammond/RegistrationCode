@@ -79,7 +79,7 @@ int main( int argc, char * argv[] )
 
   // put in parameters for MI metric - number of bins and number of samples
   unsigned int numberOfBins = 24;
-  unsigned int numberOfSamples = 10000;
+  unsigned int numberOfSamples = 100000;
   metric->SetNumberOfHistogramBins( numberOfBins );
   metric->SetNumberOfSpatialSamples( numberOfSamples );
   //metric->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
@@ -108,13 +108,13 @@ int main( int argc, char * argv[] )
 
   // initialize the transform 
   // (make sure the center of rotation is set to the center of mass of the object in the fixed image)
-  typedef itk::CenteredTransformInitializer<TransformType, FixedImageType, MovingImageType>	InitalizationType;
+  typedef itk::CenteredTransformInitializer<TransformType, FixedImageType, MovingImageType>	InitializationType;
   InitializationType::Pointer initializer = InitializationType::New();
   // set proper parameters
   initializer->SetTransform( transform );
   initializer->SetFixedImage( fixedReader->GetOutput() );
   initializer->SetMovingImage( movingReader->GetOutput() );
-  initializer->MomentsOn();
+  initializer->GeometryOn();
   initializer->InitializeTransform();
   // initialize the translation of the images
   typedef RegistrationType::ParametersType ParametersType;
@@ -150,8 +150,8 @@ int main( int argc, char * argv[] )
   ParametersType finalParameters = registration->GetLastTransformParameters();
 
   std::cout << "\nResults = \n";
-  std::cout << " Translation X = " << finalParameters[0] << std::endl;
-  std::cout << " Translation Y = " << finalParameters[1] << std::endl;
+  std::cout << " Translation X = " << finalParameters[4] << std::endl;
+  std::cout << " Translation Y = " << finalParameters[5] << std::endl;
   std::cout << " Iterations = " << optimizer->GetCurrentIteration() << std::endl;
   std::cout << " Metric Value = " << optimizer->GetValue() << std::endl;
   std::cout << " Stop Condition = " << optimizer->GetStopCondition() << std::endl;
