@@ -117,12 +117,12 @@ int main( int argc, char * argv[] )
   initializer->GeometryOn();
   initializer->InitializeTransform();
   // initialize the translation of the images
-  typedef RegistrationType::ParametersType ParametersType;
+  /*typedef RegistrationType::ParametersType ParametersType;
   ParametersType initialParameters = transform->GetParameters();
   initialParameters[4] = 0.0;
-  initialParameters[5] = 0.0;
+  initialParameters[5] = 0.0;*/
   // input in the registrator
-  registration->SetInitialTransformParameters( initialParameters );  
+  registration->SetInitialTransformParameters( transform->GetParameters() );  
 
   // set up the optimizer and put in its parameters
   optimizer->MinimizeOn();	// set optimizer up for minimization
@@ -147,11 +147,13 @@ int main( int argc, char * argv[] )
   }
 
   // obtain and print out the final results
+  typedef TransformType::ParametersType ParametersType;
   ParametersType finalParameters = registration->GetLastTransformParameters();
 
   std::cout << "\nResults = \n";
-  std::cout << " Translation X = " << finalParameters[4] << std::endl;
-  std::cout << " Translation Y = " << finalParameters[5] << std::endl;
+  std::cout << " Parameters = " << std::endl;
+  std::cout << finalParameters[0] << "   " << finalParameters[1] << "   " << finalParameters[2] << std::endl;
+  std::cout << finalParameters[3] << "   " << finalParameters[4] << "   " << finalParameters[5] << std::endl;
   std::cout << " Iterations = " << optimizer->GetCurrentIteration() << std::endl;
   std::cout << " Metric Value = " << optimizer->GetValue() << std::endl;
   std::cout << " Stop Condition = " << optimizer->GetStopCondition() << std::endl;
