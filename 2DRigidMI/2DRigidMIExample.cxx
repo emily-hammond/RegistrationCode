@@ -78,7 +78,7 @@ int main( int argc, char * argv[] )
   registration->SetOptimizer( optimizer );
 
   // put in parameters for MI metric - number of bins and number of samples
-  unsigned int numberOfBins = 24;
+  unsigned int numberOfBins = 50;
   unsigned int numberOfSamples = 100000;
   metric->SetNumberOfHistogramBins( numberOfBins );
   metric->SetNumberOfSpatialSamples( numberOfSamples );
@@ -126,9 +126,9 @@ int main( int argc, char * argv[] )
 
   // set up the optimizer and put in its parameters
   optimizer->MinimizeOn();	// set optimizer up for minimization
-  optimizer->SetMaximumStepLength( 2.00 );
-  optimizer->SetMinimumStepLength( 0.01 );
-  optimizer->SetNumberOfIterations( 200 );
+  optimizer->SetMaximumStepLength( 0.2 );
+  optimizer->SetMinimumStepLength( 0.001 );
+  optimizer->SetNumberOfIterations( 1500 );
   optimizer->SetRelaxationFactor( 0.8 );	// controls for the rate of step size reduction
 
   timer.Stop( "Registration" );
