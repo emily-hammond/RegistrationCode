@@ -122,14 +122,14 @@ int main( int argc, char * argv[] )
   initialParameters[4] = 0.0;
   initialParameters[5] = 0.0;*/
   // input in the registrator
-  registration->SetInitialTransformParameters( transform->GetParameters() );  
+  registration->SetInitialTransformParameters( transform->GetParameters() );
 
   // set up the optimizer and put in its parameters
   optimizer->MinimizeOn();	// set optimizer up for minimization
   optimizer->SetMaximumStepLength( 0.2 );
   optimizer->SetMinimumStepLength( 0.001 );
   optimizer->SetNumberOfIterations( 1500 );
-  optimizer->SetRelaxationFactor( 0.8 );	// controls for the rate of step size reduction
+  optimizer->SetRelaxationFactor( 0.5 );	// controls for the rate of step size reduction
 
   timer.Stop( "Registration" );
 
