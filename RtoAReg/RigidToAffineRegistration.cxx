@@ -63,6 +63,7 @@ int main(int argc, char * argv[])
     char * movingMaskFilename = argv[5];
     char * outputFilename = argv[6];
     int rigid = atoi( argv[7] );
+    char * fiducialFilename = argv[8];
 
     // set up timer to time various stages of code
     itk::TimeProbesCollectorBase timer;
@@ -75,6 +76,20 @@ int main(int argc, char * argv[])
     typedef float                               PixelType;
     typedef itk::Image<PixelType, Dimension>    FixedImageType;
     typedef itk::Image<PixelType, Dimension>    MovingImageType;
+
+    // read in fiducial placements for validation purposes
+    // fixed image instantiation of points
+    FixedImageType::PointType fixedCorina;
+    FixedImageType::PointType fixedBaseHeart;
+    FixedImageType::PointType fixedAorta;
+    // moving image instantiations of points
+    MovingImageType::PointType movingCorina;
+    MovingImageType::PointType movingBaseHeart;
+    MovingImageType::PointType movingAorta;
+
+    //std::ofstream fidFile;
+    //fidFile.open(fiducialFilename);
+
 
     // read in images
     typedef itk::ImageFileReader<FixedImageType>    FixedImageReaderType;
