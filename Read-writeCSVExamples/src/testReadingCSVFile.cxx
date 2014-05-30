@@ -16,7 +16,7 @@
 int main( int argc, char * argv[] )
 {
     std::string filename = argv[1];
-    std::string imageOfInterest = argv[2];
+    char * imageOfInterest = argv[2];
 
     std::fstream file;
     file.open( filename.c_str() );
@@ -59,7 +59,7 @@ int main( int argc, char * argv[] )
         std::getline(file,line);
         sscanf(line.c_str(), "%s", image, &corina[0], &corina[1], &corina[2], &heart[0], &heart[1], &heart[2], &aorta[0], &aorta[1], &aorta[2]);
 
-        if( strcmp(image, imageOfInterest.c_str()) == 0 )
+        if( strcmp(image, imageOfInterest) == 0 )
         {
             sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f", image, &corina[0], &corina[1], &corina[2], &heart[0], &heart[1], &heart[2], &aorta[0], &aorta[1], &aorta[2]);
 
