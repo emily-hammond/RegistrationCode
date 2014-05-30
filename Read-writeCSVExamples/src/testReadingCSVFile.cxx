@@ -57,7 +57,7 @@ int main( int argc, char * argv[] )
     while( file.good() )
     {
         std::getline(file,line);
-        sscanf(line.c_str(), "%s,%f,%f,%f,%f,%f,%f,%f,%f,%f", image, &corina[0], &corina[1], &corina[2], &heart[0], &heart[1], &heart[2], &aorta[0], &aorta[1], &aorta[2]);
+        sscanf(line.c_str(), "%s", image, &corina[0], &corina[1], &corina[2], &heart[0], &heart[1], &heart[2], &aorta[0], &aorta[1], &aorta[2]);
 
         if( strcmp(image, imageOfInterest.c_str()) == 0 )
         {
