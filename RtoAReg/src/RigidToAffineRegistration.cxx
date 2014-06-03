@@ -78,67 +78,6 @@ int main(int argc, char * argv[])
     typedef itk::Image<PixelType, Dimension>    FixedImageType;
     typedef itk::Image<PixelType, Dimension>    MovingImageType;
 
-    // read in fiducial placements for validation purposes
-    // fixed image instantiation of points
-    FixedImageType::PointType fixedCorina;
-    FixedImageType::PointType fixedBaseHeart;
-    FixedImageType::PointType fixedAorta;
-    // moving image instantiations of points
-    MovingImageType::PointType movingCorina;
-    MovingImageType::PointType movingBaseHeart;
-    MovingImageType::PointType movingAorta;
-
-    // open file and create variables to allow for reading of file
-    std::fstream fidFile;
-    fidFile.open(fiducialFilename);
-    std::string line;
-    char image[225];
-    bool header = true;
-
-    // parse through file to find the image corresponding to the fixed image and the moving image
-    // place the following values into the proper arrays
-    while( fidFile.good() )
-    {
-        std::getline(fidFile, line);
-        sscanf(line.c_str(), "%s", image);
-        // if it is the first line, then it is the header
-        if( header )
-        {
-            // do nothing
-        }
-        else if( strcmp(image, fixedFilename) == 0 )
-        {
-            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",
-                   image, fixedCorina[0], fixedCorina[1], fixedCorina[2],
-                    fixedBaseHeart[0], fixedBaseHeart[1], fixedBaseHeart[2],
-                    fixedAorta[0], fixedAorta[1], fixedAorta[2]);
-
-            std::cout << "Image found!   : " << image << std::endl;
-            std::cout << "    Corina: " << fixedCorina[0] << ", " << fixedCorina[1] << ", " << fixedCorina[2] << std::endl;
-            std::cout << "    Heart : " << fixedBaseHeart[0] << ", " << fixedBaseHeart[1] << ", " << fixedBaseHeart[2] << std::endl;
-            std::cout << "    Aorta : " << fixedAorta[0] << ", " << fixedAorta[1] << ", " << fixedAorta[2] << std::endl;
-            std::cout << std::endl;
-        }
-        else if( strcmp( image, movingFilename) == 0 )
-        {
-            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",
-                   image, movingCorina[0], movingCorina[1], movingCorina[2],
-                    movingBaseHeart[0], movingBaseHeart[1], movingBaseHeart[2],
-                    movingAorta[0], movingAorta[1], movingAorta[2]);
-
-            std::cout << "Image found!   : " << image << std::endl;
-            std::cout << "    Corina: " << movingCorina[0] << ", " << movingCorina[1] << ", " << movingCorina[2] << std::endl;
-            std::cout << "    Heart : " << movingBaseHeart[0] << ", " << movingBaseHeart[1] << ", " << movingBaseHeart[2] << std::endl;
-            std::cout << "    Aorta : " << movingAorta[0] << ", " << movingAorta[1] << ", " << movingAorta[2] << std::endl;
-            std::cout << std::endl;
-        }
-        else
-        {
-            // do nothing
-            // image not found
-        }
-    }
-
     // read in images
     typedef itk::ImageFileReader<FixedImageType>    FixedImageReaderType;
     typedef itk::ImageFileReader<MovingImageType>   MovingImageReaderType;
@@ -152,6 +91,7 @@ int main(int argc, char * argv[])
     // print out which images are being registered
     std::cout << "Fixed: " << fixedFilename << std::endl;
     std::cout << "Moving: " << movingFilename << std::endl;
+    std::cout << "Fiducials: " << fiducialFilename << std::endl;
 
     /*
     // assign images to pointers
@@ -512,22 +452,118 @@ int main(int argc, char * argv[])
     // stop timer and send out information
     timer.Stop("Complete Code");
 
-    // output information to screen
+    // read in fiducial placements for validation purposes
+    // fixed image instantiation of points
+    FixedImageType::PointType fixedCorina;
+    FixedImageType::PointType fixedBaseHeart;
+    FixedImageType::PointType fixedAorta;
+    // moving image instantiations of points
+    MovingImageType::PointType movingCorina;
+    MovingImageType::PointType movingBaseHeart;
+    MovingImageType::PointType movingAorta;
+
+    // open file and create variables to allow for reading of file
+    std::string line;
+    char image[225];
+    bool header = true;
+    std::fstream fidFile;
+    fidFile.open(fiducialFilename);
+
+    // parse through file to find the image corresponding to the fixed image and the moving image
+    // place the following values into the proper arrays
+    while( fidFile.good() )
+    {
+        std::getline(fidFile, line);
+        sscanf(line.c_str(), "%s", image);
+        // if it is the first line, then it is the header
+        if( header )
+        {
+            header = false;
+        }
+        else if( strcmp(image, fixedFilename) == 0 )
+        {
+            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",
+                   image, fixedCorina[0], fixedCorina[1], fixedCorina[2],
+                    fixedBaseHeart[0], fixedBaseHeart[1], fixedBaseHeart[2],
+                    fixedAorta[0], fixedAorta[1], fixedAorta[2]);
+
+            std::cout << "Image found!   : " << image << std::endl;
+            std::cout << "    Corina: " << fixedCorina[0] << ", " << fixedCorina[1] << ", " << fixedCorina[2] << std::endl;
+            std::cout << "    Heart : " << fixedBaseHeart[0] << ", " << fixedBaseHeart[1] << ", " << fixedBaseHeart[2] << std::endl;
+            std::cout << "    Aorta : " << fixedAorta[0] << ", " << fixedAorta[1] << ", " << fixedAorta[2] << std::endl;
+            std::cout << std::endl;
+        }
+        else if( strcmp( image, movingFilename) == 0 )
+        {
+            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",
+                   image, movingCorina[0], movingCorina[1], movingCorina[2],
+                    movingBaseHeart[0], movingBaseHeart[1], movingBaseHeart[2],
+                    movingAorta[0], movingAorta[1], movingAorta[2]);
+
+            std::cout << "Image found!   : " << image << std::endl;
+            std::cout << "    Corina: " << movingCorina[0] << ", " << movingCorina[1] << ", " << movingCorina[2] << std::endl;
+            std::cout << "    Heart : " << movingBaseHeart[0] << ", " << movingBaseHeart[1] << ", " << movingBaseHeart[2] << std::endl;
+            std::cout << "    Aorta : " << movingAorta[0] << ", " << movingAorta[1] << ", " << movingAorta[2] << std::endl;
+            std::cout << std::endl;
+        }
+        else
+        {
+            // do nothing
+            // image not found
+        }
+    }
+
+    fidFile.close();
+
+
+    // output information to screen and determine the SSD between the two images
     if( rigid == 1)
     {
+        // transform the moving image fiducials
+        MovingImageType::PointType movingTransformedCorina = versorTransform->TransformPoint( movingCorina );
+        MovingImageType::PointType movingTransformedBaseHeart = versorTransform->TransformPoint( movingBaseHeart );
+        MovingImageType::PointType movingTransformedAorta = versorTransform->TransformPoint( movingAorta );
+
+        PixelType SSD = (fixedCorina[0] - movingTransformedCorina[0])*(fixedCorina[0] - movingTransformedCorina[0])
+                + (fixedCorina[1] - movingTransformedCorina[1])*(fixedCorina[1] - movingTransformedCorina[1])
+                + (fixedCorina[2] - movingTransformedCorina[2])*(fixedCorina[2] - movingTransformedCorina[2])
+                + (fixedBaseHeart[0] - movingTransformedBaseHeart[0])*(fixedBaseHeart[0] - movingTransformedBaseHeart[0])
+                + (fixedBaseHeart[1] - movingTransformedBaseHeart[1])*(fixedBaseHeart[1] - movingTransformedBaseHeart[1])
+                + (fixedBaseHeart[2] - movingTransformedBaseHeart[2])*(fixedBaseHeart[2] - movingTransformedBaseHeart[2])
+                + (fixedAorta[0] - movingTransformedAorta[0])*(fixedAorta[0] - movingTransformedAorta[0])
+                + (fixedAorta[1] - movingTransformedAorta[1])*(fixedAorta[1] - movingTransformedAorta[1])
+                + (fixedAorta[2] - movingTransformedAorta[2])*(fixedAorta[2] - movingTransformedAorta[2]);
+
         std::cout << std::endl;
         std::cout << "Versor Matrix: " << versorTransform->GetMatrix() << std::endl;
         std::cout << "Translation values: " << versorTransform->GetTranslation() << std::endl;
         std::cout << "Iterations: " << versorOptimizer->GetCurrentIteration() << std::endl;
         std::cout << "MetricValue: " << versorOptimizer->GetValue() << std::endl;
+        std::cout << "SSD: " << SSD << std::endl;
     }
     else
     {
+        // transform the moving image fiducials
+        MovingImageType::PointType movingTransformedCorina = affineTransform->TransformPoint( movingCorina );
+        MovingImageType::PointType movingTransformedBaseHeart = affineTransform->TransformPoint( movingBaseHeart );
+        MovingImageType::PointType movingTransformedAorta = affineTransform->TransformPoint( movingAorta );
+
+        PixelType SSD = (fixedCorina[0] - movingTransformedCorina[0])*(fixedCorina[0] - movingTransformedCorina[0])
+                + (fixedCorina[1] - movingTransformedCorina[1])*(fixedCorina[1] - movingTransformedCorina[1])
+                + (fixedCorina[2] - movingTransformedCorina[2])*(fixedCorina[2] - movingTransformedCorina[2])
+                + (fixedBaseHeart[0] - movingTransformedBaseHeart[0])*(fixedBaseHeart[0] - movingTransformedBaseHeart[0])
+                + (fixedBaseHeart[1] - movingTransformedBaseHeart[1])*(fixedBaseHeart[1] - movingTransformedBaseHeart[1])
+                + (fixedBaseHeart[2] - movingTransformedBaseHeart[2])*(fixedBaseHeart[2] - movingTransformedBaseHeart[2])
+                + (fixedAorta[0] - movingTransformedAorta[0])*(fixedAorta[0] - movingTransformedAorta[0])
+                + (fixedAorta[1] - movingTransformedAorta[1])*(fixedAorta[1] - movingTransformedAorta[1])
+                + (fixedAorta[2] - movingTransformedAorta[2])*(fixedAorta[2] - movingTransformedAorta[2]);
+
         std::cout << std::endl;
         std::cout << "Affine Matrix: " << std::endl << affineTransform->GetMatrix() << std::endl;
         std::cout << "Affine Translation: " << affineTransform->GetTranslation() << std::endl;
         std::cout << "Iterations: " << affineOptimizer->GetCurrentIteration() << std::endl;
         std::cout << "MetricValue: " << affineOptimizer->GetValue() << std::endl;
+        std::cout << "SSD: " << SSD << std::endl;
     }
 
     timer.Report( std::cout );
