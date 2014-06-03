@@ -112,6 +112,12 @@ int main(int argc, char * argv[])
                    image, fixedCorina[0], fixedCorina[1], fixedCorina[2],
                     fixedBaseHeart[0], fixedBaseHeart[1], fixedBaseHeart[2],
                     fixedAorta[0], fixedAorta[1], fixedAorta[2]);
+
+            std::cout << "Image found!   : " << image << std::endl;
+            std::cout << "    Corina: " << fixedCorina[0] << ", " << fixedCorina[1] << ", " << fixedCorina[2] << std::endl;
+            std::cout << "    Heart : " << fixedBaseHeart[0] << ", " << fixedBaseHeart[1] << ", " << fixedBaseHeart[2] << std::endl;
+            std::cout << "    Aorta : " << fixedAorta[0] << ", " << fixedAorta[1] << ", " << fixedAorta[2] << std::endl;
+            std::cout << std::endl;
         }
         else if( strcmp( image, movingFilename) == 0 )
         {
@@ -119,6 +125,12 @@ int main(int argc, char * argv[])
                    image, movingCorina[0], movingCorina[1], movingCorina[2],
                     movingBaseHeart[0], movingBaseHeart[1], movingBaseHeart[2],
                     movingAorta[0], movingAorta[1], movingAorta[2]);
+
+            std::cout << "Image found!   : " << image << std::endl;
+            std::cout << "    Corina: " << movingCorina[0] << ", " << movingCorina[1] << ", " << movingCorina[2] << std::endl;
+            std::cout << "    Heart : " << movingBaseHeart[0] << ", " << movingBaseHeart[1] << ", " << movingBaseHeart[2] << std::endl;
+            std::cout << "    Aorta : " << movingAorta[0] << ", " << movingAorta[1] << ", " << movingAorta[2] << std::endl;
+            std::cout << std::endl;
         }
         else
         {
