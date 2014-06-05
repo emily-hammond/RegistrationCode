@@ -467,43 +467,59 @@ int main(int argc, char * argv[])
     char image[225];
     bool header = true;
     std::fstream fidFile;
-    fidFile.open(fiducialFilename);
+    fidFile.open( fiducialFilename );
+    float one, two, three, four, five, six, seven, eight, nine;
 
     // parse through file to find the image corresponding to the fixed image and the moving image
     // place the following values into the proper arrays
-    while( fidFile.good() )
+    do
     {
         std::getline(fidFile, line);
         sscanf(line.c_str(), "%s", image);
         // if it is the first line, then it is the header
+
         if( header )
         {
             header = false;
         }
         else if( strcmp(image, fixedFilename) == 0 )
         {
-            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",
-                   image, fixedCorina[0], fixedCorina[1], fixedCorina[2],
-                    fixedBaseHeart[0], fixedBaseHeart[1], fixedBaseHeart[2],
-                    fixedAorta[0], fixedAorta[1], fixedAorta[2]);
+            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",image, &one, &two, &three, &four, &five, &six, &seven, &eight, &nine);
+
+            fixedCorina[0] = one;
+            fixedCorina[1] = two;
+            fixedCorina[2] = three;
+            fixedBaseHeart[0] = four;
+            fixedBaseHeart[1] = five;
+            fixedBaseHeart[2] = six;
+            fixedAorta[0] = seven;
+            fixedAorta[1] = eight;
+            fixedAorta[2] = nine;
 
             std::cout << "Image found!   : " << image << std::endl;
-            std::cout << "    Corina: " << fixedCorina[0] << ", " << fixedCorina[1] << ", " << fixedCorina[2] << std::endl;
-            std::cout << "    Heart : " << fixedBaseHeart[0] << ", " << fixedBaseHeart[1] << ", " << fixedBaseHeart[2] << std::endl;
-            std::cout << "    Aorta : " << fixedAorta[0] << ", " << fixedAorta[1] << ", " << fixedAorta[2] << std::endl;
+            std::cout << "    Corina: " << fixedCorina << std::endl;
+            std::cout << "    Heart : " << fixedBaseHeart << std::endl;
+            std::cout << "    Aorta : " << fixedAorta << std::endl;
             std::cout << std::endl;
         }
         else if( strcmp( image, movingFilename) == 0 )
         {
-            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",
-                   image, movingCorina[0], movingCorina[1], movingCorina[2],
-                    movingBaseHeart[0], movingBaseHeart[1], movingBaseHeart[2],
-                    movingAorta[0], movingAorta[1], movingAorta[2]);
+            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",image, &one, &two, &three, &four, &five, &six, &seven, &eight, &nine);
+
+            movingCorina[0] = one;
+            movingCorina[1] = two;
+            movingCorina[2] = three;
+            movingBaseHeart[0] = four;
+            movingBaseHeart[1] = five;
+            movingBaseHeart[2] = six;
+            movingAorta[0] = seven;
+            movingAorta[1] = eight;
+            movingAorta[2] = nine;
 
             std::cout << "Image found!   : " << image << std::endl;
-            std::cout << "    Corina: " << movingCorina[0] << ", " << movingCorina[1] << ", " << movingCorina[2] << std::endl;
-            std::cout << "    Heart : " << movingBaseHeart[0] << ", " << movingBaseHeart[1] << ", " << movingBaseHeart[2] << std::endl;
-            std::cout << "    Aorta : " << movingAorta[0] << ", " << movingAorta[1] << ", " << movingAorta[2] << std::endl;
+            std::cout << "    Corina: " << movingCorina << std::endl;
+            std::cout << "    Heart : " << movingBaseHeart << std::endl;
+            std::cout << "    Aorta : " << movingAorta << std::endl;
             std::cout << std::endl;
         }
         else
@@ -511,7 +527,7 @@ int main(int argc, char * argv[])
             // do nothing
             // image not found
         }
-    }
+    }while( fidFile.good() );
 
     fidFile.close();
 
@@ -523,6 +539,10 @@ int main(int argc, char * argv[])
         MovingImageType::PointType movingTransformedCorina = versorTransform->TransformPoint( movingCorina );
         MovingImageType::PointType movingTransformedBaseHeart = versorTransform->TransformPoint( movingBaseHeart );
         MovingImageType::PointType movingTransformedAorta = versorTransform->TransformPoint( movingAorta );
+
+        std::cout << "    Corina: " << movingTransformedCorina << std::endl;
+        std::cout << "    Heart : " << movingTransformedBaseHeart << std::endl;
+        std::cout << "    Aorta : " << movingTransformedAorta << std::endl;
 
         PixelType SSD = (fixedCorina[0] - movingTransformedCorina[0])*(fixedCorina[0] - movingTransformedCorina[0])
                 + (fixedCorina[1] - movingTransformedCorina[1])*(fixedCorina[1] - movingTransformedCorina[1])
@@ -547,6 +567,10 @@ int main(int argc, char * argv[])
         MovingImageType::PointType movingTransformedCorina = affineTransform->TransformPoint( movingCorina );
         MovingImageType::PointType movingTransformedBaseHeart = affineTransform->TransformPoint( movingBaseHeart );
         MovingImageType::PointType movingTransformedAorta = affineTransform->TransformPoint( movingAorta );
+
+        std::cout << "    Corina: " << movingTransformedCorina << std::endl;
+        std::cout << "    Heart : " << movingTransformedBaseHeart << std::endl;
+        std::cout << "    Aorta : " << movingTransformedAorta << std::endl;
 
         PixelType SSD = (fixedCorina[0] - movingTransformedCorina[0])*(fixedCorina[0] - movingTransformedCorina[0])
                 + (fixedCorina[1] - movingTransformedCorina[1])*(fixedCorina[1] - movingTransformedCorina[1])
