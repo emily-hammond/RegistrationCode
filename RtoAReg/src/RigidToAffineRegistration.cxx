@@ -536,9 +536,9 @@ int main(int argc, char * argv[])
     if( rigid == 1)
     {
         // transform the moving image fiducials
-        MovingImageType::PointType movingTransformedCorina = versorTransform->TransformPoint( movingCorina );
-        MovingImageType::PointType movingTransformedBaseHeart = versorTransform->TransformPoint( movingBaseHeart );
-        MovingImageType::PointType movingTransformedAorta = versorTransform->TransformPoint( movingAorta );
+        MovingImageType::PointType movingTransformedCorina = versorTransform->TransformPoint( fixedCorina );
+        MovingImageType::PointType movingTransformedBaseHeart = versorTransform->TransformPoint( fixedBaseHeart );
+        MovingImageType::PointType movingTransformedAorta = versorTransform->TransformPoint( fixedAorta );
 
         std::cout << "    Corina: " << movingTransformedCorina << std::endl;
         std::cout << "    Heart : " << movingTransformedBaseHeart << std::endl;
