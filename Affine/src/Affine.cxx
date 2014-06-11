@@ -136,16 +136,7 @@ int main( int argc, char * argv[] )
     // (input parameter changes here if desired)
 
     // define number of pyramid levels
-    registration->SetNumberOfLevels( 12 );
-
-    FixedPyramidType::ScheduleType fixedSchedule = fixedPyramid->GetSchedule();
-    MovingPyramidType::ScheduleType movingSchedule = movingPyramid->GetSchedule();
-
-    std::cout << "Fixed schedule: " << std::endl;
-    std::cout << fixedSchedule << std::endl;
-    std::cout << "Moving schedule: " << std::endl;
-    std::cout << movingSchedule << std::endl;
-    std::cout << std::endl;
+    registration->SetNumberOfLevels( 3 );
 
     try
     {
