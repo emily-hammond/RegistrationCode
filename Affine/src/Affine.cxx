@@ -127,6 +127,32 @@ int main( int argc, char * argv[] )
     optimizer->SetMinimumStepLength( 0.0001 );
     optimizer->SetNumberOfIterations( 1000 );
 
+    // set up metric
+    // (insert masks here if using them!)
+    metric->SetNumberOfHistogramBins( 128 );
+    metric->SetNumberOfSpatialSamples( 50000 );
+
+    // set up optimizer
+    // (input parameter changes here if desired)
+
+    // define number of pyramid levels
+    registration->SetNumberOfLevels( 3 );
+
+    std::cout << registration->GetFixedImagePyramidSchedule() << std::endl;
+    std::cout << registration->GetMovingImagePyramidSchedule() << std::endl;
+    std::cout << std::endl;
+
+    try
+    {
+        registration->Update();
+        std::cout << "Optimizer Stop Condition: " << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+    }
+    catch(itk::ExceptionObject & err)
+    {
+        std::cout << "ExceptionObject caught!" << std::endl;
+        std::cout << err << std::endl;
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }
