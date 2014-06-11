@@ -9,7 +9,6 @@
  */
 
 // reading/writing images
-#include "itkImage.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 
@@ -28,7 +27,7 @@
 int main( int argc, char * argv[] )
 {
     // obtain the necessary inputs from the command line
-    char * fisedFilename = argv[1];
+    char * fixedFilename = argv[1];
     char * movingFilename = argv[2];
     char * outputFilename = argv[3];
     char * fiducialFilename = argv[4];
@@ -37,7 +36,7 @@ int main( int argc, char * argv[] )
     const unsigned int  Dimension = 3;
     typedef float       PixelType;
     typedef itk::Image<PixelType, Dimension>    FixedImageType;
-    typedef itk::Image<FixelType, Dimension>    MovingImageType;
+    typedef itk::Image<PixelType, Dimension>    MovingImageType;
 
     // read in images
     typedef itk::ImageFileReader<FixedImageType>    FixedImageReaderType;
@@ -47,7 +46,7 @@ int main( int argc, char * argv[] )
 
     typedef itk::ImageFileReader<MovingImageType>   MovingImageReaderType;
     MovingImageReaderType::Pointer movingReader = MovingImageReaderType::New();
-    movingReader->SetFilenName( movingFilename );
+    movingReader->SetFileName( movingFilename );
     movingReader->Update();
 
     // set up registration
@@ -98,7 +97,7 @@ int main( int argc, char * argv[] )
 
     // align by geometry and apply
     initializer->GeometryOn();
-    initializer->InitializerTransform();
+    initializer->InitializeTransform();
 
     // plug initialization results into registration
     registration->SetInitialTransformParameters( affineTransform->GetParameters() );
@@ -106,6 +105,7 @@ int main( int argc, char * argv[] )
     // finish setting up transform by including the optimizer scales
     typedef OptimizerType::ScalesType OptimizerScalesType;
     OptimizerScalesType optimizerScales( affineTransform->GetNumberOfParameters() );
+    const double translationScale = 1.0/1000.0;
 
     // 12 affine parameters
     optimizerScales[0] = 1.0;
@@ -136,10 +136,15 @@ int main( int argc, char * argv[] )
     // (input parameter changes here if desired)
 
     // define number of pyramid levels
-    registration->SetNumberOfLevels( 3 );
+    registration->SetNumberOfLevels( 12 );
 
-    std::cout << registration->GetFixedImagePyramidSchedule() << std::endl;
-    std::cout << registration->GetMovingImagePyramidSchedule() << std::endl;
+    FixedPyramidType::ScheduleType fixedSchedule = fixedPyramid->GetSchedule();
+    MovingPyramidType::ScheduleType movingSchedule = movingPyramid->GetSchedule();
+
+    std::cout << "Fixed schedule: " << std::endl;
+    std::cout << fixedSchedule << std::endl;
+    std::cout << "Moving schedule: " << std::endl;
+    std::cout << movingSchedule << std::endl;
     std::cout << std::endl;
 
     try
