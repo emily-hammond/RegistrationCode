@@ -21,6 +21,7 @@
 #include "itkRegularStepGradientDescentOptimizer.h"
 
 // additional components
+#include "itkMultiResolutionPyramidImageFilter.h"
 #include "itkCenteredTransformInitializer.h"
 #include "itkResampleImageFilter.h"
 
@@ -52,7 +53,7 @@ int main( int argc, char * argv[] )
     // set up registration
     typedef itk::AffineTransform<double, Dimension>                                             AffineTransformType;
     typedef itk::MattesMutualInformationImageToImageMetric<FixedImageType, MovingImageType>     MetricType;
-    typedef itk::RegularStepGradientDescentOptimizer                                            OptimiaerType;
+    typedef itk::RegularStepGradientDescentOptimizer                                            OptimizerType;
     typedef itk::LinearInterpolateImageFunction<MovingImageType, double>                        InterpolatorType;
     typedef itk::MultiResolutionImageRegistrationMethod<FixedImageType, MovingImageType>        RegistrationType;
 
@@ -63,6 +64,68 @@ int main( int argc, char * argv[] )
     InterpolatorType::Pointer       interpolator = InterpolatorType::New();
     RegistrationType::Pointer       registration = RegistrationType::New();
 
+    // set up an image pyramid for multi-res
+    typedef itk::MultiResolutionPyramidImageFilter<FixedImageType, FixedImageType>              FixedPyramidType;
+    typedef itk::MultiResolutionPyramidImageFilter<MovingImageType, MovingImageType>            MovingPyramidType;
+
+    FixedPyramidType::Pointer       fixedPyramid = FixedPyramidType::New();
+    MovingPyramidType::Pointer      movingPyramid = MovingPyramidType::New();
+
+    // plug in components of registration
+    registration->SetTransform( affineTransform );
+    registration->SetMetric( metric );
+    registration->SetOptimizer( optimizer );
+    registration->SetInterpolator( interpolator );
+    registration->SetFixedImagePyramid( fixedPyramid );
+    registration->SetMovingImagePyramid( movingPyramid );
+
+    // denote the images for the registration
+    registration->SetFixedImage( fixedReader->GetOutput() );
+    registration->SetMovingImage( movingReader->GetOutput() );
+
+    // update and set fixed image region
+    // (must have the fixed reader updated before this!!)
+    registration->SetFixedImageRegion( fixedReader->GetOutput()->GetBufferedRegion() );
+
+    // initialize the two images
+    typedef itk::CenteredTransformInitializer<AffineTransformType, FixedImageType, MovingImageType> InitializerType;
+    InitializerType::Pointer initializer = InitializerType::New();
+
+    // determine the parameters
+    initializer->SetTransform( affineTransform );
+    initializer->SetFixedImage( fixedReader->GetOutput() );
+    initializer->SetMovingImage( movingReader->GetOutput() );
+
+    // align by geometry and apply
+    initializer->GeometryOn();
+    initializer->InitializerTransform();
+
+    // plug initialization results into registration
+    registration->SetInitialTransformParameters( affineTransform->GetParameters() );
+
+    // finish setting up transform by including the optimizer scales
+    typedef OptimizerType::ScalesType OptimizerScalesType;
+    OptimizerScalesType optimizerScales( affineTransform->GetNumberOfParameters() );
+
+    // 12 affine parameters
+    optimizerScales[0] = 1.0;
+    optimizerScales[1] = 1.0;
+    optimizerScales[2] = 1.0;
+    optimizerScales[3] = 1.0;
+    optimizerScales[4] = 1.0;
+    optimizerScales[5] = 1.0;
+    optimizerScales[6] = 1.0;
+    optimizerScales[7] = 1.0;
+    optimizerScales[8] = 1.0;
+
+    optimizerScales[9] = translationScale;
+    optimizerScales[10] = translationScale;
+    optimizerScales[11] = translationScale;
+
+    optimizer->SetScales( optimizerScales );
+    optimizer->SetMaximumStepLength( 0.2 );
+    optimizer->SetMinimumStepLength( 0.0001 );
+    optimizer->SetNumberOfIterations( 1000 );
 
 
     return EXIT_SUCCESS;
