@@ -8,9 +8,21 @@
  *
  */
 
+// reading/writing images
 #include "itkImage.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
+
+// perform the registration
+#include "itkMultiResolutionImageRegistrationMethod.h"
+#include "itkMattesMutualInformationImageToImageMetric.h"
+#include "itkAffineTransform.h"
+#include "itkLinearInterpolateImageFunction.h"
+#include "itkRegularStepGradientDescentOptimizer.h"
+
+// additional components
+#include "itkCenteredTransformInitializer.h"
+#include "itkResampleImageFilter.h"
 
 int main( int argc, char * argv[] )
 {
@@ -36,6 +48,21 @@ int main( int argc, char * argv[] )
     MovingImageReaderType::Pointer movingReader = MovingImageReaderType::New();
     movingReader->SetFilenName( movingFilename );
     movingReader->Update();
+
+    // set up registration
+    typedef itk::AffineTransform<double, Dimension>                                             AffineTransformType;
+    typedef itk::MattesMutualInformationImageToImageMetric<FixedImageType, MovingImageType>     MetricType;
+    typedef itk::RegularStepGradientDescentOptimizer                                            OptimiaerType;
+    typedef itk::LinearInterpolateImageFunction<MovingImageType, double>                        InterpolatorType;
+    typedef itk::MultiResolutionImageRegistrationMethod<FixedImageType, MovingImageType>        RegistrationType;
+
+    // instantiate objects for registration components
+    AffineTransformType::Pointer    affineTransform = AffineTransformType::New();
+    MetricType::Pointer             metric = MetricType::New();
+    OptimizerType::Pointer          optimizer = OptimizerType::New();
+    InterpolatorType::Pointer       interpolator = InterpolatorType::New();
+    RegistrationType::Pointer       registration = RegistrationType::New();
+
 
 
     return EXIT_SUCCESS;
