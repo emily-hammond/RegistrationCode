@@ -168,7 +168,7 @@ int main( int argc, char * argv[] )
 
     // input fixed image parameters into the resampler
     FixedImageType::Pointer fixedImage = fixedReader->GetOutput();
-    resampler->SetSize( fixedImage->GetLargestPossibleRegion() );
+    resampler->SetSize( fixedImage->GetLargestPossibleRegion().GetSize() );
     resampler->SetOutputOrigin( fixedImage->GetOrigin() );
     resampler->SetOutputSpacing( fixedImage->GetSpacing() );
     resampler->SetOutputDirection( fixedImage->GetDirection() );
@@ -181,7 +181,7 @@ int main( int argc, char * argv[] )
     typedef itk::ImageFileWriter<OutputImageType> WriterType;
 
     WriterType::Pointer writer = WriterType::New();
-    writer->SetFilename( outputFilename );
+    writer->SetFileName( outputFilename );
     writer->SetInput( resampler->GetOutput() );
     writer->Update();
 
