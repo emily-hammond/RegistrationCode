@@ -176,5 +176,14 @@ int main( int argc, char * argv[] )
     // set pixel value to denote the area that the moving image is not mapped to in the fixed image
     resampler->SetDefaultPixelValue( 128 );
 
+    // write image out to file
+    typedef itk::Image<PixelType, Dimension>    OutputImageType;
+    typedef itk::ImageFileWriter<OutputImageType> WriterType;
+
+    WriterType::Pointer writer = WriterType::New();
+    writer->SetFilename( outputFilename );
+    writer->SetInput( resampler->GetOutput() );
+    writer->Update();
+
     return EXIT_SUCCESS;
 }
