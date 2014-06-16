@@ -150,5 +150,31 @@ int main( int argc, char * argv[] )
         return EXIT_FAILURE;
     }
 
+    // resample moving image according to the transform
+    typedef itk::ResampleImageFilter<MovingImageType, FixedImageType> ResampleFilterType;
+    ResampleFilterType::Pointer resampler = ResampleFilterType::New();
+
+    // obtain the final transform parameters and plug into new transform
+    OptimizerType::ParametersType finalAffineParameters = registration->GetLastTransformParameters();
+    AffineTransformType::Pointer finalAffineTransform = AffineTransformType::New();
+
+    finalAffineTransform->SetCenter( affineTransform->GetCenter() );
+    finalAffineTransform->SetParameters( finalAffineParameters );
+    finalAffineTransform->SetFixedParameters( affineTransform->GetFixedParameters() );
+
+    // input into resampler
+    resampler->SetTransform( finalAffineTransform );
+    resampler->SetInput( movingReader->GetOutput() );
+
+    // input fixed image parameters into the resampler
+    FixedImageType::Pointer fixedImage = fixedReader->GetOutput();
+    resampler->SetSize( fixedImage->GetLargestPossibleRegion() );
+    resampler->SetOutputOrigin( fixedImage->GetOrigin() );
+    resampler->SetOutputSpacing( fixedImage->GetSpacing() );
+    resampler->SetOutputDirection( fixedImage->GetDirection() );
+
+    // set pixel value to denote the area that the moving image is not mapped to in the fixed image
+    resampler->SetDefaultPixelValue( 128 );
+
     return EXIT_SUCCESS;
 }
