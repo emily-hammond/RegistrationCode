@@ -24,6 +24,10 @@
 #include "itkCenteredTransformInitializer.h"
 #include "itkResampleImageFilter.h"
 
+// additional c headers
+#include <fstream>
+#include <stdio.h>
+
 int main( int argc, char * argv[] )
 {
     // obtain the necessary inputs from the command line
@@ -189,6 +193,7 @@ int main( int argc, char * argv[] )
     // create necessary variables
     std::string line;
     char image[255];
+    float one, two, three, four, five, six, seven, eight, nine;
 
     // fixed image instantiation of points
     FixedImageType::PointType fixedCorina;
@@ -208,29 +213,42 @@ int main( int argc, char * argv[] )
     do
     {
         std::getline(fidFile, line);
-        sscaf(line.c_str(), "%s", image);
+        sscanf(line.c_str(), "%s", image);
 
         // check if it matches the fixedFilename
         if(strcmp(image, fixedFilename) == 0)
         {
-            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f", image,
-                   &fixedCorina[0], &fixedCorina[1], &fixedCorina[2],
-                   &fixedBaseHeart[0], &fixedBaseHeart[1], &fixedBaseHeart[2],
-                   &fixedAorta[0], &fixedAorta[1], &fixedAorta[2]);
+            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",image, &one, &two, &three, &four, &five, &six, &seven, &eight, &nine);
+
+            fixedCorina[0] = -one;
+            fixedCorina[1] = -two;
+            fixedCorina[2] = three;
+            fixedBaseHeart[0] = -four;
+            fixedBaseHeart[1] = -five;
+            fixedBaseHeart[2] = six;
+            fixedAorta[0] = -seven;
+            fixedAorta[1] = -eight;
+            fixedAorta[2] = nine;
         }
         else if(strcmp(image, movingFilename) == 0)
         {
-            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f", image,
-                   &movingCorina[0], &movingCorina[1], &movingCorina[2],
-                   &movingBaseHeart[0], &movingBaseHeart[1], &movingBaseHeart[2],
-                   &movingAorta[0], &movingAorta[1], &movingAorta[2]);
+            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f",image, &one, &two, &three, &four, &five, &six, &seven, &eight, &nine);
+
+            movingCorina[0] = -one;
+            movingCorina[1] = -two;
+            movingCorina[2] = three;
+            movingBaseHeart[0] = -four;
+            movingBaseHeart[1] = -five;
+            movingBaseHeart[2] = six;
+            movingAorta[0] = -seven;
+            movingAorta[1] = -eight;
+            movingAorta[2] = nine;
         }
         else{}
     }while( fidFile.good() );
 
     // close file
     fidFile.close();
-
 
     return EXIT_SUCCESS;
 }
