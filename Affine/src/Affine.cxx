@@ -185,5 +185,52 @@ int main( int argc, char * argv[] )
     writer->SetInput( resampler->GetOutput() );
     writer->Update();
 
+    // read in the fiducials and find the proper image
+    // create necessary variables
+    std::string line;
+    char image[255];
+
+    // fixed image instantiation of points
+    FixedImageType::PointType fixedCorina;
+    FixedImageType::PointType fixedBaseHeart;
+    FixedImageType::PointType fixedAorta;
+
+    // moving image instantiations of points
+    MovingImageType::PointType movingCorina;
+    MovingImageType::PointType movingBaseHeart;
+    MovingImageType::PointType movingAorta;
+
+    // open file
+    std::fstream fidFile;
+    fidFile.open( fiducialFilename );
+
+    // parse through file and find the proper fixed and moving image
+    do
+    {
+        std::getline(fidFile, line);
+        sscaf(line.c_str(), "%s", image);
+
+        // check if it matches the fixedFilename
+        if(strcmp(image, fixedFilename) == 0)
+        {
+            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f", image,
+                   &fixedCorina[0], &fixedCorina[1], &fixedCorina[2],
+                   &fixedBaseHeart[0], &fixedBaseHeart[1], &fixedBaseHeart[2],
+                   &fixedAorta[0], &fixedAorta[1], &fixedAorta[2]);
+        }
+        else if(strcmp(image, movingFilename) == 0)
+        {
+            sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f", image,
+                   &movingCorina[0], &movingCorina[1], &movingCorina[2],
+                   &movingBaseHeart[0], &movingBaseHeart[1], &movingBaseHeart[2],
+                   &movingAorta[0], &movingAorta[1], &movingAorta[2]);
+        }
+        else{}
+    }while( fidFile.good() );
+
+    // close file
+    fidFile.close();
+
+
     return EXIT_SUCCESS;
 }
