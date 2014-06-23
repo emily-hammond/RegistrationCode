@@ -250,5 +250,20 @@ int main( int argc, char * argv[] )
     // close file
     fidFile.close();
 
+    // transform moving fiducials
+    MovingImageType::PointType movingTransformedCorina = finalAffineTransform->TransformPoint( movingCorina );
+    MovingImageType::PointType movingTransformedBaseHeart = finalAffineTransform->TransformPoint( movingBaseHeart );
+    MovingImageType::PointType movingTransformedAorta = finalAffineTransform->TransformPoint( movingAorta );
+
+    std::cout << std::endl;
+    std::cout << "Pre: " << movingCorina << std::endl;
+    std::cout << std::endl;
+    std::cout << "Post: " << movingTransformedCorina << std::endl;
+    std::cout << std::endl;
+    std::cout << "Fin: " << fixedCorina << std::endl;
+    std::cout << std::endl;
+    std::cout << finalAffineTransform << std::endl;
+    std::cout << std::endl;
+
     return EXIT_SUCCESS;
 }
