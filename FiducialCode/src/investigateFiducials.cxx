@@ -13,6 +13,9 @@
 int main( int argc, char * argv[] )
 {
     char * filename = argv[1];
+    int index0 = atoi( argv[2] );
+    int index1 = atoi( argv[3] );
+    int index2 = atoi( argv[4] );
 
     // load in an image
     const unsigned int  Dimension = 3;
@@ -23,6 +26,22 @@ int main( int argc, char * argv[] )
 
     reader->SetFileName( filename );
     reader->Update();
+
+    ImageType::Pointer image = ImageType::New();
+
+    ImageType::PointType physicalPoint;
+    ImageType::IndexType indexLocation;
+
+    indexLocation[0] = index0;
+    indexLocation[1] = index1;
+    indexLocation[2] = index2;
+
+    std::cout << indexLocation << std::endl;
+
+    image->TransformIndexToPhysicalPoint( indexLocation, physicalPoint );
+
+    std::cout << std::endl;
+    std::cout << physicalPoint << std::endl;
 
     return 0;
 }
