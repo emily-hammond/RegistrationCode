@@ -329,7 +329,7 @@ int N4( int argc, char *argv[] )
   return EXIT_SUCCESS;
 }
 
-int itkN4BiasFieldCorrectionImageFilterTest( int argc, char *argv[] )
+int main( int argc, char *argv[] )
 {
   if ( argc < 4 )
     {
