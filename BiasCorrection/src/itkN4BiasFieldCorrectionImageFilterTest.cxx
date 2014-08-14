@@ -22,6 +22,7 @@
 #include "itkOtsuThresholdImageFilter.h"
 #include "itkShrinkImageFilter.h"
 
+
 template<typename TFilter>
 class CommandIterationUpdate : public itk::Command
 {
@@ -66,7 +67,7 @@ public:
 
 };
 
-
+// This class is to convert values to send them to a string
 template<typename TValue>
 TValue Convert( std::string optionString )
 {
@@ -77,6 +78,7 @@ TValue Convert( std::string optionString )
   return value;
 }
 
+// This class is to convert vectors to send them to strings
 template<typename TValue>
 std::vector<TValue> ConvertVector( std::string optionString )
 {
@@ -114,26 +116,30 @@ std::vector<TValue> ConvertVector( std::string optionString )
   return values;
 }
 
+// This is the main core of the program templated over dimension
 template<unsigned int ImageDimension>
 int N4( int argc, char *argv[] )
 {
-  typedef float RealType;
+  typedef float RealType;	// deal with floating types
 
-  typedef itk::Image<RealType, ImageDimension>  ImageType;
-  typedef typename ImageType::Pointer           ImagePointer;
+  typedef itk::Image<RealType, ImageDimension>  ImageType;		// create an image type of dimension and float
+  typedef typename ImageType::Pointer           ImagePointer;	// create a pointer to the image
 
+  // read in an image specified by the command prompt
   typedef itk::ImageFileReader<ImageType> ReaderType;
   typename ReaderType::Pointer reader = ReaderType::New();
   reader->SetFileName( argv[2] );
   reader->Update();
 
+  // set the pointer to the read in image
   ImagePointer inputImage = reader->GetOutput();
   inputImage->DisconnectPipeline();
 
-  // handle the mask image
+  // handle the mask image (instantiate a new image and create a null pointer for it)
   typedef itk::Image<unsigned char, ImageDimension> MaskImageType;
   typename MaskImageType::Pointer maskImage = ITK_NULLPTR;
 
+  // if user specifies a mask image, read it in
   if( argc > 6 )
     {
     typedef itk::ImageFileReader<MaskImageType> MaskReaderType;
@@ -151,11 +157,11 @@ int N4( int argc, char *argv[] )
       }
     }
 
+  // if it is not specified, create one with thresholding
   if( !maskImage )
     {
     std::cout << "Mask not read.  Creating Otsu mask." << std::endl;
-    typedef itk::OtsuThresholdImageFilter<ImageType, MaskImageType>
-    ThresholderType;
+    typedef itk::OtsuThresholdImageFilter<ImageType, MaskImageType>  ThresholderType;
     typename ThresholderType::Pointer otsu = ThresholderType::New();
     otsu->SetInput( inputImage );
     // otsu->SetNumberOfHistogramBins( 200 );
@@ -168,8 +174,7 @@ int N4( int argc, char *argv[] )
     }
 
   // instantiate N4 and assign variables not exposed to the user in this test.
-  typedef itk::N4BiasFieldCorrectionImageFilter<ImageType, MaskImageType,
-                                                ImageType> CorrecterType;
+  typedef itk::N4BiasFieldCorrectionImageFilter<ImageType, MaskImageType, ImageType> CorrecterType;
   typename CorrecterType::Pointer correcter = CorrecterType::New();
   correcter->SetMaskLabel( 1 );
   correcter->SetSplineOrder( 3 );
@@ -216,17 +221,12 @@ int N4( int argc, char *argv[] )
 
   for( unsigned int d = 0; d < ImageDimension; d++ )
     {
-    float domain = static_cast<RealType>( inputImage->
-      GetLargestPossibleRegion().GetSize()[d] - 1 ) *
-      inputImage->GetSpacing()[d];
-    unsigned int numberOfSpans = static_cast<unsigned int>(
-      std::ceil( domain / splineDistance ) );
-    unsigned long extraPadding = static_cast<unsigned long>( ( numberOfSpans *
-      splineDistance - domain ) / inputImage->GetSpacing()[d] + 0.5 );
+    float domain = static_cast<RealType>( inputImage->GetLargestPossibleRegion().GetSize()[d] - 1 ) * inputImage->GetSpacing()[d];
+    unsigned int numberOfSpans = static_cast<unsigned int>(std::ceil( domain / splineDistance ) );
+    unsigned long extraPadding = static_cast<unsigned long>( ( numberOfSpans * splineDistance - domain ) / inputImage->GetSpacing()[d] + 0.5 );
     lowerBound[d] = static_cast<unsigned long>( 0.5 * extraPadding );
     upperBound[d] = extraPadding - lowerBound[d];
-    newOrigin[d] -= ( static_cast<RealType>( lowerBound[d] ) *
-                      inputImage->GetSpacing()[d] );
+    newOrigin[d] -= ( static_cast<RealType>( lowerBound[d] ) * inputImage->GetSpacing()[d] );
     numberOfControlPoints[d] = numberOfSpans + correcter->GetSplineOrder();
     }
 
@@ -241,8 +241,7 @@ int N4( int argc, char *argv[] )
   inputImage = padder->GetOutput();
   inputImage->DisconnectPipeline();
 
-  typedef itk::ConstantPadImageFilter<MaskImageType, MaskImageType>
-  MaskPadderType;
+  typedef itk::ConstantPadImageFilter<MaskImageType, MaskImageType>  MaskPadderType;
   typename MaskPadderType::Pointer maskPadder = MaskPadderType::New();
   maskPadder->SetInput( maskImage );
   maskPadder->SetPadLowerBound( lowerBound );
@@ -304,9 +303,7 @@ int N4( int argc, char *argv[] )
   // Test the reconstruction of the log bias field
   ImagePointer originalInputImage = reader->GetOutput();
   reader->UpdateOutputInformation();
-  typedef itk::BSplineControlPointImageFilter
-  <typename CorrecterType::BiasFieldControlPointLatticeType, typename
-   CorrecterType::ScalarImageType> BSplinerType;
+  typedef itk::BSplineControlPointImageFilter<typename CorrecterType::BiasFieldControlPointLatticeType, typename CorrecterType::ScalarImageType> BSplinerType;
   typename BSplinerType::Pointer bspliner = BSplinerType::New();
   bspliner->SetInput( correcter->GetLogBiasFieldControlPointLattice() );
   bspliner->SetSplineOrder( correcter->GetSplineOrder() );
@@ -319,12 +316,18 @@ int N4( int argc, char *argv[] )
 
 
   // output the log bias field control point lattice
-  typedef itk::ImageFileWriter<
-    typename CorrecterType::BiasFieldControlPointLatticeType> WriterType;
+  typedef itk::ImageFileWriter<typename CorrecterType::BiasFieldControlPointLatticeType> WriterType;
   typename WriterType::Pointer writer = WriterType::New();
-  writer->SetFileName( argv[3] );
+  writer->SetFileName( "BiasField.nii.gz" );
   writer->SetInput( correcter->GetLogBiasFieldControlPointLattice() );
   writer->Update();
+  
+  // output the corrected image
+  typedef itk::ImageFileWriter<ImageType> WriteCorrectedImageType;
+  typename WriteCorrectedImageType::Pointer writeCorrected = WriteCorrectedImageType::New();
+  writeCorrected->SetFileName( argv[3] );
+  writeCorrected->SetInput( correcter->GetOutput() );
+  writeCorrected->Update();
 
   return EXIT_SUCCESS;
 }
@@ -334,7 +337,7 @@ int main( int argc, char *argv[] )
   if ( argc < 4 )
     {
     std::cerr << "Usage: " << argv[0] << " imageDimension inputImage "
-              << "outputLogControlPointLattice [shrinkFactor,default=1] "
+              << "outputImage [shrinkFactor,default=1] "
               << "[numberOfIterations,default=100x50x50] "
               << " [maskImageWithLabelEqualTo1] [splineDistance,default=200]"
               << std::endl;
