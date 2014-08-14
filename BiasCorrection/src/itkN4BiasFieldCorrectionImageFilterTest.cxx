@@ -21,6 +21,7 @@
 #include "itkN4BiasFieldCorrectionImageFilter.h"
 #include "itkOtsuThresholdImageFilter.h"
 #include "itkShrinkImageFilter.h"
+#include "itkCastImageFilter.h"
 
 
 template<typename TFilter>
@@ -322,11 +323,17 @@ int N4( int argc, char *argv[] )
   writer->SetInput( correcter->GetLogBiasFieldControlPointLattice() );
   writer->Update();
   
+  // cast the final image to an unsigned char
+  typedef itk::Image<unsigned char, ImageDimension> CharImageType;
+  typedef itk::CastImageFilter<ImageType, CharImageType> CasterType;
+  typename CasterType::Pointer caster = CasterType::New();
+  caster->SetInput( correcter->GetOutput() );
+
   // output the corrected image
-  typedef itk::ImageFileWriter<ImageType> WriteCorrectedImageType;
+  typedef itk::ImageFileWriter<CharImageType> WriteCorrectedImageType;
   typename WriteCorrectedImageType::Pointer writeCorrected = WriteCorrectedImageType::New();
   writeCorrected->SetFileName( argv[3] );
-  writeCorrected->SetInput( correcter->GetOutput() );
+  writeCorrected->SetInput( caster->GetOutput() );
   writeCorrected->Update();
 
   return EXIT_SUCCESS;
