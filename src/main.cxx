@@ -11,6 +11,10 @@
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 
+#include <itksys/SystemTools.hxx>
+#include <fstream>
+#include <string>
+
 // Write a function to read in images templated over dimension and pixel type
 template<typename ImageType>
 typename ImageType::Pointer ReadInImage( const char * ImageFilename )
@@ -37,7 +41,7 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 
 // Write a function to write out images
 template<typename ImageType>
-int WriteOutImage( const char * ImageFilename,  )
+int WriteOutImage( const char * ImageFilename )
 {
 	typedef itk::ImageFileWriter<ImageType>		WriterType;
 	typename WriterType::Pointer writer = WriterType::New();
@@ -59,16 +63,80 @@ int WriteOutImage( const char * ImageFilename,  )
 	return EXIT_SUCCESS;
 }
 
+// Write a function to read in the fiducials (from Slicer) for each image
+template<typename PointType, typename LandmarksType>
+typename LandmarksType ReadFiducial( const char * fiducialFilename )
+{
+	// open file
+	std::ifstream myfile( fiducialFilename );
+	LandmarksType landmarks;
+	
+	// read in lines from file
+	std::string line;
+	while( getline( myfile, line ) )
+	{
+		if( line.compare( 0, 1, "#" ) != 0 ) // skip lines starting with #
+		{
+			// determine where the first coordinate lives
+			size_t pos1 = line.find( ',', 0 );
+			PointType	pointPos;
+
+			// grab the coordinates from the string
+			for( unsigned int i = 0; i < 3; ++i )
+			{
+				const size_t pos2 = line.find( ',', pos1+1 );
+				pointPos[i] = atof( line.substr( pos1+1, pos2-pos1-1 ).c_str() );
+				if( i < 2 ) // negate first two components for RAS->LPS
+				{
+					pointPos[i] *= -1;
+				}
+				pos1 = pos2;
+			}
+			
+			// determine what label/location the coordinates are from
+			if( line.find( "Corina" ) )
+			{
+				landmarks["Corina"] = pointPos;
+			}
+			else if( line.find( "Aorta" ) )
+			{
+				landmarks["Aorta"] = pointPos;
+			}
+			else if( line.find( "BaseOfHeart" ) )
+			{
+				landmarks["BaseOfHeart"] = pointPos;
+			}
+			else
+			{
+				std::cerr << "Reassign labels to fiducials." << std::endl;
+				std::cerr << "   Acceptable labels: Carina, Aorta, BaseOfHeart" << std::endl;
+			}
+		}
+	}
+
+	return landmarks;
+}
+
+// print out the landmarks
+void printLandmarks( LandmarksType landmarks )
+{
+	return;
+}
+
 int main( int argc, char * argv[] )
 {
 	// create specified image types to be used
 	typedef itk::Image<float, 3>			FloatImageType;
 	typedef itk::Image<unsigned char, 3>	CharImageType;
+	typedef std::map<std::string, FloatImageType::PointType> LandmarksType;
+
 
 	// take in arguments
-	char * InputFilename = argv[1];
-	char * OutputFilename = argv[2];
+	//char * InputFilename = argv[1];
+	//char * OutputFilename = argv[2];
+	char * FiducialFilename = argv[1];
 
+	/*
 	// read in the image
 	FloatImageType::Pointer inputImage = ReadInImage<FloatImageType>( InputFilename );
 	std::cout << "Image has been read in." << std::endl;
@@ -76,6 +144,10 @@ int main( int argc, char * argv[] )
 	// write out image
 	WriteOutImage<CharImageType>( OutputFilename );
 	std::cout << "Image has been written." << std::endl;
+	*/
+
+	// read in fiducials
+	LandmarksType landmarks = ReadFiducial<FloatImageType::PointType,LandmarksType>( FiducialFilename );
 
     return EXIT_SUCCESS;
 }
