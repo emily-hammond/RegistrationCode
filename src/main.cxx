@@ -94,15 +94,15 @@ typename LandmarksType ReadFiducial( const char * fiducialFilename )
 			}
 			
 			// determine what label/location the coordinates are from
-			if( line.find( "Corina" ) )
+			if( line.find( "Carina" ) != -1 )
 			{
-				landmarks["Corina"] = pointPos;
+				landmarks["Carina"] = pointPos;
 			}
-			else if( line.find( "Aorta" ) )
+			else if( line.find( "Aorta" ) != -1 )
 			{
 				landmarks["Aorta"] = pointPos;
 			}
-			else if( line.find( "BaseOfHeart" ) )
+			else if( line.find( "BaseOfHeart" ) != -1 )
 			{
 				landmarks["BaseOfHeart"] = pointPos;
 			}
@@ -113,14 +113,20 @@ typename LandmarksType ReadFiducial( const char * fiducialFilename )
 			}
 		}
 	}
-
 	return landmarks;
 }
 
-// print out the landmarks
-void printLandmarks( LandmarksType landmarks )
+template< typename LandmarksType >
+int printFiducials( LandmarksType landmarks )
 {
-	return;
+	// iterate through the landmarks and print out the contents
+	LandmarksType::const_iterator it = landmarks.begin();
+	for(; it!=landmarks.end(); it++)
+	{
+		std::cout << it->first << " " << it->second << std::endl;
+	}
+
+	return EXIT_SUCCESS;
 }
 
 int main( int argc, char * argv[] )
@@ -136,11 +142,11 @@ int main( int argc, char * argv[] )
 	//char * OutputFilename = argv[2];
 	char * FiducialFilename = argv[1];
 
-	/*
 	// read in the image
 	FloatImageType::Pointer inputImage = ReadInImage<FloatImageType>( InputFilename );
 	std::cout << "Image has been read in." << std::endl;
 
+	/*
 	// write out image
 	WriteOutImage<CharImageType>( OutputFilename );
 	std::cout << "Image has been written." << std::endl;
@@ -148,6 +154,7 @@ int main( int argc, char * argv[] )
 
 	// read in fiducials
 	LandmarksType landmarks = ReadFiducial<FloatImageType::PointType,LandmarksType>( FiducialFilename );
+	printFiducials<LandmarksType>(landmarks);
 
     return EXIT_SUCCESS;
 }
