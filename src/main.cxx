@@ -41,16 +41,18 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 
 // Write a function to write out images
 template<typename ImageType>
-int WriteOutImage( const char * ImageFilename )
+int WriteOutImage( const char * ImageFilename, typename ImageType::Pointer image )
 {
 	typedef itk::ImageFileWriter<ImageType>		WriterType;
 	typename WriterType::Pointer writer = WriterType::New();
 	writer->SetFileName( ImageFilename );
+	writer->SetInput( image );
 
 	// update the writer
 	try
 	{
 		writer->Update();
+		std::cout << "Image has been written." << std::endl;
 	}
 	catch(itk::ExceptionObject & err)
 	{
@@ -138,23 +140,36 @@ int main( int argc, char * argv[] )
 
 
 	// take in arguments
-	//char * InputFilename = argv[1];
-	//char * OutputFilename = argv[2];
-	char * FiducialFilename = argv[1];
+	char * InputFilename = argv[1];
+	char * OutputFilename = argv[2];
+	char * FiducialFilename = argv[3];
 
 	// read in the image
 	FloatImageType::Pointer inputImage = ReadInImage<FloatImageType>( InputFilename );
 	std::cout << "Image has been read in." << std::endl;
 
-	/*
-	// write out image
-	WriteOutImage<CharImageType>( OutputFilename );
-	std::cout << "Image has been written." << std::endl;
-	*/
-
 	// read in fiducials
 	LandmarksType landmarks = ReadFiducial<FloatImageType::PointType,LandmarksType>( FiducialFilename );
 	printFiducials<LandmarksType>(landmarks);
+
+	// convert points to index and draw on the image
+	FloatImageType::IndexType carina;
+	FloatImageType::IndexType aorta;
+	FloatImageType::IndexType baseofheart;
+
+	inputImage->TransformPhysicalPointToIndex(landmarks["Carina"], carina);
+	inputImage->TransformPhysicalPointToIndex(landmarks["Aorta"],aorta);
+	inputImage->TransformPhysicalPointToIndex(landmarks["BaseOfHeart"],baseofheart);
+
+	inputImage->SetPixel(carina, 2000);
+	inputImage->SetPixel(aorta, 2000);
+	inputImage->SetPixel(baseofheart, 2000);
+
+	std::cout << "Fiducials Marked!" << std::endl;
+
+	// write out image
+	WriteOutImage<FloatImageType>( OutputFilename, inputImage );
+	std::cout << "Image has been written." << std::endl;
 
     return EXIT_SUCCESS;
 }
