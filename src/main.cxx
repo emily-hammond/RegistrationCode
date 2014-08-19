@@ -3,13 +3,15 @@
  * 8/15/2014
  *
  * Goals with this code
- 1. Write functions that read in images, csv files and txt files
+ 1. Write functions that read/write images and fiducial files from slicer
+ 2. 
  *
  */
 
 #include "itkImage.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
+#include "itkCastImageFilter.h"
 
 #include <itksys/SystemTools.hxx>
 #include <fstream>
@@ -40,19 +42,22 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 }
 
 // Write a function to write out images
-template<typename ImageType>
-int WriteOutImage( const char * ImageFilename, typename ImageType::Pointer image )
+template<typename inputImageType, typename outputImageType>
+int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer image )
 {
-	typedef itk::ImageFileWriter<ImageType>		WriterType;
+	typedef itk::CastImageFilter<inputImageType, outputImageType> CastFilterType;
+	typename CastFilterType::Pointer caster = CastFilterType::New();
+	caster->SetInput( image );
+
+	typedef itk::ImageFileWriter<outputImageType> WriterType;
 	typename WriterType::Pointer writer = WriterType::New();
 	writer->SetFileName( ImageFilename );
-	writer->SetInput( image );
+	writer->SetInput( caster->GetOutput() );
 
 	// update the writer
 	try
 	{
 		writer->Update();
-		std::cout << "Image has been written." << std::endl;
 	}
 	catch(itk::ExceptionObject & err)
 	{
@@ -138,7 +143,6 @@ int main( int argc, char * argv[] )
 	typedef itk::Image<unsigned char, 3>	CharImageType;
 	typedef std::map<std::string, FloatImageType::PointType> LandmarksType;
 
-
 	// take in arguments
 	char * InputFilename = argv[1];
 	char * OutputFilename = argv[2];
@@ -168,7 +172,7 @@ int main( int argc, char * argv[] )
 	std::cout << "Fiducials Marked!" << std::endl;
 
 	// write out image
-	WriteOutImage<FloatImageType>( OutputFilename, inputImage );
+	WriteOutImage<FloatImageType,FloatImageType>( OutputFilename, inputImage );
 	std::cout << "Image has been written." << std::endl;
 
     return EXIT_SUCCESS;
