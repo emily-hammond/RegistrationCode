@@ -123,6 +123,7 @@ typename LandmarksType ReadFiducial( const char * fiducialFilename )
 	return landmarks;
 }
 
+// write function to print out fiducials
 template< typename LandmarksType >
 int printFiducials( LandmarksType landmarks )
 {
