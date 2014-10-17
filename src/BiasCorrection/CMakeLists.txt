@@ -1,16 +1,8 @@
-# This is the root ITK CMakeLists file.
-cmake_minimum_required(VERSION 2.4)
-if(COMMAND CMAKE_POLICY)
-  cmake_policy(SET CMP0003 NEW)
-endif()
+set(BiasCorrection_SRC itkN4BiasFieldCorrectionImageFilterTest.cxx)
 
-# This project is designed to be built outside the Insight source tree.
-project(BiasCorrection)
+add_library(BiasCorrectionLib SHARED ${BiasCorrection_SRC})
+set_target_properties(BiasCorrectionLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint")
+target_link_libraries(BiasCorrectionLib ${ITK_LIBRARIES})
 
-# Find ITK.
-find_package(ITK REQUIRED)
-include(${ITK_USE_FILE})
-
-add_executable(BiasCorrection itkN4BiasFieldCorrectionImageFilterTest.cxx )
-
+add_executable(BiasCorrection ${BiasCorrection_SRC})
 target_link_libraries(BiasCorrection ${ITK_LIBRARIES})

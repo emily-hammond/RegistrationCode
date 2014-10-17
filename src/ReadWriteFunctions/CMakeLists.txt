@@ -1,10 +1,8 @@
-cmake_minimum_required(VERSION 2.8)
-project (Code)
+set(ReadWriteFunctions_SRC ReadWriteFunctions.cxx)
 
-find_package(ITK REQUIRED)
-include(${ITK_USE_FILE})
+add_library(ReadWriteFunctionsLib SHARED ${ReadWriteFunctions_SRC})
+set_target_properties(ReadWriteFunctionsLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint")
+target_link_libraries(ReadWriteFunctionsLib ${ITK_LIBRARIES})
 
-add_executable(main main.cxx)
-
-target_link_libraries(main ${ITK_LIBRARIES})
-
+add_executable(ReadWriteFunctions ${ReadWriteFunctions_SRC})
+target_link_libraries(ReadWriteFunctions ${ITK_LIBRARIES})

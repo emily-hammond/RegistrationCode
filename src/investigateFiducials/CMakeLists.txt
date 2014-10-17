@@ -1,10 +1,8 @@
-cmake_minimum_required(VERSION 2.8)
-project (FiducialCode)
+set(investigateFiducials_SRC investigateFiducials.cxx)
 
-find_package(ITK REQUIRED)
-include(${ITK_USE_FILE})
+add_library(investigateFiducialsLib SHARED ${investigateFiducials_SRC})
+set_target_properties(investigateFiducialsLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint")
+target_link_libraries(investigateFiducialsLib ${ITK_LIBRARIES})
 
-add_executable(investigateFiducials.exe investigateFiducials.cxx)
-
-target_link_libraries(investigateFiducials.exe ${ITK_LIBRARIES})
-
+add_executable(investigateFiducials ${investigateFiducials_SRC})
+target_link_libraries(investigateFiducials ${ITK_LIBRARIES})
