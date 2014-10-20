@@ -22,6 +22,8 @@
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 #include "itkCastImageFilter.h"
+#include "itkTransformFileReader.h"
+#include "itkTransformFileWriter.h"
 
 #include <itksys/SystemTools.hxx>
 #include <fstream>
@@ -140,13 +142,50 @@ typename LandmarksType ReadFiducial( const char * fiducialFilename )
 }
 
 
+
+// Write a function to write out a transform
+template<typename TransformType>
+int WriteOutTransform( const char * transformFilename, TransformType transform )
+{
+	typedef itk::TransformFileWriterTemplate< double > TransformWriterType;
+	TransformWriterType::Pointer writer = TransformWriterType::New();
+	writer->SetInput( transform );
+	writer->SetFileName( transformFilename );
+
+	// update the writer
+	try
+	{
+		writer->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
+	
+	// return output
+	return EXIT_SUCCESS;
+}
+
 /*************************************************************************
  * Main function to perform/test functionality
  *************************************************************************/
 int main(int argc, char * argv[])
 {
 	// list desired inputs
+	const char * fixedImageFilename = argv[1];
+	const char * movingImageFilename = argv[2];
+	const char * outputDirectory = argv[3];
+	const char * outputFileFormat = argv[4];
 
+	// list desired outputs
+	const char * rigidResult = outputDirectory + "\rigidResult." + outputFileFormat;
+	const char * rigidTransform = outputDirectory + "\rigidTransformParameters.txt";
+	const char * deformableResult = outputDirectory + "\deformableResult." + outputFileFormat;
+	const char * deformableTransform = outputDirectory + "\deformableTransformParameters.txt";
+	const char * deformation = outputDirectory + "deformation." + outputFileFormat;
+	const char * jacobianMap = outputDirectory + "jacobianMap." + outputFileFormat;
 
 	return EXIT_SUCCESS;
 }
