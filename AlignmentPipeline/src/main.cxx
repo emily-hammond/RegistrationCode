@@ -10,6 +10,21 @@
  *			Outputs: transformed moving image, final transform parameters, 
  *					 deformation image, jacobian map			
  *	2. Read and write functions pulled from RegistrationCode/src/ReadWriteFunctions
+ *	3. Flow of program
+ *		- Read in desired images
+ *		- (Perform desired preprocessing steps)
+ *		- Perform initial alignment
+ *			CenteredTransformInitializer by geometry
+ *		- Perform rigid registration
+ *			Components: VersorRigid3DTransform, VersorRigid3DOptimizer, 
+ *						MattesMutualInformation, LinearInterpolator
+ *		- Give option for affine registration
+ *			Components: AffineTransform, ConjugateGradientLineSearchOptimizerv4, 
+ *						MattesMutualInformation, LinearInterpolator
+ *		- Give option for bspline registration
+ *			Components: BSplineTransform, ConjugateGradientLineSearchOptimizerv4, 
+ *						MattesMutualInformation, LinearInterpolator
+ *		- Write out all the desired files
  *
  */
 
@@ -176,8 +191,10 @@ int main(int argc, char * argv[])
 	// list desired inputs
 	const char * fixedImageFilename = argv[1];
 	const char * movingImageFilename = argv[2];
-	const char * outputDirectory = argv[3];
-	const char * outputFileFormat = argv[4];
+	const char * fixedFiducialList = argv[3];
+	const char * movingFiducialList = argv[4];
+	const char * outputDirectory = argv[5];
+	const char * outputFileFormat = argv[5];
 
 	// list desired outputs
 	const char * rigidResult = outputDirectory + "\rigidResult." + outputFileFormat;
@@ -186,6 +203,18 @@ int main(int argc, char * argv[])
 	const char * deformableTransform = outputDirectory + "\deformableTransformParameters.txt";
 	const char * deformation = outputDirectory + "deformation." + outputFileFormat;
 	const char * jacobianMap = outputDirectory + "jacobianMap." + outputFileFormat;
+
+	// read in necessary files
+	const unsigned int	Dimension = 3;
+	typedef short		PixelType;
+
+	typedef itk::Image<PixelType, Dimension>	FixedImageType;
+	typedef itk::Image<PixelType, Dimension>	MovingImageType;
+
+	FixedImageType::Pointer fixedImage = ReadInImage<FixedImageType>(fixedImageFilename);
+	MovingImageType::Pointer movingImage = ReadInImage<MovingImageType>(movingImageFilename);
+
+	// set up registration
 
 	return EXIT_SUCCESS;
 }
