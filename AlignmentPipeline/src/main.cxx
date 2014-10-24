@@ -40,6 +40,18 @@
 #include "itkTransformFileReader.h"
 #include "itkTransformFileWriter.h"
 
+// initialization
+#include "itkCenteredTransformInitializer.h"
+
+// creating histogram
+#include "itkImageToHistogramFilter.h"
+#include "itkMinimumMaximumImageCalculator.h"
+
+// rigid registration
+#include "itkVersorRigid3DTransform.h"
+#include "itkMattesMutualInformationImageToImageMetricv4.h"
+
+// additional C++ libraries
 #include <itksys/SystemTools.hxx>
 #include <fstream>
 #include <string>
@@ -160,7 +172,7 @@ typename LandmarksType ReadFiducial( const char * fiducialFilename )
 
 // Write a function to write out a transform
 template<typename TransformType>
-int WriteOutTransform( const char * transformFilename, TransformType transform )
+int WriteOutTransform( const char * transformFilename, typename TransformType::Pointer transform )
 {
 	typedef itk::TransformFileWriterTemplate< double > TransformWriterType;
 	TransformWriterType::Pointer writer = TransformWriterType::New();
@@ -183,38 +195,121 @@ int WriteOutTransform( const char * transformFilename, TransformType transform )
 	return EXIT_SUCCESS;
 }
 
+// Write function to output the histogram
+template<typename ImageType>
+int CreateHistogram(typename ImageType::Pointer image)
+{
+	// plot the histogram based on the number of bins
+	typedef itk::Statistics::ImageToHistogramFilter< typename ImageType >	HistogramFilterType;
+	HistogramFilterType::Pointer histogramFilter = HistogramFilterType::New();
+
+	typedef itk::MinimumMaximumImageCalculator< ImageType >	MinMaxCalculatorType;
+	MinMaxCalculatorType::Pointer minMaxCalc = MinMaxCalculatorType::New();
+
+	minMaxCalc->SetImage( image );
+	minMaxCalc->Compute();
+	ImageType::PixelType min = minMaxCalc->GetMinimum();
+	ImageType::PixelType max = minMaxCalc->GetMaximum();
+	HistogramFilterType::HistogramSizeType bins;
+	bins[0] = (max - min)/10.0;
+
+	histogramFilter->SetHistogramSize( bins );
+	histogramFilter->SetMarginalScale( 10.0 );
+	//histogramFilter->SetHistogramBinMinimum( 0.0 );
+	//histogramFilter->SetHistogramBinMaximum( 1000000 );
+
+	histogramFilter->SetInput( image );
+	histogramFilter->Update();
+
+	typedef HistogramFilterType::HistogramType	HistogramType;
+	const HistogramType * histogram = histogramFilter->GetOutput();
+
+	std::ofstream histogramFile;
+	histogramFile.open( "histogram.txt" );
+
+	HistogramType::ConstIterator histItr = histogram->Begin();
+	HistogramType::ConstIterator histEnd = histogram->End();
+
+	typedef HistogramType::AbsoluteFrequencyType	AbsoluteFrequencyType;
+	while( histItr != histEnd )
+	{
+		const AbsoluteFrequencyType frequency = histItr.GetFrequency();
+		histogramFile.write( (const char *)(&frequency), sizeof(frequency) );
+		if( frequency != 0)
+		{
+			HistogramType::IndexType index;
+			index = histogram->GetIndex(histItr.GetInstanceIdentifier());
+			std::cout << "Index = " << index << ", Frequency = " << frequency << std::endl;
+		}
+		++histItr;
+	}
+
+	histogramFile.close();
+
+	return EXIT_SUCCESS;
+}
+
+// write function to output the histogram
+
 /*************************************************************************
  * Main function to perform/test functionality
  *************************************************************************/
 int main(int argc, char * argv[])
 {
+	
 	// list desired inputs
 	const char * fixedImageFilename = argv[1];
 	const char * movingImageFilename = argv[2];
-	const char * fixedFiducialList = argv[3];
-	const char * movingFiducialList = argv[4];
-	const char * outputDirectory = argv[5];
-	const char * outputFileFormat = argv[5];
+	//const char * fixedFiducialList = argv[3];
+	//const char * movingFiducialList = argv[4];
+	std::string outputDirectory = argv[5];
+	std::string outputFileFormat = argv[5];
+	const char * transformFilename = "initializedRigidTransform.txt";
 
 	// list desired outputs
-	const char * rigidResult = outputDirectory + "\rigidResult." + outputFileFormat;
-	const char * rigidTransform = outputDirectory + "\rigidTransformParameters.txt";
-	const char * deformableResult = outputDirectory + "\deformableResult." + outputFileFormat;
-	const char * deformableTransform = outputDirectory + "\deformableTransformParameters.txt";
-	const char * deformation = outputDirectory + "deformation." + outputFileFormat;
-	const char * jacobianMap = outputDirectory + "jacobianMap." + outputFileFormat;
+	std::string rigidResultFilename = outputDirectory + "\rigidResult." + outputFileFormat;
+	std::string rigidTransformFilename = outputDirectory + "\rigidTransformParameters.txt";
+	std::string deformableResultFilename = outputDirectory + "\deformableResult." + outputFileFormat;
+	std::string deformableTransformFilename = outputDirectory + "\deformableTransformParameters.txt";
+	std::string deformationFilename = outputDirectory + "deformation." + outputFileFormat;
+	std::string jacobianMapFilename = outputDirectory + "jacobianMap." + outputFileFormat;
 
 	// read in necessary files
 	const unsigned int	Dimension = 3;
 	typedef short		PixelType;
 
-	typedef itk::Image<PixelType, Dimension>	FixedImageType;
-	typedef itk::Image<PixelType, Dimension>	MovingImageType;
+	typedef itk::Image< PixelType, Dimension >	FixedImageType;
+	typedef itk::Image< PixelType, Dimension >	MovingImageType;
 
 	FixedImageType::Pointer fixedImage = ReadInImage<FixedImageType>(fixedImageFilename);
 	MovingImageType::Pointer movingImage = ReadInImage<MovingImageType>(movingImageFilename);
 
-	// set up registration
+	// insert preprocessing steps
+	//	- inhomogeneity correction
+	//  - generation of mask files
+	//  - etc.
+
+	// set up rigid transform with initialization
+	typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
+	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
+
+	typedef itk::CenteredTransformInitializer< RigidTransformType, FixedImageType, MovingImageType >	InitializerType;
+	InitializerType::Pointer initializer = InitializerType::New();
+	
+	initializer->SetTransform( rigidTransform );
+	initializer->SetFixedImage( fixedImage );
+	initializer->SetMovingImage( movingImage );
+	initializer->GeometryOn();
+	initializer->InitializeTransform();
+
+	// write out transform after initialization
+	//WriteOutTransform< RigidTransformType >( transformFilename , rigidTransform );
+
+	// set up the metric
+	//typedef itk::MattesMutualInformationImageToImageMetricv4< FixedImageType, MovingImageType >	MetricType;
+	//MetricType::Pointer metric = MetricType::New();
+
+	CreateHistogram< MovingImageType >( movingImage );
 
 	return EXIT_SUCCESS;
 }
