@@ -8,7 +8,7 @@
  *	1. Create a set up for the desired inputs and outputs
  *			Inputs: fixed image, moving image, output directory name
  *			Outputs: transformed moving image, final transform parameters, 
- *					 deformation image, jacobian map			
+ *					 deformation image, jacobian map, histogram images		
  *	2. Read and write functions pulled from RegistrationCode/src/ReadWriteFunctions
  *	3. Flow of program
  *		- Read in desired images
@@ -81,6 +81,7 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 	}
 	
 	// return output
+	std::cout << ImageFilename << " has been read in!" << std::endl;
 	return reader->GetOutput();
 }
 
@@ -111,6 +112,7 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 	}
 	
 	// return output
+	std::cout << ImageFilename << " has been written. " << std::endl;
 	return EXIT_SUCCESS;
 }
 
@@ -165,6 +167,8 @@ typename LandmarksType ReadFiducial( const char * fiducialFilename )
 			}
 		}
 	}
+
+	std::cout << fiducialFilename << " has been successfully read in." << std::endl;
 	return landmarks;
 }
 
@@ -192,17 +196,26 @@ int WriteOutTransform( const char * transformFilename, typename TransformType::P
 	}
 	
 	// return output
+	std::cout << transformFilename << " has successfully been created." << std::endl;
 	return EXIT_SUCCESS;
 }
 
 // Write function to output the histogram
 template<typename ImageType>
-int CreateHistogram(typename ImageType::Pointer image)
+int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer image, const int bins )
 {
+	// check to make sure bins in >0
+	if (bins < 1)
+	{
+		std::cout << "Invalid value for bins" << std::endl;
+		return EXIT_FAILURE;
+	}
+
 	// plot the histogram based on the number of bins
 	typedef itk::Statistics::ImageToHistogramFilter< typename ImageType >	HistogramFilterType;
 	HistogramFilterType::Pointer histogramFilter = HistogramFilterType::New();
 
+	// determine what the minimum and maximum values of the image are
 	typedef itk::MinimumMaximumImageCalculator< ImageType >	MinMaxCalculatorType;
 	MinMaxCalculatorType::Pointer minMaxCalc = MinMaxCalculatorType::New();
 
@@ -210,23 +223,37 @@ int CreateHistogram(typename ImageType::Pointer image)
 	minMaxCalc->Compute();
 	ImageType::PixelType min = minMaxCalc->GetMinimum();
 	ImageType::PixelType max = minMaxCalc->GetMaximum();
-	HistogramFilterType::HistogramSizeType bins;
-	bins[0] = (max - min)/10.0;
 
-	histogramFilter->SetHistogramSize( bins );
+	// calculate the desired number of bins
+	typedef HistogramFilterType::HistogramSizeType SizeType;
+	SizeType size(1);
+	size[0] = (max - min)/bins;
+
+	histogramFilter->SetHistogramSize( size );
 	histogramFilter->SetMarginalScale( 10.0 );
-	//histogramFilter->SetHistogramBinMinimum( 0.0 );
-	//histogramFilter->SetHistogramBinMaximum( 1000000 );
 
+	// set bin min and max values (taken from example)
+	typedef HistogramFilterType::HistogramMeasurementVectorType    HistogramMeasurementVectorType;
+	HistogramMeasurementVectorType binMinimum(1);
+	HistogramMeasurementVectorType binMaximum(1);
+	binMinimum[0] = -0.5;
+	binMaximum[0] = 255.5;
+
+	histogramFilter->SetHistogramBinMinimum( binMinimum );
+	histogramFilter->SetHistogramBinMaximum( binMaximum );
+
+	// create the histogram
 	histogramFilter->SetInput( image );
 	histogramFilter->Update();
 
 	typedef HistogramFilterType::HistogramType	HistogramType;
 	const HistogramType * histogram = histogramFilter->GetOutput();
 
+	// write the values out to a file
 	std::ofstream histogramFile;
-	histogramFile.open( "histogram.txt" );
+	histogramFile.open( histogramFilename );
 
+	// create iterators
 	HistogramType::ConstIterator histItr = histogram->Begin();
 	HistogramType::ConstIterator histEnd = histogram->End();
 
@@ -234,18 +261,17 @@ int CreateHistogram(typename ImageType::Pointer image)
 	while( histItr != histEnd )
 	{
 		const AbsoluteFrequencyType frequency = histItr.GetFrequency();
-		histogramFile.write( (const char *)(&frequency), sizeof(frequency) );
-		if( frequency != 0)
-		{
-			HistogramType::IndexType index;
-			index = histogram->GetIndex(histItr.GetInstanceIdentifier());
-			std::cout << "Index = " << index << ", Frequency = " << frequency << std::endl;
-		}
+
+		HistogramType::IndexType index;
+		index = histogram->GetIndex(histItr.GetInstanceIdentifier());
+		histogramFile << index << "," << frequency << std::endl;
+
 		++histItr;
 	}
 
 	histogramFile.close();
 
+	std::cout << histogramFilename << " has been successfully created and written to file." << std::endl;
 	return EXIT_SUCCESS;
 }
 
@@ -262,17 +288,19 @@ int main(int argc, char * argv[])
 	const char * movingImageFilename = argv[2];
 	//const char * fixedFiducialList = argv[3];
 	//const char * movingFiducialList = argv[4];
-	std::string outputDirectory = argv[5];
-	std::string outputFileFormat = argv[5];
-	const char * transformFilename = "initializedRigidTransform.txt";
+	std::string outputDirectory = argv[3];
+	std::string outputFileFormat = ".mhd";
+	const int bins = atoi(argv[4]);
 
 	// list desired outputs
-	std::string rigidResultFilename = outputDirectory + "\rigidResult." + outputFileFormat;
-	std::string rigidTransformFilename = outputDirectory + "\rigidTransformParameters.txt";
-	std::string deformableResultFilename = outputDirectory + "\deformableResult." + outputFileFormat;
-	std::string deformableTransformFilename = outputDirectory + "\deformableTransformParameters.txt";
-	std::string deformationFilename = outputDirectory + "deformation." + outputFileFormat;
-	std::string jacobianMapFilename = outputDirectory + "jacobianMap." + outputFileFormat;
+	std::string rigidResultFilename = outputDirectory + "\\rigidResult." + outputFileFormat;
+	std::string rigidTransformFilename = outputDirectory + "\\rigidTransformParameters.txt";
+	std::string deformableResultFilename = outputDirectory + "\\deformableResult." + outputFileFormat;
+	std::string deformableTransformFilename = outputDirectory + "\\deformableTransformParameters.txt";
+	std::string deformationFilename = outputDirectory + "\\deformation." + outputFileFormat;
+	std::string jacobianMapFilename = outputDirectory + "\\jacobianMap." + outputFileFormat;
+	std::string movingHistogramFilename = outputDirectory + "\\movingHistogram.txt";
+	std::string fixedHistogramFilename = outputDirectory + "\\fixedHistogram.txt";
 
 	// read in necessary files
 	const unsigned int	Dimension = 3;
@@ -303,13 +331,14 @@ int main(int argc, char * argv[])
 	initializer->InitializeTransform();
 
 	// write out transform after initialization
-	//WriteOutTransform< RigidTransformType >( transformFilename , rigidTransform );
+	WriteOutTransform< RigidTransformType >( rigidTransformFilename.c_str() , rigidTransform );
 
 	// set up the metric
 	//typedef itk::MattesMutualInformationImageToImageMetricv4< FixedImageType, MovingImageType >	MetricType;
 	//MetricType::Pointer metric = MetricType::New();
 
-	CreateHistogram< MovingImageType >( movingImage );
+	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, bins );
+	CreateHistogram< FixedImageType >( fixedHistogramFilename.c_str(), fixedImage, bins );
 
 	return EXIT_SUCCESS;
 }
