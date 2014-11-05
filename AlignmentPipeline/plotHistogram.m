@@ -19,7 +19,8 @@
 %
 
 function plotHistogram(InputFilename, OutputFilename)
-[path,name,ext] = fileparts(InputFilename);
+[path,name1,ext] = fileparts(InputFilename);
+[path,name2,ext] = fileparts(OutputFilename);
 
 % read in file
 histFile = fopen(InputFilename,'r');
@@ -56,7 +57,7 @@ fig = bar(bins,normFrequency,'hist');
 axis('tight');
 hX = xlabel('Bins');
 hY = ylabel('Frequency');
-message = sprintf('Normalized Histogram Plot of %s with %d bins',name,numel(bins));
+message = sprintf('Normalized Histogram Plot of %s with %d bins',name1,numel(bins));
 hTitle = title(message);
 set(hTitle,'FontSize', 12, ...
     'FontWeight', 'bold');
@@ -71,10 +72,11 @@ set(gca,'FontSize',8,...
 set(gcf, 'PaperPositionMode','auto');
 
 % save the figure to the proper file
+OutputFilename = sprintf('%s\\%s%d%s',path,name2,numel(bins),ext);
 saveas(fig, OutputFilename);
 
 % close the fileS
 fclose(histFile);
 
 % close out of matlab
-exit
+% exit

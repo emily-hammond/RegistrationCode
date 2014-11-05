@@ -10,7 +10,7 @@ mkdir H:\RegistrationResults\2014.11\Output_1
 
 :: run the registration file :)
 cd C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\AlignmentPipeline\bld\Release
-main.exe H:\RegistrationResults\2014.11\Input\J3_CTLung_0.5mm.mhd H:\RegistrationResults\2014.11\Input\J3_T2Var155AxNav.mhd H:\RegistrationResults\2014.11\Output_1 10
+main.exe H:\RegistrationResults\2014.11\Input\J3_CTLung_0.5mm.mhd H:\RegistrationResults\2014.11\Input\J3_T2Var155AxNav.mhd H:\RegistrationResults\2014.11\Output_1 20
 
 :: create the histogram image with Matlab
 :: change path to MATLAB executable

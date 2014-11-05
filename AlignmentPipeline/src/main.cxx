@@ -10,6 +10,7 @@
  *			Outputs: transformed moving image, final transform parameters, 
  *					 deformation image, jacobian map, histogram images		
  *	2. Read and write functions pulled from RegistrationCode/src/ReadWriteFunctions
+ *	3. Obtain the histograms of the images, and the joint histogram
  *	3. Flow of program
  *		- Read in desired images
  *		- (Perform desired preprocessing steps)
@@ -43,9 +44,10 @@
 // initialization
 #include "itkCenteredTransformInitializer.h"
 
-// creating histogram
+// creating histograms
 #include "itkImageToHistogramFilter.h"
 #include "itkMinimumMaximumImageCalculator.h"
+#include "itkJoinImageFilter.h"
 
 // rigid registration
 #include "itkVersorRigid3DTransform.h"
@@ -218,7 +220,6 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 	// determine what the minimum and maximum values of the image are
 	typedef itk::MinimumMaximumImageCalculator< ImageType >	MinMaxCalculatorType;
 	MinMaxCalculatorType::Pointer minMaxCalc = MinMaxCalculatorType::New();
-
 	minMaxCalc->SetImage( image );
 	minMaxCalc->Compute();
 	ImageType::PixelType min = minMaxCalc->GetMinimum();
@@ -227,8 +228,7 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 	// calculate the desired number of bins
 	typedef HistogramFilterType::HistogramSizeType SizeType;
 	SizeType size(1);
-	size[0] = (max - min)/bins;
-
+	size[0] = bins;
 	histogramFilter->SetHistogramSize( size );
 	histogramFilter->SetMarginalScale( 10.0 );
 
@@ -238,7 +238,6 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 	HistogramMeasurementVectorType binMaximum(1);
 	binMinimum[0] = -0.5;
 	binMaximum[0] = 255.5;
-
 	histogramFilter->SetHistogramBinMinimum( binMinimum );
 	histogramFilter->SetHistogramBinMaximum( binMaximum );
 
@@ -249,33 +248,39 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 	typedef HistogramFilterType::HistogramType	HistogramType;
 	const HistogramType * histogram = histogramFilter->GetOutput();
 
-	// write the values out to a file
-	std::ofstream histogramFile;
-	histogramFile.open( histogramFilename );
+	// write the values out to a text file
+	std::ofstream histogramTextFile;
+	histogramTextFile.open( histogramFilename );
 
 	// create iterators
 	HistogramType::ConstIterator histItr = histogram->Begin();
 	HistogramType::ConstIterator histEnd = histogram->End();
 
+	// define the frequency type (and initialize the max frequency value)
 	typedef HistogramType::AbsoluteFrequencyType	AbsoluteFrequencyType;
+	AbsoluteFrequencyType maxFrequency = 0;
+	
 	while( histItr != histEnd )
 	{
 		const AbsoluteFrequencyType frequency = histItr.GetFrequency();
 
 		HistogramType::IndexType index;
 		index = histogram->GetIndex(histItr.GetInstanceIdentifier());
-		histogramFile << index << "," << frequency << std::endl;
+		histogramTextFile << index << "," << frequency << std::endl;
+		if( frequency > maxFrequency )
+		{		
+			maxFrequency = frequency;
+		}
 
 		++histItr;
 	}
 
-	histogramFile.close();
+	histogramTextFile.close();
 
 	std::cout << histogramFilename << " has been successfully created and written to file." << std::endl;
+
 	return EXIT_SUCCESS;
 }
-
-// write function to output the histogram
 
 /*************************************************************************
  * Main function to perform/test functionality
@@ -290,7 +295,8 @@ int main(int argc, char * argv[])
 	//const char * movingFiducialList = argv[4];
 	std::string outputDirectory = argv[3];
 	std::string outputFileFormat = ".mhd";
-	const int bins = atoi(argv[4]);
+	const int movingBins = atoi(argv[4]);
+	const int fixedBins = atoi(argv[5]);
 
 	// list desired outputs
 	std::string rigidResultFilename = outputDirectory + "\\rigidResult." + outputFileFormat;
@@ -337,8 +343,8 @@ int main(int argc, char * argv[])
 	//typedef itk::MattesMutualInformationImageToImageMetricv4< FixedImageType, MovingImageType >	MetricType;
 	//MetricType::Pointer metric = MetricType::New();
 
-	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, bins );
-	CreateHistogram< FixedImageType >( fixedHistogramFilename.c_str(), fixedImage, bins );
+	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, movingBins );
+	CreateHistogram< FixedImageType >( fixedHistogramFilename.c_str(), fixedImage, fixedBins );
 
 	return EXIT_SUCCESS;
 }
