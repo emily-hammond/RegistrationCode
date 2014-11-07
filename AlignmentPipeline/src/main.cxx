@@ -10,7 +10,7 @@
  *			Outputs: transformed moving image, final transform parameters, 
  *					 deformation image, jacobian map, histogram images		
  *	2. Read and write functions pulled from RegistrationCode/src/ReadWriteFunctions
- *	3. Obtain the histograms of the images, and the joint histogram
+ *	3. Obtain the histograms of the images, and the joint histogram (obtain jh from MMI class)
  *	3. Flow of program
  *		- Read in desired images
  *		- (Perform desired preprocessing steps)
@@ -48,10 +48,12 @@
 #include "itkImageToHistogramFilter.h"
 #include "itkMinimumMaximumImageCalculator.h"
 #include "itkJoinImageFilter.h"
+#include "itkRescaleIntensityImageFilter.h"
 
 // rigid registration
 #include "itkVersorRigid3DTransform.h"
 #include "itkMattesMutualInformationImageToImageMetricv4.h"
+#include "itkLinearInterpolateImageFunction.h"
 
 // additional C++ libraries
 #include <itksys/SystemTools.hxx>
@@ -287,6 +289,11 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
  *************************************************************************/
 int main(int argc, char * argv[])
 {
+	if( argc < 5 )
+	{
+		std::cerr << "Incorrect number of inputs: " << std::endl;
+		std::cerr << "	main.exe fixedImage movingImage outputDirectory movingBins fixedBins " << std::endl;
+	}
 	
 	// list desired inputs
 	const char * fixedImageFilename = argv[1];
@@ -307,13 +314,16 @@ int main(int argc, char * argv[])
 	std::string jacobianMapFilename = outputDirectory + "\\jacobianMap." + outputFileFormat;
 	std::string movingHistogramFilename = outputDirectory + "\\movingHistogram.txt";
 	std::string fixedHistogramFilename = outputDirectory + "\\fixedHistogram.txt";
+	std::string jointHistogramFilename = outputDirectory + "\\jointHistogram.tif";
 
 	// read in necessary files
 	const unsigned int	Dimension = 3;
-	typedef short		PixelType;
+	typedef float		PixelType;
+	typedef unsigned char	charPixelType;
 
 	typedef itk::Image< PixelType, Dimension >	FixedImageType;
 	typedef itk::Image< PixelType, Dimension >	MovingImageType;
+	typedef itk::Image< charPixelType, 2 >		JointHistogramImageType;
 
 	FixedImageType::Pointer fixedImage = ReadInImage<FixedImageType>(fixedImageFilename);
 	MovingImageType::Pointer movingImage = ReadInImage<MovingImageType>(movingImageFilename);
@@ -339,12 +349,38 @@ int main(int argc, char * argv[])
 	// write out transform after initialization
 	WriteOutTransform< RigidTransformType >( rigidTransformFilename.c_str() , rigidTransform );
 
-	// set up the metric
-	//typedef itk::MattesMutualInformationImageToImageMetricv4< FixedImageType, MovingImageType >	MetricType;
-	//MetricType::Pointer metric = MetricType::New();
-
+	// create the histograms
 	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, movingBins );
 	CreateHistogram< FixedImageType >( fixedHistogramFilename.c_str(), fixedImage, fixedBins );
+
+	// set up interpolator
+	typedef itk::LinearInterpolateImageFunction< MovingImageType, double >	InterpolatorType;
+	InterpolatorType::Pointer interpolator = InterpolatorType::New();
+
+	// set up the metric
+	typedef itk::MattesMutualInformationImageToImageMetricv4< FixedImageType, MovingImageType > MetricType;
+	MetricType::Pointer metric = MetricType::New();
+	
+	metric->SetFixedImage( fixedImage );
+	metric->SetMovingImage( movingImage );
+	metric->SetTransform( rigidTransform );
+	metric->SetMovingInterpolator( interpolator );
+
+	metric->SetNumberOfHistogramBins( 100 );
+	metric->Initialize();
+	std::cout << metric->GetValue() << std::endl;
+
+	// obtain joint histogram and rescale
+	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
+	typedef itk::RescaleIntensityImageFilter< JPDFImageType, JointHistogramImageType >	RescaleImageType;
+	RescaleImageType::Pointer rescaler = RescaleImageType::New();
+	rescaler->SetInput( metric->GetJointPDF() );
+	rescaler->SetOutputMinimum( 0 );
+	rescaler->SetOutputMaximum( 255 );
+	JointHistogramImageType::Pointer jpdfCharImage = rescaler->GetOutput();
+
+	// write out jpdf to file
+	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), jpdfCharImage );
 
 	return EXIT_SUCCESS;
 }
