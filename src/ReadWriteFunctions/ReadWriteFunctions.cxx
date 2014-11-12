@@ -12,6 +12,8 @@
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 #include "itkCastImageFilter.h"
+#include "itkTransformFileReader.h"
+#include "itkTransformFileWriter.h"
 
 #include <itksys/SystemTools.hxx>
 #include <fstream>
@@ -134,6 +136,32 @@ int printFiducials( LandmarksType landmarks )
 		std::cout << it->first << " " << it->second << std::endl;
 	}
 
+	return EXIT_SUCCESS;
+}
+
+// Write a function to write out a transform
+template<typename TransformType>
+int WriteOutTransform( const char * transformFilename, typename TransformType::Pointer transform )
+{
+	typedef itk::TransformFileWriterTemplate< double > TransformWriterType;
+	TransformWriterType::Pointer writer = TransformWriterType::New();
+	writer->SetInput( transform );
+	writer->SetFileName( transformFilename );
+
+	// update the writer
+	try
+	{
+		writer->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
+	
+	// return output
+	std::cout << transformFilename << " has successfully been created." << std::endl;
 	return EXIT_SUCCESS;
 }
 

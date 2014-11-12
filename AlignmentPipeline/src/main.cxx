@@ -382,5 +382,7 @@ int main(int argc, char * argv[])
 	// write out jpdf to file
 	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), jpdfCharImage );
 
+
+
 	return EXIT_SUCCESS;
 }
