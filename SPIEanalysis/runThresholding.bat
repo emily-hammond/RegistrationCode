@@ -5,13 +5,16 @@
 @echo # from CT images.
 @echo #
 
-cd C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SPIEanalysis\bld\RigidRegistration\Release 
+::cd C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SPIEanalysis\bld\RigidRegistration\Release 
 
-RigidRegistration.exe C:\Experiments\SPIEMhdFiles\AP20373\T3\T3_AP20373.mhd C:\Experiments\SPIEMhdFiles\AP20373\T2\T2_AP20373.mhd C:\Experiments\SPIEMhdFiles\Results\Test > C:\Experiments\SPIEMhdFiles\Results\Test\log.txt
+:: H:\RegistrationResults\SampleData\phantom.mhd 
 
-cd C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SPIEanalysis
+::RigidRegistration.exe AP20375 2 > C:\Experiments\SPIEMhdFiles\AP20375\Results\TP2Reglog.txt 2>&1
+
+cd C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SPIEanalysis\bld\IsolateSkeleton\Release 
 ::cd C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SPIEanalysis\bld\Release
 
-::IsolatedSkeleton.exe C:\Experiments\SPIEMhdFiles\AP20373\T1\T1_AP20373.mhd C:\Experiments\SPIEMhdFiles\AP20373\Output 2 > C:\Experiments\SPIEMhdFiles\AP20373\Output\log.txt
+IsolateSkeleton.exe AP20375 2 > C:\Experiments\SPIEMhdFiles\AP20375\Results\TP2Skellog.txt 2>&1
+IsolateSkeleton.exe AP20375 3 > C:\Experiments\SPIEMhdFiles\AP20375\Results\TP3Skellog.txt 2>&1
 
 ::cd C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SPIEanalysis

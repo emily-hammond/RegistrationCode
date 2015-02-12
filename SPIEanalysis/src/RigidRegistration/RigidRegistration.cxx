@@ -23,11 +23,117 @@ Pipeline:
 // registration components
 #include "itkCenteredTransformInitializer.h"
 #include "itkScaleVersor3DTransform.h"
-#include "itkMeanSquaresImageToImageMetric.h"
-#include "itkVersorRigid3DTransformOptimizer.h"
+#include "itkMattesMutualInformationImageToImageMetric.h"
+//#include "itkConjugateGradientOptimizer.h"
+#include "itkRegularStepGradientDescentOptimizer.h"
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkMultiResolutionImageRegistrationMethod.h"
 #include "itkMultiResolutionPyramidImageFilter.h"
+
+// apply final transform
+#include "itkResampleImageFilter.h"
+#include "itkRescaleIntensityImageFilter.h"
+
+// monitoring process
+#include "itkCommand.h"
+
+// implement a command observer to monitor the registration process
+template<typename Registration>
+class RegistrationInterfaceCommand : public itk::Command
+{
+public:
+	typedef RegistrationInterfaceCommand	Self;
+	typedef itk::Command					Superclass;
+	typedef itk::SmartPointer<Self>			Pointer;
+	itkNewMacro( Self );
+
+protected:
+	RegistrationInterfaceCommand() {};
+
+public:
+	typedef	Registration					RegistrationType;
+	typedef RegistrationType *				RegistrationPointer;
+	typedef itk::RegularStepGradientDescentOptimizer	OptimizerType;
+	typedef OptimizerType *					OptimizerPointer;
+	//typedef MetricType *					MetricPointer;
+	//typedef TransformType *					TransformPointer;
+
+	// implement the real Execute function
+	// output the class name and object name
+	void Execute( itk::Object * object, const itk::EventObject & event )
+	{
+		if( !(itk::IterationEvent().CheckEvent( &event )))
+		{
+			return;
+		}
+
+		// cast the object to a const object
+		RegistrationPointer registration = dynamic_cast< RegistrationPointer >( object );
+
+		// set up optimizer
+		OptimizerPointer optimizer = dynamic_cast< OptimizerPointer >( registration->GetModifiableOptimizer() );
+
+		// set up metric and transform
+		//MetricPointer metric = dynamic_cast< MetricPointer >( registration->GetMetric() );
+		//TransformPointer transform = dynamic_cast< TransformPointer >( registration->GetTransform() );
+		
+		if( registration->GetCurrentLevel() == 0 )
+		{
+			optimizer->SetMaximumStepLength( 1.0 );
+			optimizer->SetMinimumStepLength( 0.001 );
+		}
+		else
+		{
+			optimizer->SetMaximumStepLength( optimizer->GetMaximumStepLength() * 0.5 );
+			optimizer->SetMinimumStepLength( optimizer->GetMinimumStepLength() * 0.1 );
+		}
+
+		// print info out to screen
+		std::cout << "==========================" << std::endl;
+		std::cout << "Multiresolution Level: " << registration->GetCurrentLevel() << std::endl;
+		std::cout << " Step size: [" << optimizer->GetMinimumStepLength() << ", " << optimizer->GetMaximumStepLength() << "]" << std::endl;
+		std::cout << "start" << std::endl;
+	}
+	void Execute( const itk::Object *, const itk::EventObject & )
+	{
+		return;
+	}
+};
+
+// implement a command observer to monitor the registration process
+class CommandIterationUpdate : public itk::Command
+{
+public:
+	typedef CommandIterationUpdate		Self;
+	typedef itk::Command				Superclass;
+	typedef itk::SmartPointer< Self >	Pointer;
+	itkNewMacro( Self );
+
+protected:
+	CommandIterationUpdate() {};
+
+public:
+	typedef itk::RegularStepGradientDescentOptimizer	OptimizerType;
+	typedef const OptimizerType *			OptimizerPointer;
+
+	// write functions to output the details of the optimizer
+	void Execute( itk::Object * object, const itk::EventObject & event )
+	{
+		Execute( (const itk::Object *) object, event );
+	}
+
+	void Execute( const itk::Object * object, const itk::EventObject & event )
+	{
+		OptimizerPointer optimizer = dynamic_cast< OptimizerPointer >( object );
+		/*if( !(itk::IterationEvent().CheckEvent( &event )) );
+		{
+			return;
+		}*/
+		std::cout << optimizer->GetCurrentIteration() << " ";
+		std::cout << optimizer->GetValue() << " ";
+		std::cout << optimizer->GetCurrentPosition() << std::endl;
+	}
+};
 
 // Write a function to read in images templated over dimension and pixel type
 template<typename ImageType>
@@ -79,6 +185,8 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 		std::cerr << "Exception Object Caught!" << std::endl;
 		std::cerr << err << std::endl;
 		std::cerr << std::endl;
+
+		return EXIT_FAILURE;
 	}
 
 	std::cout << std::endl;
@@ -107,6 +215,8 @@ int WriteOutTransform( const char * transformFilename, typename TransformType::P
 		std::cerr << "Exception Object Caught!" << std::endl;
 		std::cerr << err << std::endl;
 		std::cerr << std::endl;
+
+		return EXIT_FAILURE;
 	}
 	
 	// return output
@@ -117,121 +227,175 @@ int WriteOutTransform( const char * transformFilename, typename TransformType::P
 int main(int argc, char * argv[])
 {
 	// determine inputs
-	const char * fixedImageFilename = argv[1];
-	const char * movingImageFilename = argv[2];
-	std::string outputDirectory = argv[3];
+	std::string animalTag = argv[1];
+	std::string movingTP = argv[2];
+	std::string fixedTP = "1";
+
+	// input files
+	std::string basePath = "C:\\Experiments\\SPIEMhdFiles\\";
+	std::string fixedImageFilename = basePath + animalTag + "\\T" + fixedTP + "\\T" + fixedTP + "_" + animalTag + ".mhd";;
+	std::string movingImageFilename = basePath + animalTag + "\\T" + movingTP + "\\T" + movingTP + "_" + animalTag + ".mhd";;
+
+	std::cout << "Fixed Image: " << fixedImageFilename << std::endl;
+	std::cout << "Moving Image: " << movingImageFilename << std::endl;
 
 	// outputs
-	std::string finalImageFilename = outputDirectory + "\\result.mhd";
-	std::string finalTransformFilename = outputDirectory + "\\transform.mhd";
+	std::string outputDirectory = "C:\\Experiments\\SPIEMhdFiles\\" + animalTag + "\\Results";
+	std::string finalImageFilename = outputDirectory + "\\TP" + movingTP + "result.mhd";
+	std::string initialTransformFilename = outputDirectory + "\\TP" + movingTP + "initalTransform.mhd";
+	std::string finalTransformFilename = outputDirectory + "\\TP" + movingTP + "finalTransform.mhd";
+	std::string jointPDFFilename = outputDirectory + "\\TP" + movingTP + "jointPDF.tif";
+	std::string fixedImageOutput = outputDirectory + "\\TP" + fixedTP + "result.mhd";
+	//std::string movingImageOutput = outputDirectory + "\\movingImage.mhd";
+	std::string initializedImageFilename = outputDirectory + "\\TP" + movingTP + "initializedImage.mhd";
 
 	// set up image types to be used
-	typedef short	PixelType;
-	const unsigned int Dimension = 3;
-
+	typedef short		PixelType;
+	const unsigned int	Dimension = 3;
+	
+	// define images
 	typedef itk::Image< PixelType, Dimension >	FixedImageType;
 	typedef itk::Image< PixelType, Dimension >	MovingImageType;
 
-	// read in images
-	FixedImageType::Pointer fixedImage = ReadInImage< FixedImageType >( fixedImageFilename );
-	MovingImageType::Pointer movingImage = ReadInImage< MovingImageType >( movingImageFilename );
+	// define components of registration
+	typedef itk::ScaleVersor3DTransform< double >	ScaleVersorTransformType;
+	typedef itk::LinearInterpolateImageFunction< MovingImageType, double >	InterpolateType;
+	typedef itk::RegularStepGradientDescentOptimizer			GDOptimizerType;
+	typedef itk::MattesMutualInformationImageToImageMetric< FixedImageType, MovingImageType >	MMIMetricType;
+	typedef itk::MultiResolutionImageRegistrationMethod< FixedImageType, MovingImageType >	RegistrationType;
+	
+	// initializer for the transform
+	typedef itk::CenteredTransformInitializer< ScaleVersorTransformType, FixedImageType, MovingImageType >	InitializerType;
+	
+	// define the smoothing pyramids
+	typedef itk::MultiResolutionPyramidImageFilter< FixedImageType, FixedImageType >	FixedImagePyramidType;
+	typedef itk::MultiResolutionPyramidImageFilter< MovingImageType, MovingImageType >	MovingImagePyramidType;
+	
+	// instantiate registration methods
+	ScaleVersorTransformType::Pointer scaleVersorTransform = ScaleVersorTransformType::New();
+	GDOptimizerType::Pointer gdOptimizer = GDOptimizerType::New();
+	InterpolateType::Pointer interpolator = InterpolateType::New();
+	RegistrationType::Pointer registration = RegistrationType::New();
+	MMIMetricType::Pointer mmiMetric = MMIMetricType::New();
 
-	// set up transform
-	typedef itk::ScaleVersor3DTransform< double >	VersorTransformType;
-	VersorTransformType::Pointer versorTransform = VersorTransformType::New();
+	// instantiate initializer
+	InitializerType::Pointer initializer = InitializerType::New();
+
+	// instantiate pyramids
+	FixedImagePyramidType::Pointer fixedPyramid = FixedImagePyramidType::New();
+	MovingImagePyramidType::Pointer movingPyramid = MovingImagePyramidType::New();
+
+	// define components of registration
+	registration->SetOptimizer( gdOptimizer );
+	registration->SetTransform( scaleVersorTransform );
+	registration->SetInterpolator( interpolator );
+	registration->SetMetric( mmiMetric );
+	registration->SetFixedImagePyramid( fixedPyramid );
+	registration->SetMovingImagePyramid( movingPyramid );
+
+	// read in images
+	FixedImageType::Pointer fixedImage = ReadInImage< FixedImageType >( fixedImageFilename.c_str() );
+	MovingImageType::Pointer movingImage = ReadInImage< MovingImageType >( movingImageFilename.c_str() );
+
+	WriteOutImage< FixedImageType, FixedImageType >( fixedImageOutput.c_str(), fixedImage );
+	//WriteOutImage< MovingImageType, MovingImageType >( movingImageOutput.c_str(), movingImage );
+
+	// put images into registration
+	registration->SetFixedImage( fixedImage );
+	registration->SetMovingImage( movingImage );
+	registration->SetFixedImageRegion( fixedImage->GetBufferedRegion() );
 
 	// set initial parameters
-	typedef itk::CenteredTransformInitializer< VersorTransformType, FixedImageType, MovingImageType >	InitializerType;
-	InitializerType::Pointer initializer = InitializerType::New();
-	initializer->SetTransform( versorTransform );
+	initializer->SetTransform( scaleVersorTransform );
 	initializer->SetFixedImage( fixedImage );
 	initializer->SetMovingImage( movingImage );
 	initializer->GeometryOn();
 	initializer->InitializeTransform();
 
-	/*typedef VersorTransformType::VersorType	VersorType;
-	typedef VersorTransformType::VectorType VectorType;
-	VersorType	rotation;
-	VectorType	axis;
-	axis[0] = 0.0;
-	axis[1] = 0.0;
-	axis[2] = 0.0;
-	rotation[0] = 0.0;
-	rotation[1] = 0.0;
-	rotation[2] = 0.0;
-	versorTransform->SetRotation( rotation );
-	versorTransform->SetTranslation( axis );*/
+	// input result into registration
+	registration->SetInitialTransformParameters( scaleVersorTransform->GetParameters() );
 
-	//WriteOutTransform< VersorTransformType >( finalTransformFilename.c_str(), versorTransform );
-	std::cout << "VersorTransform information: " << std::endl;
-	std::cout << versorTransform->GetParameters() << std::endl;
-	std::cout << "Rotation: " << versorTransform->GetVersor() << std::endl;
-	std::cout << "Translation: " << versorTransform->GetTranslation() << std::endl;
-	std::cout << "Scale: " << versorTransform->GetScale() << std::endl;
+	// write out initial parameters
+	std::cout << std::endl;
+	std::cout << "scaleVersorTransform information: " << std::endl;
+	std::cout << "Rotation: " << scaleVersorTransform->GetVersor() << std::endl;
+	std::cout << "Translation: " << scaleVersorTransform->GetTranslation() << std::endl;
+	std::cout << "Scale: " << scaleVersorTransform->GetScale() << std::endl;
 	std::cout << std::endl;
 
-	//set up metric
-	typedef itk::MeanSquaresImageToImageMetric< FixedImageType, MovingImageType >	MeanSquaresMetricType;
-	MeanSquaresMetricType::Pointer meanSquaresMetric = MeanSquaresMetricType::New();
-	meanSquaresMetric->SetNumberOfSpatialSamples( 10000 );
+	// apply initial transform to image
+	typedef itk::ResampleImageFilter< MovingImageType, MovingImageType >	ResampleInitialImageType;
+	ResampleInitialImageType::Pointer initialResampler = ResampleInitialImageType::New();
 
-	// set up interpolator
-	typedef itk::LinearInterpolateImageFunction< MovingImageType, double >	InterpolateType;
-	InterpolateType::Pointer interpolator = InterpolateType::New();
+	initialResampler->SetTransform( scaleVersorTransform );
+	initialResampler->SetInput( movingImage );
+	initialResampler->SetSize( fixedImage->GetLargestPossibleRegion().GetSize() );
+	initialResampler->SetOutputOrigin( fixedImage->GetOrigin() );
+	initialResampler->SetOutputSpacing( fixedImage->GetSpacing() );
+	initialResampler->SetOutputDirection( fixedImage->GetDirection() );
+	initialResampler->Update();
+
+	//WriteOutImage< MovingImageType, MovingImageType >( initializedImageFilename.c_str(), initialResampler->GetOutput() );
+
+	//set up metric
+	mmiMetric->SetNumberOfSpatialSamples( 100000 );
+	mmiMetric->SetNumberOfHistogramBins( 128 );
+	mmiMetric->ReinitializeSeed( 19900802 );
 
 	// set up optimizer
-	typedef itk::VersorRigid3DTransformOptimizer	VersorOptimizerType;
-	VersorOptimizerType::Pointer versorOptimizer = VersorOptimizerType::New();
-	
-	typedef VersorOptimizerType::ScalesType	OptimizerScalesType;
-	OptimizerScalesType optimizerScales( versorTransform->GetNumberOfParameters() );
-	const double translationScale = 1.0/1000.0;
-	const double scalingScale = 1.0/100.0;
-	optimizerScales[0] = 1.0;
-	optimizerScales[1] = 1.0;
-	optimizerScales[2] = 1.0;
+	gdOptimizer->SetNumberOfIterations( 1000 );
+	gdOptimizer->SetRelaxationFactor( 0.9 );
+	gdOptimizer->SetMinimumStepLength( 0.001 );
+	gdOptimizer->SetMaximumStepLength( 5.0 );
+	gdOptimizer->SetGradientMagnitudeTolerance( 0.001 );
+
+	// initialize optimizer scales
+	typedef GDOptimizerType::ScalesType	OptimizerScalesType;
+	OptimizerScalesType optimizerScales( scaleVersorTransform->GetNumberOfParameters() );
+	// rotation
+	const double rotationScale = 1.0/0.01;
+	optimizerScales[0] = rotationScale;
+	optimizerScales[1] = rotationScale;
+	optimizerScales[2] = rotationScale;
+	// translation
+	const double translationScale = 1.0/50.0;
 	optimizerScales[3] = translationScale;
 	optimizerScales[4] = translationScale;
 	optimizerScales[5] = translationScale;
+	// scaling
+	const double scalingScale = 1.0/0.01;
 	optimizerScales[6] = scalingScale;
 	optimizerScales[7] = scalingScale;
 	optimizerScales[8] = scalingScale;
-	versorOptimizer->SetScales( optimizerScales );
-	versorOptimizer->SetMaximumStepLength( 0.2 );
-	versorOptimizer->SetMinimumStepLength( 0.0001 );
-	versorOptimizer->SetNumberOfIterations( 200 );
+	// set scales
+	gdOptimizer->SetScales( optimizerScales );
 
-	// set up multiresolution scheme
-	typedef itk::MultiResolutionPyramidImageFilter< FixedImageType, FixedImageType >	FixedImagePyramidType;
-	FixedImagePyramidType::Pointer fixedPyramid = FixedImagePyramidType::New();
-	fixedPyramid->SetStartingShrinkFactors( 8.0 );
-	
-	typedef itk::MultiResolutionPyramidImageFilter< MovingImageType, MovingImageType >	MovingImagePyramidType;
-	MovingImagePyramidType::Pointer movingPyramid = MovingImagePyramidType::New();
-	movingPyramid->SetStartingShrinkFactors( 8.0 );
 
-	// plug into registration
-	typedef itk::MultiResolutionImageRegistrationMethod< FixedImageType, MovingImageType >	RegistrationType;
-	RegistrationType::Pointer registration = RegistrationType::New();
+	// register command observer with optimizer
+	CommandIterationUpdate::Pointer observer = CommandIterationUpdate::New();
+	gdOptimizer->AddObserver( itk::IterationEvent(), observer );
 
-	registration->SetFixedImage( fixedImage );
-	registration->SetFixedImagePyramid( fixedPyramid );
-	registration->SetMovingImage( movingImage );
-	registration->SetMovingImagePyramid( movingPyramid );
+	// create an instance of the command and connect with registration object
+	typedef RegistrationInterfaceCommand< RegistrationType > CommandType;
+	CommandType::Pointer command = CommandType::New();
+	registration->AddObserver( itk::IterationEvent(), command );
 
-	registration->SetMetric( meanSquaresMetric );
-	registration->SetOptimizer( versorOptimizer );
-	registration->SetInterpolator( interpolator );
-	registration->SetTransform( versorTransform );
-	registration->SetInitialTransformParameters( versorTransform->GetParameters() );
-
+	// set the number of levels
 	registration->SetNumberOfLevels( 1 );
+	unsigned int shrinkFactors[3];
+	shrinkFactors[0] = 1;
+	shrinkFactors[1] = 1;
+	shrinkFactors[2] = 1;
+	fixedPyramid->SetStartingShrinkFactors( shrinkFactors );
+	movingPyramid->SetStartingShrinkFactors( shrinkFactors );
+	fixedPyramid->SetNumberOfLevels( 1 );
+	movingPyramid->SetNumberOfLevels( 1 );
 
 	std::cout << std::endl;
 	std::cout << "Fixed pyramid : " << fixedPyramid->GetSchedule() << std::endl;
 	std::cout << "Moving pyramid: " << movingPyramid->GetSchedule() << std::endl;
 	std::cout << "# of levels: " << registration->GetNumberOfLevels() << std::endl;
-	std::cout << "	fixed: " << fixedPyramid->GetNumberOfLevels() << std::endl;
+	std::cout << "  fixed: " << fixedPyramid->GetNumberOfLevels() << std::endl;
 	std::cout << "  moving: " << movingPyramid->GetNumberOfLevels() << std::endl;
 	std::cout << std::endl;
 
@@ -239,14 +403,43 @@ int main(int argc, char * argv[])
 	try
 	{
 		registration->Update();
-		std::cout << "Optimizer stop condition: " << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+		std::cout << "Optimizer stop condition: ";
+		std::cout << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
 	}
 	catch( itk::ExceptionObject & err )
 	{
+		std::cout << "ExceptionObject caught !" << std::endl;
 		std::cerr << err << std::endl;
+		return EXIT_FAILURE;
 	}
 
-	std::cout << registration->GetLastTransformParameters() << std::endl;
+	// apply final transform to image
+	typedef itk::ResampleImageFilter< MovingImageType, MovingImageType >	ResampleImageType;
+	ResampleImageType::Pointer resampler = ResampleImageType::New();
+
+	resampler->SetTransform( scaleVersorTransform );
+	resampler->SetInput( movingImage );
+	resampler->SetSize( fixedImage->GetLargestPossibleRegion().GetSize() );
+	resampler->SetOutputOrigin( fixedImage->GetOrigin() );
+	resampler->SetOutputSpacing( fixedImage->GetSpacing() );
+	resampler->SetOutputDirection( fixedImage->GetDirection() );
+	resampler->Update();
+	
+	WriteOutImage< MovingImageType, MovingImageType >( finalImageFilename.c_str(), resampler->GetOutput() );
+	//WriteOutImage< MMIMetricType::JointPDFType, MovingImageType >( jointPDFFilename.c_str(), mmiMetric->GetJointPDF() );
+
+	// output final parameters
+	std::cout << std::endl;
+	std::cout << "scaleVersorTransform information: " << std::endl;
+	std::cout << "   Raw Parameters: " << scaleVersorTransform->GetParameters() << std::endl;
+	std::cout << "   Rotation: " << scaleVersorTransform->GetVersor() << std::endl;
+	std::cout << "   Angle: " << scaleVersorTransform->GetVersor().GetAngle() << std::endl;
+	std::cout << "   Translation: " << scaleVersorTransform->GetTranslation() << std::endl;
+	std::cout << "   Scale: " << scaleVersorTransform->GetScale() << std::endl;
+	std::cout << "gradient descent optimizer: " << std::endl;
+	std::cout << "   Iterations: " << gdOptimizer->GetCurrentIteration() << std::endl;
+	std::cout << "   Metric value: " << gdOptimizer->GetValue();
+	std::cout << std::endl;
 
 	return EXIT_SUCCESS;
 }

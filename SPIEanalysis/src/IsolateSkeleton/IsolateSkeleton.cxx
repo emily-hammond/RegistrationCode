@@ -30,6 +30,9 @@ Steps:
 #include "itkConnectedComponentImageFilter.h"
 #include "itkRelabelComponentImageFilter.h"
 
+// erode and create final image
+#include "itkBinaryErodeImageFilter.h"
+
 // Write a function to read in images templated over dimension and pixel type
 template<typename ImageType>
 typename ImageType::Pointer ReadInImage( const char * ImageFilename )
@@ -91,16 +94,25 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 
 int main(int argc, char * argv[])
 {
-	std::string inputFilename = argv[1];
-	std::string outputDirectory = argv[2];
-	unsigned int radius = atoi( argv[3] );
+	std::string animalTag = argv[1];
+	std::string TP = argv[2];
+	const char * TPchar = TP.c_str();
 
-	std::string thresholdImageFilename = outputDirectory + "\\thresholdedImage.mhd";
-	std::string dilatedImageFilename = outputDirectory + "\\dilatedImage.mhd";
-	std::string connectedImageFilename = outputDirectory + "\\connectedImage.mhd";
-	std::string relabeledImageFilename = outputDirectory + "\\relabeledImage.mhd";
-	std::string combinedImageFilename = outputDirectory + "\\combinedImage.mhd";
-	std::string labelMapImageFilename = outputDirectory + "\\lableMap.mhd";
+	std::string basePath = "C:\\Experiments\\SPIEMhdFiles\\";
+//	std::string outputDirectory = basePath + animalTag + "\\T" + TP + "\\";	 // for original files
+//	std::string inputFilename = basePath + animalTag + "\\T" + TP + "\\T" + TP + "_" + animalTag + ".mhd";	// for original files
+	std::string outputDirectory = "C:\\Experiments\\SPIEMhdFiles\\" + animalTag + "\\Results\\";	// for registered files
+	std::string inputFilename = basePath + animalTag + "\\Results\\TP" + TP + "result.mhd";		// for registered files
+
+	unsigned int radius = 1;
+
+	std::string thresholdImageFilename = outputDirectory + "TP" + TP + "thresholdedImage.mhd";
+	std::string dilatedImageFilename = outputDirectory + "TP" + TP + "dilatedImage.mhd";
+	std::string connectedImageFilename = outputDirectory + "TP" + TP + "connectedImage.mhd";
+	std::string relabeledImageFilename = outputDirectory + "TP" + TP + "relabeledImage.mhd";
+	std::string combinedImageFilename = outputDirectory + "TP" + TP + "combinedImage.mhd";
+	std::string erodedImageFilename = outputDirectory + "TP" + TP + "erodedImage.mhd";
+	std::string labelMapImageFilename = outputDirectory + "TP" + TP + "labelMap.mhd";
 
 	// determine which images are going to be needed
 	const unsigned int Dimension = 3;
@@ -167,7 +179,7 @@ int main(int argc, char * argv[])
 	RelabelComponentType::Pointer relabelFilter = RelabelComponentType::New();
 
 	relabelFilter->SetInput( connectedFilter->GetOutput() );
-	relabelFilter->SetMinimumObjectSize( 20000 );
+	relabelFilter->SetMinimumObjectSize( 1000 );
 	//relabelFilter->SetSortByObjectSize( true );
 	relabelFilter->Update();
 
@@ -185,16 +197,15 @@ int main(int argc, char * argv[])
 	for( objectLabel; objectLabel <= numOfObjects; ++objectLabel )
 	{
 		RelabelComponentType::ObjectSizeType objectSize = relabelFilter->GetSizeOfObjectInPixels( objectLabel );
-		RelabelComponentType::ObjectSizeType objectSizePrev = relabelFilter->GetSizeOfObjectInPixels( objectLabel-1 );
 
 		// print information out to file
 		std::cout << "[" << objectLabel << "]: " << objectSize << std::endl;
 
 		// check to make sure the ratio between volumes is small enough, once not, stop at that label
-		if( (objectLabel > 2) &&  ((float)(objectSizePrev - objectSize)/objectSizePrev > 0.3) && (stopFlag == 0) )
+		if( (objectLabel > 1) &&  ((float)objectSize > 20000) && (stopFlag == 0) )
 		{
 			// change upper label value and stop flag
-			upperThreshold = objectLabel - 1;
+			upperThreshold = objectLabel;
 			stopFlag = 0;
 		}
 	}
@@ -214,12 +225,25 @@ int main(int argc, char * argv[])
 	combineLabelFilter->SetOutsideValue( 0 );
 	combineLabelFilter->Update();
 
+	// erode image to obtain original mask size
+	typedef itk::BinaryErodeImageFilter< CharImageType, CharImageType, StructuringElementType >		ErodeImageType;
+	ErodeImageType::Pointer erodeFilter = ErodeImageType::New();
+
+	erodeFilter->SetInput( combineLabelFilter->GetOutput() );
+	erodeFilter->SetKernel( structuringElement );
+	
+	// set the erode value
+	CharImageType::PixelType erodeValue = 1;
+	erodeFilter->SetErodeValue( erodeValue );
+	erodeFilter->Update();
+
 	// write out the images
 	//WriteOutImage< CharImageType, CharImageType >( thresholdImageFilename.c_str(), thresholdFilter->GetOutput() );
 	//WriteOutImage< CharImageType, CharImageType >( dilatedImageFilename.c_str(), dilateFilter->GetOutput() );
 	//WriteOutImage< CharImageType, CharImageType >( connectedImageFilename.c_str(), connectedFilter->GetOutput() );
-	WriteOutImage< CharImageType, CharImageType >( relabeledImageFilename.c_str(), relabelFilter->GetOutput() );
-	WriteOutImage< CharImageType, CharImageType >( combinedImageFilename.c_str(), combineLabelFilter->GetOutput() );
+	//WriteOutImage< CharImageType, CharImageType >( relabeledImageFilename.c_str(), relabelFilter->GetOutput() );
+	//WriteOutImage< CharImageType, CharImageType >( combinedImageFilename.c_str(), combineLabelFilter->GetOutput() );
+	WriteOutImage< CharImageType, CharImageType >( erodedImageFilename.c_str(), erodeFilter->GetOutput() );
 
 	return EXIT_SUCCESS;
 }
