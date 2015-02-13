@@ -232,7 +232,7 @@ namespace itk
 			{
 				// get value and negate it
 				itImage.Set( -itImage.Get() );
-				itImage++;
+				++itImage;
 			}
 		}
 

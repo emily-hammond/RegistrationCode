@@ -61,7 +61,7 @@
 #include <string>
 
 // landmark analysis
-#include "itkLandmarkAnalysis.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\src\transformFiducials\itkLandmarkAnalysis.h"
 
 /*************************************************************************
  * Write templated functions for reading/writing files to clean up code 
@@ -79,6 +79,7 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 	try
 	{
 		reader->Update();
+		std::cout << ImageFilename << " has been read in!" << std::endl;
 	}
 	catch(itk::ExceptionObject & err)
 	{
@@ -88,7 +89,6 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 	}
 	
 	// return output
-	std::cout << ImageFilename << " has been read in!" << std::endl;
 	return reader->GetOutput();
 }
 
@@ -242,9 +242,11 @@ int main(int argc, char * argv[])
 	
 	// list desired inputs
 	const char * fixedImageFilename = argv[1];
-	const char * movingImageFilename = argv[2];
+	std::string movingImageFilename = argv[2];
 	std::string outputDirectory = argv[3];
 	std::string outputFileFormat = ".mhd";
+	std::string baseFilename = movingImageFilename.substr( movingImageFilename.find_last_of("/\\") + 1 );
+	baseFilename = baseFilename.substr(0, baseFilename.find_last_of('.'));
 	
 	// use these if desiring the joint histograms
 	//const int movingBins = atoi(argv[4]);
@@ -278,7 +280,7 @@ int main(int argc, char * argv[])
 
 	// read in fixed and moving images
 	FixedImageType::Pointer fixedImage = ReadInImage<FixedImageType>(fixedImageFilename);
-	MovingImageType::Pointer movingImage = ReadInImage<MovingImageType>(movingImageFilename);
+	MovingImageType::Pointer movingImage = ReadInImage<MovingImageType>(movingImageFilename.c_str());
 
 	// insert preprocessing steps
 	//	- inhomogeneity correction
@@ -303,7 +305,7 @@ int main(int argc, char * argv[])
 	initializer->InitializeTransform();
 
 	// write out transform after initialization
-	std::string rigidInitGeomFilename = outputDirectory + "\\rigidInitGeom.tfm";
+	std::string rigidInitGeomFilename = outputDirectory + "\\" + baseFilename + "_rigidInitGeom.tfm";
 	WriteOutTransform< RigidTransformType >( rigidInitGeomFilename.c_str() , rigidTransformGeom );
 
 	// initalize by moments
@@ -312,7 +314,7 @@ int main(int argc, char * argv[])
 	initializer->InitializeTransform();
 
 	// write out transform after initialization
-	std::string rigidInitMomFilename = outputDirectory + "\\rigidInitMom.tfm";
+	std::string rigidInitMomFilename = outputDirectory + "\\" + baseFilename + "_rigidInitMom.tfm";
 	WriteOutTransform< RigidTransformType >( rigidInitMomFilename.c_str() , rigidTransformMom );
 
 	/*
