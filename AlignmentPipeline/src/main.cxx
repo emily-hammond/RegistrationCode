@@ -60,6 +60,9 @@
 #include <fstream>
 #include <string>
 
+// landmark analysis
+#include "itkLandmarkAnalysis.h"
+
 /*************************************************************************
  * Write templated functions for reading/writing files to clean up code 
  *************************************************************************/
@@ -119,64 +122,6 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 	std::cout << ImageFilename << " has been written. " << std::endl;
 	return EXIT_SUCCESS;
 }
-
-// Write a function to read in the fiducials (from Slicer) for each image
-// templated over point type (taken from image) and landmarks type (map<string, point type>)
-template<typename PointType, typename LandmarksType>
-typename LandmarksType ReadFiducial( const char * fiducialFilename )
-{
-	// open file
-	std::ifstream myfile( fiducialFilename );
-	LandmarksType landmarks;
-	
-	// read in lines from file
-	std::string line;
-	while( getline( myfile, line ) )
-	{
-		if( line.compare( 0, 1, "#" ) != 0 ) // skip lines starting with #
-		{
-			// determine where the first coordinate lives
-			size_t pos1 = line.find( ',', 0 );
-			PointType	pointPos;
-
-			// grab the coordinates from the string
-			for( unsigned int i = 0; i < 3; ++i )
-			{
-				const size_t pos2 = line.find( ',', pos1+1 );
-				pointPos[i] = atof( line.substr( pos1+1, pos2-pos1-1 ).c_str() );
-				if( i < 2 ) // negate first two components for RAS->LPS
-				{
-					pointPos[i] *= -1;
-				}
-				pos1 = pos2;
-			}
-			
-			// determine what label/location the coordinates are from
-			if( line.find( "Carina" ) != -1 )
-			{
-				landmarks["Carina"] = pointPos;
-			}
-			else if( line.find( "Aorta" ) != -1 )
-			{
-				landmarks["Aorta"] = pointPos;
-			}
-			else if( line.find( "BaseOfHeart" ) != -1 )
-			{
-				landmarks["BaseOfHeart"] = pointPos;
-			}
-			else
-			{
-				std::cerr << "Reassign labels to fiducials." << std::endl;
-				std::cerr << "   Acceptable labels: Carina, Aorta, BaseOfHeart" << std::endl;
-			}
-		}
-	}
-
-	std::cout << fiducialFilename << " has been successfully read in." << std::endl;
-	return landmarks;
-}
-
-
 
 // Write a function to write out a transform
 template<typename TransformType>
@@ -289,23 +234,28 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
  *************************************************************************/
 int main(int argc, char * argv[])
 {
-	if( argc < 5 )
+	if( argc < 4 )
 	{
 		std::cerr << "Incorrect number of inputs: " << std::endl;
-		std::cerr << "	main.exe fixedImage movingImage outputDirectory movingBins fixedBins " << std::endl;
+		std::cerr << "	main.exe fixedImage movingImage outputDirectory" << std::endl;
 	}
 	
 	// list desired inputs
 	const char * fixedImageFilename = argv[1];
 	const char * movingImageFilename = argv[2];
-	//const char * fixedFiducialList = argv[3];
-	//const char * movingFiducialList = argv[4];
 	std::string outputDirectory = argv[3];
 	std::string outputFileFormat = ".mhd";
-	const int movingBins = atoi(argv[4]);
-	const int fixedBins = atoi(argv[5]);
+	
+	// use these if desiring the joint histograms
+	//const int movingBins = atoi(argv[4]);
+	//const int fixedBins = atoi(argv[5]);
+
+	// use these if desiring to validate the registrations
+	//const char * fixedFiducialList = argv[3];
+	//const char * movingFiducialList = argv[4];
 
 	// list desired outputs
+	/*	
 	std::string rigidResultFilename = outputDirectory + "\\rigidResult." + outputFileFormat;
 	std::string rigidTransformFilename = outputDirectory + "\\rigidTransformParameters.txt";
 	std::string deformableResultFilename = outputDirectory + "\\deformableResult." + outputFileFormat;
@@ -315,16 +265,18 @@ int main(int argc, char * argv[])
 	std::string movingHistogramFilename = outputDirectory + "\\movingHistogram.txt";
 	std::string fixedHistogramFilename = outputDirectory + "\\fixedHistogram.txt";
 	std::string jointHistogramFilename = outputDirectory + "\\jointHistogram.tif";
+	*/
 
 	// read in necessary files
-	const unsigned int	Dimension = 3;
-	typedef float		PixelType;
-	typedef unsigned char	charPixelType;
+	const unsigned int		Dimension = 3;
+	typedef float			PixelType;
+	typedef unsigned char	CharPixelType;
 
 	typedef itk::Image< PixelType, Dimension >	FixedImageType;
 	typedef itk::Image< PixelType, Dimension >	MovingImageType;
-	typedef itk::Image< charPixelType, 2 >		JointHistogramImageType;
+	typedef itk::Image< CharPixelType, 2 >		JointHistogramImageType;
 
+	// read in fixed and moving images
 	FixedImageType::Pointer fixedImage = ReadInImage<FixedImageType>(fixedImageFilename);
 	MovingImageType::Pointer movingImage = ReadInImage<MovingImageType>(movingImageFilename);
 
@@ -335,20 +287,35 @@ int main(int argc, char * argv[])
 
 	// set up rigid transform with initialization
 	typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
-	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
+	RigidTransformType::Pointer rigidTransformGeom = RigidTransformType::New();
+	RigidTransformType::Pointer rigidTransformMom = RigidTransformType::New();
 
 	typedef itk::CenteredTransformInitializer< RigidTransformType, FixedImageType, MovingImageType >	InitializerType;
 	InitializerType::Pointer initializer = InitializerType::New();
 	
-	initializer->SetTransform( rigidTransform );
+	// input images
 	initializer->SetFixedImage( fixedImage );
 	initializer->SetMovingImage( movingImage );
+
+	// initialize by geometry
+	initializer->SetTransform( rigidTransformGeom );
 	initializer->GeometryOn();
 	initializer->InitializeTransform();
 
 	// write out transform after initialization
-	WriteOutTransform< RigidTransformType >( rigidTransformFilename.c_str() , rigidTransform );
+	std::string rigidInitGeomFilename = outputDirectory + "\\rigidInitGeom.tfm";
+	WriteOutTransform< RigidTransformType >( rigidInitGeomFilename.c_str() , rigidTransformGeom );
 
+	// initalize by moments
+	initializer->SetTransform( rigidTransformMom );
+	initializer->MomentsOn();
+	initializer->InitializeTransform();
+
+	// write out transform after initialization
+	std::string rigidInitMomFilename = outputDirectory + "\\rigidInitMom.tfm";
+	WriteOutTransform< RigidTransformType >( rigidInitMomFilename.c_str() , rigidTransformMom );
+
+	/*
 	// create the histograms
 	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, movingBins );
 	CreateHistogram< FixedImageType >( fixedHistogramFilename.c_str(), fixedImage, fixedBins );
@@ -381,8 +348,7 @@ int main(int argc, char * argv[])
 
 	// write out jpdf to file
 	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), jpdfCharImage );
-
-
+	*/
 
 	return EXIT_SUCCESS;
 }
