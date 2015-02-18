@@ -229,6 +229,14 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 	return EXIT_SUCCESS;
 }
 
+template< class T >
+std::string to_string(T t)
+{
+	std::ostringstream oss;
+	oss << t;
+	return oss.str();
+}
+
 /*************************************************************************
  * Main function to perform/test functionality
  *************************************************************************/
@@ -242,7 +250,7 @@ int main(int argc, char * argv[])
 	
 	//*********************** INPUTS *******************************
 	// images
-	const char * fixedImageFilename = argv[1];
+	std::string fixedImageFilename = argv[1];
 	std::string movingImageFilename = argv[2];
 	// mask files (add in later)
 	// output directory/file format
@@ -251,10 +259,10 @@ int main(int argc, char * argv[])
 	// breakdown files to get baseFilename
 	// moving image
 	std::string baseMovingFilename = movingImageFilename.substr( movingImageFilename.find_last_of("/\\") + 1 );
-	baseFilename = baseMovingFilename.substr(0, baseMovingFilename.find_last_of('.'));
+	baseMovingFilename = baseMovingFilename.substr(0, baseMovingFilename.find_last_of('.'));
 	// fixed image
 	std::string baseFixedFilename = fixedImageFilename.substr( fixedImageFilename.find_last_of("/\\") + 1 );
-	baseFilename = baseFixedFilename.substr(0, baseFixedFilename.find_last_of('.'));
+	baseFixedFilename = baseFixedFilename.substr(0, baseFixedFilename.find_last_of('.'));
 	// joint histogram bins (curiosity)
 	const int movingBins = atoi(argv[4]);
 	const int fixedBins = atoi(argv[5]);
@@ -282,10 +290,9 @@ int main(int argc, char * argv[])
 
 	typedef itk::Image< PixelType, Dimension >	FixedImageType;
 	typedef itk::Image< PixelType, Dimension >	MovingImageType;
-	typedef itk::Image< CharPixelType, 2 >		JointHistogramImageType;
 
 	// read in fixed and moving images
-	FixedImageType::Pointer fixedImage = ReadInImage<FixedImageType>(fixedImageFilename);
+	FixedImageType::Pointer fixedImage = ReadInImage<FixedImageType>(fixedImageFilename.c_str());
 	MovingImageType::Pointer movingImage = ReadInImage<MovingImageType>(movingImageFilename.c_str());
 
 	// insert preprocessing steps
@@ -295,8 +302,7 @@ int main(int argc, char * argv[])
 
 	// set up rigid transform with initialization
 	typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
-	RigidTransformType::Pointer rigidTransformGeom = RigidTransformType::New();
-	RigidTransformType::Pointer rigidTransformMom = RigidTransformType::New();
+	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
 
 	//*********************** INITIALIZATION *******************************
 	typedef itk::CenteredTransformInitializer< RigidTransformType, FixedImageType, MovingImageType >	InitializerType;
@@ -307,20 +313,20 @@ int main(int argc, char * argv[])
 	initializer->SetMovingImage( movingImage );
 
 	// initialize by geometry
-	initializer->SetTransform( rigidTransformGeom );
+	initializer->SetTransform( rigidTransform );
 	initializer->GeometryOn();
 	initializer->InitializeTransform();
 
 	// write out transform after initialization
 	std::string rigidInitGeomFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitGeom.tfm";
-	WriteOutTransform< RigidTransformType >( rigidInitGeomFilename.c_str() , rigidTransformGeom );
+	WriteOutTransform< RigidTransformType >( rigidInitGeomFilename.c_str() , rigidTransform );
 
 	// ************************ HISTOGRAMS ******************************
 	// moving image
-	std::string movingHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + std::to_string( movingBins ) + "Histogram.txt";
+	std::string movingHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + to_string( movingBins ) + "Histogram.txt";
 	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, movingBins );
 	// fixed image
-	std::string fixedHistogramFilename = outputDirectory + "\\" + baseFixedFilename + "_" + std::to_string( fixedBins ) + "Histogram.txt";
+	std::string fixedHistogramFilename = outputDirectory + "\\" + baseFixedFilename + "_" + to_string( fixedBins ) + "Histogram.txt";
 	CreateHistogram< FixedImageType >( fixedHistogramFilename.c_str(), fixedImage, fixedBins );
 
 	// *********************** INTERPOLATOR ******************************
@@ -336,23 +342,26 @@ int main(int argc, char * argv[])
 	metric->SetTransform( rigidTransform );
 	metric->SetMovingInterpolator( interpolator );
 
-	metric->SetNumberOfHistogramBins( 100 );
 	metric->Initialize();
-	std::cout << metric->GetValue() << std::endl;
 
-	/*
+	std::cout << std::endl;
+	std::cout << " Metric value: " <<  metric->GetValue() << std::endl;
+	std::cout << " #histogram bins: " << metric->GetNumberOfHistogramBins() << std::endl;
+	std::cout << " #Domain points: " << metric->GetNumberOfDomainPoints() << std::endl;
+	std::cout << " #Valid points: " << metric->GetNumberOfValidPoints() << std::endl;
+
 	// obtain joint histogram and rescale
 	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
+	typedef itk::Image< CharPixelType, 2 >				JointHistogramImageType;
 	typedef itk::RescaleIntensityImageFilter< JPDFImageType, JointHistogramImageType >	RescaleImageType;
 	RescaleImageType::Pointer rescaler = RescaleImageType::New();
 	rescaler->SetInput( metric->GetJointPDF() );
 	rescaler->SetOutputMinimum( 0 );
 	rescaler->SetOutputMaximum( 255 );
-	JointHistogramImageType::Pointer jpdfCharImage = rescaler->GetOutput();
 
 	// write out jpdf to file
-	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), jpdfCharImage );
-	*/
+	std::string jointHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + baseFixedFilename + "_jointHistogram.tif";
+	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), rescaler->GetOutput() );
 
 	return EXIT_SUCCESS;
 }
