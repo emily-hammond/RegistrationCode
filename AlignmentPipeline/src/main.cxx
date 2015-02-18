@@ -240,24 +240,30 @@ int main(int argc, char * argv[])
 		std::cerr << "	main.exe fixedImage movingImage outputDirectory" << std::endl;
 	}
 	
-	// list desired inputs
+	//*********************** INPUTS *******************************
+	// images
 	const char * fixedImageFilename = argv[1];
 	std::string movingImageFilename = argv[2];
+	// mask files (add in later)
+	// output directory/file format
 	std::string outputDirectory = argv[3];
 	std::string outputFileFormat = ".mhd";
-	std::string baseFilename = movingImageFilename.substr( movingImageFilename.find_last_of("/\\") + 1 );
-	baseFilename = baseFilename.substr(0, baseFilename.find_last_of('.'));
-	
-	// use these if desiring the joint histograms
-	//const int movingBins = atoi(argv[4]);
-	//const int fixedBins = atoi(argv[5]);
-
-	// use these if desiring to validate the registrations
+	// breakdown files to get baseFilename
+	// moving image
+	std::string baseMovingFilename = movingImageFilename.substr( movingImageFilename.find_last_of("/\\") + 1 );
+	baseFilename = baseMovingFilename.substr(0, baseMovingFilename.find_last_of('.'));
+	// fixed image
+	std::string baseFixedFilename = fixedImageFilename.substr( fixedImageFilename.find_last_of("/\\") + 1 );
+	baseFilename = baseFixedFilename.substr(0, baseFixedFilename.find_last_of('.'));
+	// joint histogram bins (curiosity)
+	const int movingBins = atoi(argv[4]);
+	const int fixedBins = atoi(argv[5]);
+	// landmark filenames (validation)
 	//const char * fixedFiducialList = argv[3];
 	//const char * movingFiducialList = argv[4];
 
-	// list desired outputs
-	/*	
+	//*********************** OUTPUTS *******************************
+	/*
 	std::string rigidResultFilename = outputDirectory + "\\rigidResult." + outputFileFormat;
 	std::string rigidTransformFilename = outputDirectory + "\\rigidTransformParameters.txt";
 	std::string deformableResultFilename = outputDirectory + "\\deformableResult." + outputFileFormat;
@@ -292,6 +298,7 @@ int main(int argc, char * argv[])
 	RigidTransformType::Pointer rigidTransformGeom = RigidTransformType::New();
 	RigidTransformType::Pointer rigidTransformMom = RigidTransformType::New();
 
+	//*********************** INITIALIZATION *******************************
 	typedef itk::CenteredTransformInitializer< RigidTransformType, FixedImageType, MovingImageType >	InitializerType;
 	InitializerType::Pointer initializer = InitializerType::New();
 	
@@ -305,28 +312,22 @@ int main(int argc, char * argv[])
 	initializer->InitializeTransform();
 
 	// write out transform after initialization
-	std::string rigidInitGeomFilename = outputDirectory + "\\" + baseFilename + "_rigidInitGeom.tfm";
+	std::string rigidInitGeomFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitGeom.tfm";
 	WriteOutTransform< RigidTransformType >( rigidInitGeomFilename.c_str() , rigidTransformGeom );
 
-	// initalize by moments
-	initializer->SetTransform( rigidTransformMom );
-	initializer->MomentsOn();
-	initializer->InitializeTransform();
-
-	// write out transform after initialization
-	std::string rigidInitMomFilename = outputDirectory + "\\" + baseFilename + "_rigidInitMom.tfm";
-	WriteOutTransform< RigidTransformType >( rigidInitMomFilename.c_str() , rigidTransformMom );
-
-	/*
-	// create the histograms
+	// ************************ HISTOGRAMS ******************************
+	// moving image
+	std::string movingHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + std::to_string( movingBins ) + "Histogram.txt";
 	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, movingBins );
+	// fixed image
+	std::string fixedHistogramFilename = outputDirectory + "\\" + baseFixedFilename + "_" + std::to_string( fixedBins ) + "Histogram.txt";
 	CreateHistogram< FixedImageType >( fixedHistogramFilename.c_str(), fixedImage, fixedBins );
 
-	// set up interpolator
+	// *********************** INTERPOLATOR ******************************
 	typedef itk::LinearInterpolateImageFunction< MovingImageType, double >	InterpolatorType;
 	InterpolatorType::Pointer interpolator = InterpolatorType::New();
 
-	// set up the metric
+	// ************************** METRIC ******************************
 	typedef itk::MattesMutualInformationImageToImageMetricv4< FixedImageType, MovingImageType > MetricType;
 	MetricType::Pointer metric = MetricType::New();
 	
@@ -339,6 +340,7 @@ int main(int argc, char * argv[])
 	metric->Initialize();
 	std::cout << metric->GetValue() << std::endl;
 
+	/*
 	// obtain joint histogram and rescale
 	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
 	typedef itk::RescaleIntensityImageFilter< JPDFImageType, JointHistogramImageType >	RescaleImageType;
