@@ -242,10 +242,10 @@ std::string to_string(T t)
  *************************************************************************/
 int main(int argc, char * argv[])
 {
-	if( argc < 4 )
+	if( argc < 6 )
 	{
 		std::cerr << "Incorrect number of inputs: " << std::endl;
-		std::cerr << "	main.exe fixedImage movingImage outputDirectory" << std::endl;
+		std::cerr << "	main.exe fixedImage movingImage outputDirectory movingBins fixedBins" << std::endl;
 	}
 	
 	//*********************** INPUTS *******************************
@@ -260,9 +260,11 @@ int main(int argc, char * argv[])
 	// moving image
 	std::string baseMovingFilename = movingImageFilename.substr( movingImageFilename.find_last_of("/\\") + 1 );
 	baseMovingFilename = baseMovingFilename.substr(0, baseMovingFilename.find_last_of('.'));
+	std::cout << baseMovingFilename << std::endl;
 	// fixed image
 	std::string baseFixedFilename = fixedImageFilename.substr( fixedImageFilename.find_last_of("/\\") + 1 );
 	baseFixedFilename = baseFixedFilename.substr(0, baseFixedFilename.find_last_of('.'));
+	std::cout << baseFixedFilename << std::endl;
 	// joint histogram bins (curiosity)
 	const int movingBins = atoi(argv[4]);
 	const int fixedBins = atoi(argv[5]);
