@@ -52,7 +52,7 @@
 
 // rigid registration
 #include "itkVersorRigid3DTransform.h"
-#include "itkMattesMutualInformationImageToImageMetricv4.h"
+#include "itkMattesMutualInformationImageToImageMetric.h" // v4 does not yet support local-deforming transforms
 #include "itkLinearInterpolateImageFunction.h"
 
 // additional C++ libraries
@@ -110,16 +110,17 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 	try
 	{
 		writer->Update();
+		std::cout << ImageFilename << " has been written. " << std::endl;
 	}
 	catch(itk::ExceptionObject & err)
 	{
 		std::cerr << "Exception Object Caught!" << std::endl;
 		std::cerr << err << std::endl;
 		std::cerr << std::endl;
+		return EXIT_FAILURE;
 	}
 	
 	// return output
-	std::cout << ImageFilename << " has been written. " << std::endl;
 	return EXIT_SUCCESS;
 }
 
@@ -260,11 +261,9 @@ int main(int argc, char * argv[])
 	// moving image
 	std::string baseMovingFilename = movingImageFilename.substr( movingImageFilename.find_last_of("/\\") + 1 );
 	baseMovingFilename = baseMovingFilename.substr(0, baseMovingFilename.find_last_of('.'));
-	std::cout << baseMovingFilename << std::endl;
 	// fixed image
 	std::string baseFixedFilename = fixedImageFilename.substr( fixedImageFilename.find_last_of("/\\") + 1 );
 	baseFixedFilename = baseFixedFilename.substr(0, baseFixedFilename.find_last_of('.'));
-	std::cout << baseFixedFilename << std::endl;
 	// joint histogram bins (curiosity)
 	const int movingBins = atoi(argv[4]);
 	const int fixedBins = atoi(argv[5]);
@@ -334,36 +333,42 @@ int main(int argc, char * argv[])
 	// *********************** INTERPOLATOR ******************************
 	typedef itk::LinearInterpolateImageFunction< MovingImageType, double >	InterpolatorType;
 	InterpolatorType::Pointer interpolator = InterpolatorType::New();
+	interpolator->SetInputImage( movingImage );
+	std::cout << "Interpolator complete" << std::endl;
 
 	// ************************** METRIC ******************************
-	typedef itk::MattesMutualInformationImageToImageMetricv4< FixedImageType, MovingImageType > MetricType;
+	typedef itk::MattesMutualInformationImageToImageMetric< FixedImageType, MovingImageType > MetricType;
 	MetricType::Pointer metric = MetricType::New();
 	
 	metric->SetFixedImage( fixedImage );
 	metric->SetMovingImage( movingImage );
 	metric->SetTransform( rigidTransform );
-	metric->SetMovingInterpolator( interpolator );
+	//metric->SetMovingInterpolator( interpolator );
+
+	//MetricType::TransformParametersType displacement = rigidTransform->GetParameters();
 
 	metric->Initialize();
 
 	std::cout << std::endl;
-	std::cout << " Metric value: " <<  metric->GetValue() << std::endl;
+	//std::cout << " Metric value: " <<  metric->GetValue( displacement ) << std::endl;
 	std::cout << " #histogram bins: " << metric->GetNumberOfHistogramBins() << std::endl;
-	std::cout << " #Domain points: " << metric->GetNumberOfDomainPoints() << std::endl;
-	std::cout << " #Valid points: " << metric->GetNumberOfValidPoints() << std::endl;
+	std::cout << " #spatial samples: " << metric->GetNumberOfSpatialSamples() << std::endl;
+	std::cout << " #pixels counted: " << metric->GetNumberOfPixelsCounted() << std::endl;
+	std::cout << " #moving samples: " << metric->GetNumberOfMovingImageSamples() << std::endl;
 
 	// obtain joint histogram and rescale
 	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
 	typedef itk::Image< CharPixelType, 2 >				JointHistogramImageType;
-	typedef itk::RescaleIntensityImageFilter< JPDFImageType, JointHistogramImageType >	RescaleImageType;
-	RescaleImageType::Pointer rescaler = RescaleImageType::New();
+	typedef itk::RescaleIntensityImageFilter< JPDFImageType, JointHistogramImageType >	RescaleFilterType;
+	RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
 	rescaler->SetInput( metric->GetJointPDF() );
 	rescaler->SetOutputMinimum( 0 );
 	rescaler->SetOutputMaximum( 255 );
+	JointHistogramImageType::Pointer image = JointHistogramImageType::New();
 
 	// write out jpdf to file
 	std::string jointHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + baseFixedFilename + "_jointHistogram.tif";
-	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), rescaler->GetOutput() );
+	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), image );
 
 	return EXIT_SUCCESS;
 }

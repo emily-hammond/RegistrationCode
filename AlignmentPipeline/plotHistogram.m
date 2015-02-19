@@ -2,25 +2,25 @@
 % from the ITK registration alignment pipeline
 % (C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\AlignmentPipeline)
 %
-% Usage: plotHistogram(inputFilename, outputFilename)
+% Usage: plotHistogram(inputFilename)
 %           inputFilename is a .txt file containing the bin # and
 %           corresponding frequency in this format:
 %               [0],12
 %               [1],10
 %               etc.
 %
-%           outputFilename is the desired name of the histogram figure
-%           including the extension format
-%               outFig.tif
+%           outputFilename is the same as the inputFilename with a
+%           .tif extension instead of a .txt extension
+%               inputFilename.tif
 %
 % To run this function from the command line, run
 % addpath('C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\AlignmentPipeline')
 % first to ensure the function is on the path
 %
 
-function plotHistogram(InputFilename, OutputFilename)
+function plotHistogram(InputFilename)
 [path,name1,ext] = fileparts(InputFilename);
-[path,name2,ext] = fileparts(OutputFilename);
+OutputFilename = sprintf('%s%s.tif',path,name1);
 
 % read in file
 histFile = fopen(InputFilename,'r');
@@ -72,11 +72,12 @@ set(gca,'FontSize',8,...
 set(gcf, 'PaperPositionMode','auto');
 
 % save the figure to the proper file
-OutputFilename = sprintf('%s\\%s%d%s',path,name2,numel(bins),ext);
 saveas(fig, OutputFilename);
 
 % close the fileS
 fclose(histFile);
+
+return;
 
 % close out of matlab
 % exit
