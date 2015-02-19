@@ -363,10 +363,12 @@ int main(int argc, char * argv[])
 	registration->SetMetric( metric );
 	registration->SetOptimizer( rigidOptimizer );
 	registration->SetTransform( rigidTransform );
+	registration->SetInitialTransformParameters( rigidTransform->GetParameters() );
 	registration->SetInterpolator( interpolator );
 	// set images
 	registration->SetFixedImage( fixedImage );
 	registration->SetMovingImage( movingImage );
+	registration->SetFixedImageRegion( fixedImage->GetBufferedRegion() );
 	// perform registration
 	std::cout << std::endl;
 	std::cout << "Beginning Registration" << std::endl;
