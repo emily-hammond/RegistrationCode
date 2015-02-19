@@ -54,6 +54,8 @@
 #include "itkVersorRigid3DTransform.h"
 #include "itkMattesMutualInformationImageToImageMetric.h" // v4 does not yet support local-deforming transforms
 #include "itkLinearInterpolateImageFunction.h"
+#include "itkImageRegistrationMethod.h"
+#include "itkVersorRigid3DTransformOptimizer.h"
 
 // additional C++ libraries
 #include <itksys/SystemTools.hxx>
@@ -231,12 +233,19 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 }
 
 template< class T >
+// Write function to help output things to the out-stream
 std::string to_string(T t)
 {
 	std::ostringstream oss;
 	oss << t;
 	return oss.str();
 }
+
+
+/*************************************************************************
+ * Write functions to monitor the registration process!
+ *************************************************************************/
+// still need to implement
 
 /*************************************************************************
  * Main function to perform/test functionality
@@ -301,11 +310,12 @@ int main(int argc, char * argv[])
 	//  - generation of mask files
 	//  - etc.
 
+	// ************************* TRANSFORM *******************************
 	// set up rigid transform with initialization
 	typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
 
-	//*********************** INITIALIZATION *******************************
+	// ********************** INITIALIZATION *****************************
 	typedef itk::CenteredTransformInitializer< RigidTransformType, FixedImageType, MovingImageType >	InitializerType;
 	InitializerType::Pointer initializer = InitializerType::New();
 	
@@ -322,7 +332,7 @@ int main(int argc, char * argv[])
 	std::string rigidInitGeomFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitGeom.tfm";
 	WriteOutTransform< RigidTransformType >( rigidInitGeomFilename.c_str() , rigidTransform );
 
-	// ************************ HISTOGRAMS ******************************
+	// ************************ HISTOGRAMS *******************************
 	// moving image
 	std::string movingHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + to_string( movingBins ) + "Histogram.txt";
 	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, movingBins );
@@ -333,28 +343,53 @@ int main(int argc, char * argv[])
 	// *********************** INTERPOLATOR ******************************
 	typedef itk::LinearInterpolateImageFunction< MovingImageType, double >	InterpolatorType;
 	InterpolatorType::Pointer interpolator = InterpolatorType::New();
-	interpolator->SetInputImage( movingImage );
-	std::cout << "Interpolator complete" << std::endl;
 
-	// ************************** METRIC ******************************
+	// *************************** METRIC ********************************
 	typedef itk::MattesMutualInformationImageToImageMetric< FixedImageType, MovingImageType > MetricType;
 	MetricType::Pointer metric = MetricType::New();
-	
-	metric->SetFixedImage( fixedImage );
-	metric->SetMovingImage( movingImage );
-	metric->SetTransform( rigidTransform );
-	//metric->SetMovingInterpolator( interpolator );
 
-	//MetricType::TransformParametersType displacement = rigidTransform->GetParameters();
+	// ************************ OPTIMIZER ********************************
+	typedef itk::VersorRigid3DTransformOptimizer	RigidOptimizerType;
+	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
+	// set parameters
+	rigidOptimizer->SetMinimumStepLength( 0.001 );
+	rigidOptimizer->SetMaximumStepLength( 0.1 );
+	rigidOptimizer->SetNumberOfIterations( 1000 );
 
-	metric->Initialize();
-
+	// ******************* REGISTRATION METHOD ***************************
+	typedef itk::ImageRegistrationMethod< FixedImageType, MovingImageType >		RegistrationType;
+	RegistrationType::Pointer registration = RegistrationType::New();
+	// set components for rigid registration
+	registration->SetMetric( metric );
+	registration->SetOptimizer( rigidOptimizer );
+	registration->SetTransform( rigidTransform );
+	registration->SetInterpolator( interpolator );
+	// set images
+	registration->SetFixedImage( fixedImage );
+	registration->SetMovingImage( movingImage );
+	// perform registration
 	std::cout << std::endl;
-	//std::cout << " Metric value: " <<  metric->GetValue( displacement ) << std::endl;
-	std::cout << " #histogram bins: " << metric->GetNumberOfHistogramBins() << std::endl;
-	std::cout << " #spatial samples: " << metric->GetNumberOfSpatialSamples() << std::endl;
-	std::cout << " #pixels counted: " << metric->GetNumberOfPixelsCounted() << std::endl;
-	std::cout << " #moving samples: " << metric->GetNumberOfMovingImageSamples() << std::endl;
+	std::cout << "Beginning Registration" << std::endl;
+	try
+	{
+		registration->Update();
+		std::cout << "OptimizerStopCondition: " << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+	}
+	catch( itk::ExceptionObject & err )
+	{
+		std::cerr << "ExceptionObjectCaught!" << std::endl;
+		std::cerr << err << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	// print results to the screen
+	std::cout << std::endl;
+	std::cout << " Iterations      : " << rigidOptimizer->GetCurrentIteration() << std::endl;
+	std::cout << " Metric value    : " << rigidOptimizer->GetValue() << std::endl;
+	std::cout << " #histogram bins : " << metric->GetNumberOfHistogramBins() << std::endl;
+	std::cout << " #spatial samples: " << registration->GetMetric()->GetNumberOfSpatialSamples() << std::endl;
+	std::cout << " #pixels counted : " << registration->GetMetric()->GetNumberOfPixelsCounted() << std::endl;
+	std::cout << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
 
 	// obtain joint histogram and rescale
 	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
@@ -369,6 +404,11 @@ int main(int argc, char * argv[])
 	// write out jpdf to file
 	std::string jointHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + baseFixedFilename + "_jointHistogram.tif";
 	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), image );
+
+	// write final rigid transform out to file
+	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.txt";
+	rigidTransform->SetParameters( registration->GetLastTransformParameters() );
+	WriteOutTransform< RigidTransformType >( finalRigidTransformFilename.c_str(), rigidTransform );
 
 	return EXIT_SUCCESS;
 }
