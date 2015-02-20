@@ -345,6 +345,7 @@ int main(int argc, char * argv[])
 	InterpolatorType::Pointer interpolator = InterpolatorType::New();
 
 	// *************************** METRIC ********************************
+	// the v3 metric does not have the function GetJointPDF!!!
 	typedef itk::MattesMutualInformationImageToImageMetric< FixedImageType, MovingImageType > MetricType;
 	MetricType::Pointer metric = MetricType::New();
 
@@ -390,25 +391,11 @@ int main(int argc, char * argv[])
 	std::cout << " Metric value    : " << rigidOptimizer->GetValue() << std::endl;
 	std::cout << " #histogram bins : " << metric->GetNumberOfHistogramBins() << std::endl;
 	std::cout << " #spatial samples: " << registration->GetMetric()->GetNumberOfSpatialSamples() << std::endl;
-	std::cout << " #pixels counted : " << registration->GetMetric()->GetNumberOfPixelsCounted() << std::endl;
+	std::cout << " #fixed samples  : " << registration->GetMetric()->GetNumberOfFixedImageSamples() << std::endl;
 	std::cout << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
 
-	// obtain joint histogram and rescale
-	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
-	typedef itk::Image< CharPixelType, 2 >				JointHistogramImageType;
-	typedef itk::RescaleIntensityImageFilter< JPDFImageType, JointHistogramImageType >	RescaleFilterType;
-	RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
-	rescaler->SetInput( metric->GetJointPDF() );
-	rescaler->SetOutputMinimum( 0 );
-	rescaler->SetOutputMaximum( 255 );
-	JointHistogramImageType::Pointer image = JointHistogramImageType::New();
-
-	// write out jpdf to file
-	std::string jointHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + baseFixedFilename + "_jointHistogram.tif";
-	WriteOutImage< JointHistogramImageType, JointHistogramImageType >( jointHistogramFilename.c_str(), image );
-
 	// write final rigid transform out to file
-	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.txt";
+	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.tfm";
 	rigidTransform->SetParameters( registration->GetLastTransformParameters() );
 	WriteOutTransform< RigidTransformType >( finalRigidTransformFilename.c_str(), rigidTransform );
 
