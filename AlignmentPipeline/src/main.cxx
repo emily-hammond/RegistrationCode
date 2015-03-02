@@ -3,29 +3,6 @@
  *
  * This code is the main code written to align multi-modal images taken of the same
  * subject on the same day.
- * 
- * steps:
- *	1. Create a set up for the desired inputs and outputs
- *			Inputs: fixed image, moving image, output directory name
- *			Outputs: transformed moving image, final transform parameters, 
- *					 deformation image, jacobian map, histogram images		
- *	2. Read and write functions pulled from RegistrationCode/src/ReadWriteFunctions
- *	3. Obtain the histograms of the images, and the joint histogram (obtain jh from MMI class)
- *	3. Flow of program
- *		- Read in desired images
- *		- (Perform desired preprocessing steps)
- *		- Perform initial alignment
- *			CenteredTransformInitializer by geometry
- *		- Perform rigid registration
- *			Components: VersorRigid3DTransform, VersorRigid3DOptimizer, 
- *						MattesMutualInformation, LinearInterpolator
- *		- Give option for affine registration
- *			Components: AffineTransform, ConjugateGradientLineSearchOptimizerv4, 
- *						MattesMutualInformation, LinearInterpolator
- *		- Give option for bspline registration
- *			Components: BSplineTransform, ConjugateGradientLineSearchOptimizerv4, 
- *						MattesMutualInformation, LinearInterpolator
- *		- Write out all the desired files
  *
  */
 
@@ -241,7 +218,6 @@ std::string to_string(T t)
 	return oss.str();
 }
 
-
 /*************************************************************************
  * Write functions to monitor the registration process!
  *************************************************************************/
@@ -252,20 +228,24 @@ std::string to_string(T t)
  *************************************************************************/
 int main(int argc, char * argv[])
 {
-	if( argc < 6 )
+	if( argc < 4 )
 	{
 		std::cerr << "Incorrect number of inputs: " << std::endl;
-		std::cerr << "	main.exe fixedImage movingImage outputDirectory movingBins fixedBins" << std::endl;
+		std::cerr << "	main.exe fixedImage movingImage outputDirectory [movingBins] [fixedBins]" << std::endl;
+		std::cerr << "          	[fixedFiducials] [movingFiducials]" << std::endl;
 	}
 	
 	//*********************** INPUTS *******************************
-	// images
+	// fixed/moving images
 	std::string fixedImageFilename = argv[1];
 	std::string movingImageFilename = argv[2];
+
 	// mask files (add in later)
+
 	// output directory/file format
 	std::string outputDirectory = argv[3];
 	std::string outputFileFormat = ".mhd";
+
 	// breakdown files to get baseFilename
 	// moving image
 	std::string baseMovingFilename = movingImageFilename.substr( movingImageFilename.find_last_of("/\\") + 1 );
@@ -273,14 +253,25 @@ int main(int argc, char * argv[])
 	// fixed image
 	std::string baseFixedFilename = fixedImageFilename.substr( fixedImageFilename.find_last_of("/\\") + 1 );
 	baseFixedFilename = baseFixedFilename.substr(0, baseFixedFilename.find_last_of('.'));
-	// joint histogram bins (curiosity)
-	const int movingBins = atoi(argv[4]);
-	const int fixedBins = atoi(argv[5]);
-	// landmark filenames (validation)
-	//const char * fixedFiducialList = argv[3];
-	//const char * movingFiducialList = argv[4];
 
-	//*********************** OUTPUTS *******************************
+	// joint histogram bins (curiosity)
+	int movingBins = 10;
+	int fixedBins = 10;
+
+	if( argc > 4 )
+	{
+		movingBins = atoi(argv[4]);
+		fixedBins = atoi(argv[5]);
+	}
+
+	// landmark filenames (validation)
+	if( argc > 6 )
+	{
+		const char * fixedFiducialList = argv[6];
+		const char * movingFiducialList = argv[7];
+	}
+
+	// ************************* OUTPUTS *********************************
 	/*
 	std::string rigidResultFilename = outputDirectory + "\\rigidResult." + outputFileFormat;
 	std::string rigidTransformFilename = outputDirectory + "\\rigidTransformParameters.txt";
@@ -293,30 +284,38 @@ int main(int argc, char * argv[])
 	std::string jointHistogramFilename = outputDirectory + "\\jointHistogram.tif";
 	*/
 
-	// read in necessary files
+	// ******************* DEFINE/READ IN IMAGES *************************
+	// define image types
 	const unsigned int		Dimension = 3;
-	typedef float			PixelType;
-	typedef unsigned char	CharPixelType;
+	typedef float			FloatPixelType;
+	//typedef unsigned char	CharPixelType;
 
-	typedef itk::Image< PixelType, Dimension >	FixedImageType;
-	typedef itk::Image< PixelType, Dimension >	MovingImageType;
+	typedef itk::Image< FloatPixelType, Dimension >	FloatImageType;
+	//typedef itk::Image< CharPixelType, Dimension >  CharImageType;
 
 	// read in fixed and moving images
-	FixedImageType::Pointer fixedImage = ReadInImage<FixedImageType>(fixedImageFilename.c_str());
-	MovingImageType::Pointer movingImage = ReadInImage<MovingImageType>(movingImageFilename.c_str());
+	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>(fixedImageFilename.c_str());
+	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>(movingImageFilename.c_str());
 
-	// insert preprocessing steps
-	//	- inhomogeneity correction
-	//  - generation of mask files
-	//  - etc.
+	// ************************ HISTOGRAMS *******************************
+	if( argc > 4 )
+	{
+		// moving image
+		std::string movingHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + to_string( movingBins ) + "Histogram.txt";
+		CreateHistogram< FloatImageType >( movingHistogramFilename.c_str(), movingImage, movingBins );
+		// fixed image
+		std::string fixedHistogramFilename = outputDirectory + "\\" + baseFixedFilename + "_" + to_string( fixedBins ) + "Histogram.txt";
+		CreateHistogram< FloatImageType >( fixedHistogramFilename.c_str(), fixedImage, fixedBins );
+	}
 
 	// ************************* TRANSFORM *******************************
-	// set up rigid transform with initialization
+	// set up rigid transform
 	typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
 
-	// ********************** INITIALIZATION *****************************
-	typedef itk::CenteredTransformInitializer< RigidTransformType, FixedImageType, MovingImageType >	InitializerType;
+	// ***************** GEOMETRICAL INITIALIZATION **********************
+	// instantiate initializer (align geometrical center of images)
+	typedef itk::CenteredTransformInitializer< RigidTransformType, FloatImageType, FloatImageType >	InitializerType;
 	InitializerType::Pointer initializer = InitializerType::New();
 	
 	// input images
@@ -332,23 +331,30 @@ int main(int argc, char * argv[])
 	std::string rigidInitGeomFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitGeom.tfm";
 	WriteOutTransform< RigidTransformType >( rigidInitGeomFilename.c_str() , rigidTransform );
 
-	// ************************ HISTOGRAMS *******************************
-	// moving image
-	std::string movingHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + to_string( movingBins ) + "Histogram.txt";
-	CreateHistogram< MovingImageType >( movingHistogramFilename.c_str(), movingImage, movingBins );
-	// fixed image
-	std::string fixedHistogramFilename = outputDirectory + "\\" + baseFixedFilename + "_" + to_string( fixedBins ) + "Histogram.txt";
-	CreateHistogram< FixedImageType >( fixedHistogramFilename.c_str(), fixedImage, fixedBins );
-
 	// *********************** INTERPOLATOR ******************************
-	typedef itk::LinearInterpolateImageFunction< MovingImageType, double >	InterpolatorType;
+	typedef itk::LinearInterpolateImageFunction< FloatImageType, double >	InterpolatorType;
 	InterpolatorType::Pointer interpolator = InterpolatorType::New();
 
 	// *************************** METRIC ********************************
 	// the v3 metric does not have the function GetJointPDF!!!
-	typedef itk::MattesMutualInformationImageToImageMetric< FixedImageType, MovingImageType > MetricType;
+	typedef itk::MattesMutualInformationImageToImageMetric< FloatImageType, FloatImageType > MetricType;
 	MetricType::Pointer metric = MetricType::New();
 
+	// ******************* METRIC INITIALIZATION *************************
+	// iterate through the transform in the z direction and calculate metric
+	// for an additional initialization
+	metric->SetFixedImage( fixedImage );
+	metric->SetMovingImage( movingImage );
+	metric->SetFixedImageRegion( fixedImage->GetLargestPossibleRegion() );
+	metric->SetTransform( rigidTransform );
+	metric->SetInterpolator( interpolator );
+	
+	// initialize
+	metric->Initialize();
+
+	std::cout << metric->GetValue( rigidTransform->GetParameters() ) << std::endl;
+
+	/*
 	// ************************ OPTIMIZER ********************************
 	typedef itk::VersorRigid3DTransformOptimizer	RigidOptimizerType;
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
@@ -358,7 +364,7 @@ int main(int argc, char * argv[])
 	rigidOptimizer->SetNumberOfIterations( 1000 );
 
 	// ******************* REGISTRATION METHOD ***************************
-	typedef itk::ImageRegistrationMethod< FixedImageType, MovingImageType >		RegistrationType;
+	typedef itk::ImageRegistrationMethod< FloatImageType, FloatImageType >		RegistrationType;
 	RegistrationType::Pointer registration = RegistrationType::New();
 	// set components for rigid registration
 	registration->SetMetric( metric );
@@ -398,6 +404,7 @@ int main(int argc, char * argv[])
 	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.tfm";
 	rigidTransform->SetParameters( registration->GetLastTransformParameters() );
 	WriteOutTransform< RigidTransformType >( finalRigidTransformFilename.c_str(), rigidTransform );
+	*/
 
 	return EXIT_SUCCESS;
 }
