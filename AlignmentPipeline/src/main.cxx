@@ -38,6 +38,7 @@
 #include <itksys/SystemTools.hxx>
 #include <fstream>
 #include <string>
+#include <stdlib.h>
 
 // landmark analysis
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\src\transformFiducials\itkLandmarkAnalysis.h"
@@ -220,56 +221,72 @@ std::string to_string(T t)
 
 // Write function to return the FOV of the fixed and moving images
 template< typename ImageType >
-typename ImageType::PointType GetImageRange( typename ImageType::Pointer image )
+typename ImageType::PointType GetImageRange( typename ImageType::Pointer image, std::string returnOption )
 {
-  // extract state variables from the image
-  const ImageType::PointType &     imageOrigin = image->GetOrigin();
-  const ImageType::SpacingType &   imageSpacing = image->GetSpacing();
-  const ImageType::SizeType &      imageSize = image->GetLargestPossibleRegion().GetSize();
-  const ImageType::IndexType &     imageIndex = image->GetLargestPossibleRegion().GetIndex();
+	// extract state variables from the image
+	const ImageType::PointType &     imageOrigin = image->GetOrigin();
+	const ImageType::SpacingType &   imageSpacing = image->GetSpacing();
+	const ImageType::SizeType &      imageSize = image->GetLargestPossibleRegion().GetSize();
+	const ImageType::IndexType &     imageIndex = image->GetLargestPossibleRegion().GetIndex();
   
-  // What is the name of the last pixel index location?
-  ImageType::IndexType lastPixelIndex;
-  // obtain information from the size of the largest possible region
-  lastPixelIndex[0] = imageSize[0]-1;
-  lastPixelIndex[1] = imageSize[1]-1;
-  lastPixelIndex[2] = imageSize[2]-1;
+	// What is the name of the last pixel index location?
+	ImageType::IndexType lastPixelIndex;
+	// obtain information from the size of the largest possible region
+	lastPixelIndex[0] = imageSize[0]-1;
+	lastPixelIndex[1] = imageSize[1]-1;
+	lastPixelIndex[2] = imageSize[2]-1;
 
-  // get physcial location of lastPixelIndex to the lastIndexPhysicalPoint
-  ImageType::PointType lastIndexPhysicalPoint;
-  // use this function to take in a pixel index and a reference to a point index (output variable) - this is done to avoid the temporary variable in a for loop
-  image->TransformIndexToPhysicalPoint( lastPixelIndex, lastIndexPhysicalPoint);
+	// get physcial location of lastPixelIndex to the lastIndexPhysicalPoint
+	ImageType::PointType lastIndexPhysicalPoint;
+	// use this function to take in a pixel index and a reference to a point index (output variable) - this is done to avoid the temporary variable in a for loop
+	image->TransformIndexToPhysicalPoint( lastPixelIndex, lastIndexPhysicalPoint);
 
-  // What is the image field of view (FOV)?
-  // find the upper most corner of the image
-  itk::ContinuousIndex<double,3> upperImageCorner;
-  // add 0.5 to the last pixel index (previously calculated)
-  upperImageCorner[0] = lastPixelIndex[0] + 0.5;
-  upperImageCorner[1] = lastPixelIndex[1] + 0.5;
-  upperImageCorner[2] = lastPixelIndex[2] + 0.5;
+	// What is the image field of view (FOV)?
+	// find the upper most corner of the image
+	itk::ContinuousIndex<double,3> upperImageCorner;
+	// add 0.5 to the last pixel index (previously calculated)
+	upperImageCorner[0] = lastPixelIndex[0] + 0.5;
+	upperImageCorner[1] = lastPixelIndex[1] + 0.5;
+	upperImageCorner[2] = lastPixelIndex[2] + 0.5;
 
-  // convert to physical coordinates
-  ImageType::PointType FOVend;
-  image->TransformContinuousIndexToPhysicalPoint(upperImageCorner, FOVend);
+	// convert to physical coordinates
+	ImageType::PointType FOVend;
+	image->TransformContinuousIndexToPhysicalPoint(upperImageCorner, FOVend);
 
-  // find the lower most corner of the image
-  itk::ContinuousIndex<double,3> lowerImageCorner;
-  // use the current index, subtract the start index and then another half voxel
-  lowerImageCorner[0] = imageIndex[0] - 0.0 - 0.5;
-  lowerImageCorner[1] = imageIndex[1] - 0.0 - 0.5;
-  lowerImageCorner[2] = imageIndex[2] - 0.0 - 0.5;
-  // convert to physical coordinates
-  ImageType::PointType FOVstart;
-  image->TransformContinuousIndexToPhysicalPoint(lowerImageCorner, FOVstart);
+	// return FOV end if desired
+	if( returnOption.compare("end") == 0 )
+	{
+		return FOVend;
+	}
 
-  // find the center of physical space (center of the FOV)
-  ImageType::PointType FOVcenter;
-  // average out the FOV end and start
-  FOVcenter[0] = (FOVend[0] + FOVstart[0])*0.5;
-  FOVcenter[1] = (FOVend[1] + FOVstart[1])*0.5;
-  FOVcenter[2] = (FOVend[2] + FOVstart[2])*0.5;
+	// find the lower most corner of the image
+	itk::ContinuousIndex<double,3> lowerImageCorner;
+	// use the current index, subtract the start index and then another half voxel
+	lowerImageCorner[0] = imageIndex[0] - 0.0 - 0.5;
+	lowerImageCorner[1] = imageIndex[1] - 0.0 - 0.5;
+	lowerImageCorner[2] = imageIndex[2] - 0.0 - 0.5;
+	// convert to physical coordinates
+	ImageType::PointType FOVstart;
+	image->TransformContinuousIndexToPhysicalPoint(lowerImageCorner, FOVstart);
 
-  return FOVcenter;
+	// return FOV start if desired
+	if( returnOption.compare("start") == 0 )
+	{
+		return FOVstart;
+	}
+
+	// find the center of physical space (center of the FOV)
+	ImageType::PointType FOVcenter;
+	// average out the FOV end and start
+	FOVcenter[0] = (FOVend[0] + FOVstart[0])*0.5;
+	FOVcenter[1] = (FOVend[1] + FOVstart[1])*0.5;
+	FOVcenter[2] = (FOVend[2] + FOVstart[2])*0.5;
+
+	// return FOV end if desired
+	if( returnOption.compare("center") == 0 )
+	{
+		return FOVcenter;
+	}
 }
 
 
@@ -407,9 +424,30 @@ int main(int argc, char * argv[])
 	// initialize
 	metric->Initialize();
 
-	// identify center of moving image
-	FloatImageType::PointType movingCenter = GetImageRange< FloatImageType >( movingImage );
+	// identify FOVs of both images
+	FloatImageType::PointType movingEnd = GetImageRange< FloatImageType >( movingImage, "end" );
+	FloatImageType::PointType movingStart = GetImageRange< FloatImageType >( movingImage, "start" );
+	FloatImageType::PointType fixedStart = GetImageRange< FloatImageType >( fixedImage, "start" );
+	FloatImageType::PointType fixedCenter = GetImageRange< FloatImageType >( fixedImage, "center" );
 
+	// obtain the parameters from the transform
+	RigidTransformType::ParametersType parameters = rigidTransform->GetParameters();	
+
+	/* This portion of code identifies where to perform the gross translation in the z direction.
+	The range is defined as the distance from the center of the fixed image to the location where
+	the moving image center would occur if the two images were bottom aligned. So in math terms
+	fixedCenter - fixedStart - movingRange/2 (all only for the z direction).
+	*/
+	float range = abs( fixedCenter[2] - fixedStart[2] - abs( movingEnd[2] - movingStart[2] )/2.0 );
+	float origParam5 = parameters[5];
+
+	// change the parameter corresponding to the z translation and obtain the metric
+	std::cout << "  METRIC        PARAMETERS " << std::endl;
+	for( float zTrans = origParam5 - range; zTrans < origParam5 + range; zTrans = zTrans + 10 )
+	{
+		parameters[5] = zTrans;
+		std::cout << metric->GetValue( parameters ) << "    " << parameters << std::endl;
+	}
 
 	/*
 	// ************************ OPTIMIZER ********************************
