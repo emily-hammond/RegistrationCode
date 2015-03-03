@@ -220,20 +220,13 @@ std::string to_string(T t)
 
 // Write function to return the FOV of the fixed and moving images
 template< typename ImageType >
-int GetImageRange( typename ImageType::Pointer image )
+typename ImageType::PointType GetImageRange( typename ImageType::Pointer image )
 {
   // extract state variables from the image
   const ImageType::PointType &     imageOrigin = image->GetOrigin();
   const ImageType::SpacingType &   imageSpacing = image->GetSpacing();
   const ImageType::SizeType &      imageSize = image->GetLargestPossibleRegion().GetSize();
   const ImageType::IndexType &     imageIndex = image->GetLargestPossibleRegion().GetIndex();
-  //const ImageType::DirectionType & imageDirectionCosine = image->GetDirection();
-
-  // output the name and origin location of the image
-  // dump out all state variables of image
-  // std::cout << image << std::endl;
-  // output image name
-  //std::cout << "IMAGE NAME: " << inputVolume << std::endl;
   
   // What is the name of the last pixel index location?
   ImageType::IndexType lastPixelIndex;
@@ -241,31 +234,11 @@ int GetImageRange( typename ImageType::Pointer image )
   lastPixelIndex[0] = imageSize[0]-1;
   lastPixelIndex[1] = imageSize[1]-1;
   lastPixelIndex[2] = imageSize[2]-1;
-  // print out to screen
-  std::cout << "MAX VALID INDEX LOCATION: " << "[" << lastPixelIndex[0] << "," << lastPixelIndex[1] << "," << lastPixelIndex[2] << "]" << std::endl;
 
-  // output origin location
-  std::cout << "IMAGE ORIGIN: " << imageOrigin << std::endl;
-  
-  // How big is the image in pysical dimensions? (i.e. Area in 2D, Volume in 3D)
-  float physicaldim[3];
-  // obtain information as size * spacing (# pixels by the size of each pixel)
-  // size of image in mm
-  physicaldim[0] = imageSize[0] * imageSpacing[0];
-  physicaldim[1] = imageSize[1] * imageSpacing[1];
-  physicaldim[2] = imageSize[2] * imageSpacing[2];
-  // output to the screen
-  std::cout << "IMAGE PHYSICAL SIZE DIMENSIONS: " << "[" << physicaldim[0] << "," << physicaldim[1] << "," << physicaldim[2] << "]" << std::endl;
-  //std::cout << "" << std::endl;
-
-  // get phsycial location of lastPixelIndex to the lastIndexPhysicalPoint
+  // get physcial location of lastPixelIndex to the lastIndexPhysicalPoint
   ImageType::PointType lastIndexPhysicalPoint;
   // use this function to take in a pixel index and a reference to a point index (output variable) - this is done to avoid the temporary variable in a for loop
   image->TransformIndexToPhysicalPoint( lastPixelIndex, lastIndexPhysicalPoint);
-  
-  // print out to screen
-  //std::cout << "The physical location of the last voxel is " << lastIndexPhysicalPoint << std::endl;
-  //std::cout << "" << std::endl;
 
   // What is the image field of view (FOV)?
   // find the upper most corner of the image
@@ -289,10 +262,6 @@ int GetImageRange( typename ImageType::Pointer image )
   ImageType::PointType FOVstart;
   image->TransformContinuousIndexToPhysicalPoint(lowerImageCorner, FOVstart);
 
-  // output to screen
-  std::cout << "IMAGE FIELD OF VIEW: " << FOVstart << std::endl;
-  std::cout << "		     " << FOVend << std::endl;
-
   // find the center of physical space (center of the FOV)
   ImageType::PointType FOVcenter;
   // average out the FOV end and start
@@ -300,25 +269,7 @@ int GetImageRange( typename ImageType::Pointer image )
   FOVcenter[1] = (FOVend[1] + FOVstart[1])*0.5;
   FOVcenter[2] = (FOVend[2] + FOVstart[2])*0.5;
 
-  // ouput to screen
-  std::cout << "IMAGE CENTER OF PHYSICAL SPACE: " << FOVcenter << std::endl;
-
-  // Find the center of mass (or gravity) of the image
-  // for this value, we need to use the ImageMomentsCalculator header file
-  typedef itk::ImageMomentsCalculator<ImageType> MomentsType;
-  typedef itk::Vector<double, 3>         VectorType;
-  // set up moments calculator object and input parameters
-  MomentsType::Pointer momentcalculator = MomentsType::New();
-  momentcalculator->SetImage( image );
-  momentcalculator->Compute();
-  // calculate the center of mass/gravity
-  MomentsType::VectorType centerofgrav = momentcalculator->GetCenterOfGravity();
-
-  // output to screen
-  std::cout << "CENTER OF (INTENSITY) MASS: " << centerofgrav << std::endl;
-  std::cout << "" << std::endl;
-
-  return EXIT_SUCCESS;
+  return FOVcenter;
 }
 
 
@@ -456,9 +407,9 @@ int main(int argc, char * argv[])
 	// initialize
 	metric->Initialize();
 
-	// identify FOV of fixed/moving images
-	GetImageRange< FloatImageType >( fixedImage );
-	GetImageRange< FloatImageType >( movingImage );
+	// identify center of moving image
+	FloatImageType::PointType movingCenter = GetImageRange< FloatImageType >( movingImage );
+
 
 	/*
 	// ************************ OPTIMIZER ********************************
