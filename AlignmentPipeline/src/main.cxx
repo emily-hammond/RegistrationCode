@@ -289,7 +289,6 @@ typename ImageType::PointType GetImageRange( typename ImageType::Pointer image, 
 	}
 }
 
-
 /*************************************************************************
  * Write functions to monitor the registration process!
  *************************************************************************/
@@ -440,14 +439,31 @@ int main(int argc, char * argv[])
 	*/
 	float range = abs( fixedCenter[2] - fixedStart[2] - abs( movingEnd[2] - movingStart[2] )/2.0 );
 	float origParam5 = parameters[5];
+	//MetricWithParameters< float, RigidTransformType::ParametersType> metricValues[50] = { };
+	//int i = 0;
+
+	float minMetric = 10000000.0;
+	RigidTransformType::ParametersType minParameters;
 
 	// change the parameter corresponding to the z translation and obtain the metric
-	std::cout << "  METRIC        PARAMETERS " << std::endl;
-	for( float zTrans = origParam5 - range; zTrans < origParam5 + range; zTrans = zTrans + 10 )
+	std::cout << "  METRIC      PARAMETERS" << std::endl;
+	for( float zTrans = origParam5 - range; zTrans < origParam5 + range; zTrans = zTrans + range/20.0 )
 	{
+		// change z parameter
 		parameters[5] = zTrans;
+		// store parameters and metric value into array
+		if( metric->GetValue(parameters) < minMetric )
+		{
+			minMetric = metric->GetValue(parameters);
+			minParameters = parameters;
+		}
 		std::cout << metric->GetValue( parameters ) << "    " << parameters << std::endl;
 	}
+
+	// insert the new initialization parameters into the transform and print out
+	rigidTransform->SetParameters( minParameters );
+	std::string rigidInitMetricFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitMetric.tfm";
+	WriteOutTransform< RigidTransformType >( rigidInitMetricFilename.c_str() , rigidTransform );
 
 	/*
 	// ************************ OPTIMIZER ********************************
