@@ -34,6 +34,9 @@
 #include "itkImageRegistrationMethod.h"
 #include "itkVersorRigid3DTransformOptimizer.h"
 
+// monitoring
+#include "itkCommand.h"
+
 // additional C++ libraries
 #include <itksys/SystemTools.hxx>
 #include <fstream>
@@ -292,7 +295,32 @@ typename ImageType::PointType GetImageRange( typename ImageType::Pointer image, 
 /*************************************************************************
  * Write functions to monitor the registration process!
  *************************************************************************/
-// still need to implement
+class RigidCommandIterationUpdate: public itk::Command
+{
+public:
+	typedef RigidCommandIterationUpdate	Self;
+	typedef itk::Command				Superclass;
+	typedef itk::SmartPointer< Self >	Pointer;
+	itkNewMacro( Self );
+protected:
+	RigidCommandIterationUpdate() {};
+public:
+	typedef itk::VersorRigid3DTransformOptimizer	OptimizerType;
+	typedef const OptimizerType *					OptimizerPointer;
+	void Execute( itk::Object *caller, const itk::EventObject &event)
+	{
+		Execute( (const itk::Object *)caller, event);
+	}
+	void Execute( const itk::Object * object, const itk::EventObject &event )
+	{
+		OptimizerPointer	optimizer = static_cast< OptimizerPointer >( object );
+		if( ! itk::IterationEvent().CheckEvent( &event )
+		{
+			return;
+		}
+		std::cout << optimizer->GetCurrentIteration() << "     " << optimizer->GetValue() << "    " << optimizer->GetCurrentPosition() << std::endl;
+	}
+}
 
 /*************************************************************************
  * Main function to perform/test functionality
@@ -465,7 +493,6 @@ int main(int argc, char * argv[])
 	std::string rigidInitMetricFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitMetric.tfm";
 	WriteOutTransform< RigidTransformType >( rigidInitMetricFilename.c_str() , rigidTransform );
 
-	/*
 	// ************************ OPTIMIZER ********************************
 	typedef itk::VersorRigid3DTransformOptimizer	RigidOptimizerType;
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
@@ -515,7 +542,6 @@ int main(int argc, char * argv[])
 	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.tfm";
 	rigidTransform->SetParameters( registration->GetLastTransformParameters() );
 	WriteOutTransform< RigidTransformType >( finalRigidTransformFilename.c_str(), rigidTransform );
-	*/
 
 	return EXIT_SUCCESS;
 }
