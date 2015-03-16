@@ -39,6 +39,7 @@
 
 // additional C++ libraries
 #include <itksys/SystemTools.hxx>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <stdlib.h>
@@ -314,13 +315,14 @@ public:
 	void Execute( const itk::Object * object, const itk::EventObject &event )
 	{
 		OptimizerPointer	optimizer = static_cast< OptimizerPointer >( object );
-		if( ! itk::IterationEvent().CheckEvent( &event )
+		if( ! itk::IterationEvent().CheckEvent( &event ) )
 		{
 			return;
 		}
-		std::cout << optimizer->GetCurrentIteration() << "     " << optimizer->GetValue() << "    " << optimizer->GetCurrentPosition() << std::endl;
+		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();
+		std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
 	}
-}
+};
 
 /*************************************************************************
  * Main function to perform/test functionality
@@ -440,6 +442,7 @@ int main(int argc, char * argv[])
 	MetricType::Pointer metric = MetricType::New();
 
 	// ******************* METRIC INITIALIZATION *************************
+	std::cout << "\nPerform metric initialization" << std::endl;
 	// iterate through the transform in the z direction and calculate metric
 	// for an additional initialization
 	metric->SetFixedImage( fixedImage );
@@ -474,7 +477,7 @@ int main(int argc, char * argv[])
 	RigidTransformType::ParametersType minParameters;
 
 	// change the parameter corresponding to the z translation and obtain the metric
-	std::cout << "  METRIC      PARAMETERS" << std::endl;
+	std::cout << "\nMETRIC PARAMETERS" << std::endl;
 	for( float zTrans = origParam5 - range; zTrans < origParam5 + range; zTrans = zTrans + range/20.0 )
 	{
 		// change z parameter
@@ -485,7 +488,7 @@ int main(int argc, char * argv[])
 			minMetric = metric->GetValue(parameters);
 			minParameters = parameters;
 		}
-		std::cout << metric->GetValue( parameters ) << "    " << parameters << std::endl;
+		std::cout << metric->GetValue( parameters ) << " " << parameters << std::endl;
 	}
 
 	// insert the new initialization parameters into the transform and print out
@@ -500,6 +503,16 @@ int main(int argc, char * argv[])
 	rigidOptimizer->SetMinimumStepLength( 0.001 );
 	rigidOptimizer->SetMaximumStepLength( 0.1 );
 	rigidOptimizer->SetNumberOfIterations( 1000 );
+	rigidOptimizer->SetRelaxationFactor( 0.9 );
+
+	// SET THE OPTIMIZER SCALES!!!
+
+	std::cout << "\nRelaxationFactor: " << rigidOptimizer->GetRelaxationFactor() << std::endl;
+	std::cout << "Scales: " << rigidOptimizer->GetScales() << std::endl;
+
+	// register the optimizer with the command class
+	RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();
+	rigidOptimizer->AddObserver( itk::IterationEvent(), rigidObserver );
 
 	// ******************* REGISTRATION METHOD ***************************
 	typedef itk::ImageRegistrationMethod< FloatImageType, FloatImageType >		RegistrationType;
@@ -517,6 +530,7 @@ int main(int argc, char * argv[])
 	// perform registration
 	std::cout << std::endl;
 	std::cout << "Beginning Registration" << std::endl;
+	std::cout << "Itr# StepSize MetricValue TransformParameters" << std::endl;
 	try
 	{
 		registration->Update();

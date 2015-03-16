@@ -37,6 +37,7 @@ def parseLineInHistogramFile( str ):
 # ****************** MAIN CODE *******************
 # read in filename from the command line as the first argument
 script, fixedImage, bins1, movingImage, bins2, resultsDirectory = argv
+print argv
 
 # find the different files to take from
 monitorFilename = resultsDirectory + "\\" + movingImage + "log.txt"
@@ -83,8 +84,6 @@ with open(monitorFilename) as monitoringTxt:
 			params.append( paramsTemp )
 		else:
 			endFlag = False
-	
-	print "\n%r has been read in." %monitorFilename
 
 # transpose rows and columns in params
 params = [[row[i] for row in params] for i in range(6)]
@@ -139,8 +138,6 @@ with open(fixedFilename) as fixedTxt:
 		binTemp, freqTemp = parseLineInHistogramFile( line )
 		fixedBins.append( binTemp )
 		fixedFreq.append( freqTemp )
-		
-	print "\n%r has been read in." %fixedFilename
 
 # plot fixed histogram
 fix = pl.figure(3)
@@ -161,8 +158,6 @@ with open(movingFilename) as movingTxt:
 		binTemp, freqTemp = parseLineInHistogramFile( line )
 		fixedBins.append( binTemp )
 		fixedFreq.append( freqTemp )
-		
-	print "\n%r has been read in." %movingFilename
 
 mov = pl.figure(4)
 ax2 = mov.add_subplot(111)
