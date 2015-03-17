@@ -505,7 +505,20 @@ int main(int argc, char * argv[])
 	rigidOptimizer->SetNumberOfIterations( 1000 );
 	rigidOptimizer->SetRelaxationFactor( 0.9 );
 
-	// SET THE OPTIMIZER SCALES!!!
+	// set optimizer scales
+	RigidOptimizerType::ScalesType rigidOptScales( rigidTransform->GetNumberOfParameters() );
+	// rotation
+	const double rotationScale = 1.0/0.01;
+	rigidOptScales[0] = rotationScale;
+	rigidOptScales[1] = rotationScale;
+	rigidOptScales[2] = rotationScale;
+	// translation
+	const double translationScale = 1.0/50.0;
+	rigidOptScales[3] = translationScale;
+	rigidOptScales[4] = translationScale;
+	rigidOptScales[5] = translationScale;
+	// set the scales
+	rigidOptimizer->SetScales( rigidOptScales );
 
 	std::cout << "\nRelaxationFactor: " << rigidOptimizer->GetRelaxationFactor() << std::endl;
 	std::cout << "Scales: " << rigidOptimizer->GetScales() << std::endl;
