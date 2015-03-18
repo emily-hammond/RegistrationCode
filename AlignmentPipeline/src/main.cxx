@@ -28,11 +28,13 @@
 #include "itkRescaleIntensityImageFilter.h"
 
 // rigid registration
-#include "itkVersorRigid3DTransform.h"
+//#include "itkVersorRigid3DTransform.h"
 #include "itkMattesMutualInformationImageToImageMetric.h" // v4 does not yet support local-deforming transforms
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkImageRegistrationMethod.h"
-#include "itkVersorRigid3DTransformOptimizer.h"
+//#include "itkVersorRigid3DTransformOptimizer.h"
+#include "itkScaleVersor3DTransform.h"
+#include "itkRegularStepGradientDescentOptimizer.h"
 
 // monitoring
 #include "itkCommand.h"
@@ -306,8 +308,8 @@ public:
 protected:
 	RigidCommandIterationUpdate() {};
 public:
-	typedef itk::VersorRigid3DTransformOptimizer	OptimizerType;
-	typedef const OptimizerType *					OptimizerPointer;
+	typedef itk::RegularStepGradientDescentOptimizer	OptimizerType;
+	typedef const OptimizerType *						OptimizerPointer;
 	void Execute( itk::Object *caller, const itk::EventObject &event)
 	{
 		Execute( (const itk::Object *)caller, event);
@@ -411,7 +413,7 @@ int main(int argc, char * argv[])
 
 	// ************************* TRANSFORM *******************************
 	// set up rigid transform
-	typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
+	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
 
 	// ***************** GEOMETRICAL INITIALIZATION **********************
@@ -497,7 +499,7 @@ int main(int argc, char * argv[])
 	WriteOutTransform< RigidTransformType >( rigidInitMetricFilename.c_str() , rigidTransform );
 
 	// ************************ OPTIMIZER ********************************
-	typedef itk::VersorRigid3DTransformOptimizer	RigidOptimizerType;
+	typedef itk::RegularStepGradientDescentOptimizer	RigidOptimizerType;
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
 	// set parameters
 	rigidOptimizer->SetMinimumStepLength( 0.001 );
@@ -508,7 +510,7 @@ int main(int argc, char * argv[])
 	// set optimizer scales
 	RigidOptimizerType::ScalesType rigidOptScales( rigidTransform->GetNumberOfParameters() );
 	// rotation
-	const double rotationScale = 1.0/0.01;
+	const double rotationScale = 1.0/0.1;
 	rigidOptScales[0] = rotationScale;
 	rigidOptScales[1] = rotationScale;
 	rigidOptScales[2] = rotationScale;
@@ -517,6 +519,11 @@ int main(int argc, char * argv[])
 	rigidOptScales[3] = translationScale;
 	rigidOptScales[4] = translationScale;
 	rigidOptScales[5] = translationScale;
+	// scaling
+	const double scalingScale = 1.0/0.01;
+	rigidOptScales[6] = scalingScale;
+	rigidOptScales[7] = scalingScale;
+	rigidOptScales[8] = scalingScale;
 	// set the scales
 	rigidOptimizer->SetScales( rigidOptScales );
 
@@ -558,12 +565,20 @@ int main(int argc, char * argv[])
 
 	// print results to the screen
 	std::cout << std::endl;
+	std::cout << "***** OPTIMIZER PARAMETERS *****" << std::endl;
 	std::cout << " Iterations      : " << rigidOptimizer->GetCurrentIteration() << std::endl;
 	std::cout << " Metric value    : " << rigidOptimizer->GetValue() << std::endl;
 	std::cout << " #histogram bins : " << metric->GetNumberOfHistogramBins() << std::endl;
 	std::cout << " #spatial samples: " << registration->GetMetric()->GetNumberOfSpatialSamples() << std::endl;
 	std::cout << " #fixed samples  : " << registration->GetMetric()->GetNumberOfFixedImageSamples() << std::endl;
 	std::cout << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
+
+	std::cout << "***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
+	std::cout << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
+	std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
+	std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
+	std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
+	std::cout << " Scale: " << rigidTransform->GetScale() << std::endl;
 
 	// write final rigid transform out to file
 	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.tfm";

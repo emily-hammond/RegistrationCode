@@ -44,11 +44,6 @@ monitorFilename = resultsDirectory + "\\" + movingImage + "log.txt"
 fixedFilename = resultsDirectory + "\\" + fixedImage + "_" + bins1 + "Histogram.txt"
 movingFilename = resultsDirectory + "\\" + movingImage + "_" + bins2 + "Histogram.txt"
 
-# coordinate outputs
-metricStepPlot = resultsDirectory + '\\metricStepPlot.png'
-fixedHist = resultsDirectory + '\\fixedHistogram.png'
-movingHist = resultsDirectory + '\\movingHistogram.png'
-
 # Open a file and read in lines corresponding to data
 #filename = raw_input('Enter in name of file: ')
 #print(filename)
@@ -86,7 +81,7 @@ with open(monitorFilename) as monitoringTxt:
 			endFlag = False
 
 # transpose rows and columns in params
-params = [[row[i] for row in params] for i in range(6)]
+params = [[row[i] for row in params] for i in range(9)]
 
 # create a line plot of the iteration number by the metric value
 mon = pl.figure(1)
@@ -100,31 +95,43 @@ ax0b.plot(itr,step)
 pl.xlabel('Iteration')
 pl.ylabel('StepSize')
 pl.title('Evolution of Step Size')
-pl.savefig(metricStepPlot)
+pl.savefig(resultsDirectory + '\\metricStepPlot.png')
 
 # create a plot for the transform parameters
+# rotation
 tran = pl.figure(2)
-ax0 = tran.add_subplot(321)
+ax0 = tran.add_subplot(331)
 ax0.plot(itr,params[0])
 pl.ylabel('Rot1')
 pl.title('Rotation Parameters')
-ax1 = tran.add_subplot(323)
+ax1 = tran.add_subplot(334)
 ax1.plot(itr,params[1])
 pl.ylabel('Rot2')
-ax2 = tran.add_subplot(325)
+ax2 = tran.add_subplot(337)
 ax2.plot(itr,params[2])
 pl.ylabel('Rot3')
 pl.xlabel('Iteration')
-ax3 = tran.add_subplot(322)
+ax3 = tran.add_subplot(332)
 ax3.plot(itr,params[3])
 pl.ylabel('TransX')
 pl.title('Translation Parameters')
-ax4 = tran.add_subplot(324)
+ax4 = tran.add_subplot(335)
 ax4.plot(itr,params[4])
 pl.ylabel('TransY')
-ax5 = tran.add_subplot(326)
+ax5 = tran.add_subplot(338)
 ax5.plot(itr,params[5])
 pl.ylabel('TransZ')
+pl.xlabel('Iteration')
+ax6 = tran.add_subplot(333)
+ax6.plot(itr,params[6])
+pl.ylabel('ScaleX')
+pl.title('Scaling Parameters')
+ax7 = tran.add_subplot(336)
+ax7.plot(itr,params[7])
+pl.ylabel('ScaleY')
+ax8 = tran.add_subplot(339)
+ax8.plot(itr,params[8])
+pl.ylabel('ScaleZ')
 pl.xlabel('Iteration')
 pl.savefig(resultsDirectory + '\\transformEvolutionPlot.png')
 
@@ -146,7 +153,7 @@ ax1.bar(fixedBins, fixedFreq)
 pl.title('Fixed Histogram with %d bins' %len(fixedBins))
 pl.xlabel('Bin value')
 pl.ylabel('Frequency')
-pl.savefig( fixedHist )
+pl.savefig(resultsDirectory + '\\fixedHistogram.png')
 
 with open(movingFilename) as movingTxt:
 	# initialize variables
@@ -165,4 +172,4 @@ ax2.bar(fixedBins, fixedFreq)
 pl.title('Moving Histogram with %d bins' %len(fixedBins))
 pl.xlabel('Bin value')
 pl.ylabel('Frequency')
-pl.savefig( movingHist )
+pl.savefig(resultsDirectory + '\\movingHistogram.png')
