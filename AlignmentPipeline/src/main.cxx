@@ -337,6 +337,9 @@ int main(int argc, char * argv[])
 	itk::TimeProbesCollectorBase chronometer;
 	itk::MemoryProbesCollectorBase memorymeter;
 
+	memorymeter.Start( "Full program" );
+	chronometer.Start( "Full program" );
+
 	if( argc < 4 )
 	{
 		std::cerr << "Incorrect number of inputs: " << std::endl;
@@ -544,7 +547,7 @@ int main(int argc, char * argv[])
 	rigidOptScales[4] = translationScale;
 	rigidOptScales[5] = translationScale;
 	// scaling
-	const double scalingScale = 1.0/0.01;
+	const double scalingScale = 1.0/0.8;
 	rigidOptScales[6] = scalingScale;
 	rigidOptScales[7] = scalingScale;
 	rigidOptScales[8] = scalingScale;
@@ -609,6 +612,7 @@ int main(int argc, char * argv[])
 	std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
 	std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 	std::cout << " Scale: " << rigidTransform->GetScale() << std::endl;
+	std::cout << std::endl;
 
 	// write final rigid transform out to file
 	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.tfm";
@@ -624,7 +628,10 @@ int main(int argc, char * argv[])
 	rescaler->SetOutputMaximum( 255 );
 	
 	std::string jointHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_JPDF.tif";
-	WriteOutImage< JPDFImageType, CharImageType >( jointHistogramFilename.c_str(), metric->GetJointPDF() );
+	WriteOutImage< CharImageType, CharImageType >( jointHistogramFilename.c_str(), rescaler->GetOutput() );
+
+	memorymeter.Stop( "Full program" );
+	chronometer.Stop( "Full program" );
 
 	std::cout << "\n***** TIME/MEMORY MONITORING *****" << std::endl;
 	chronometer.Report( std::cout );
