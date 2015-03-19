@@ -38,6 +38,8 @@
 
 // monitoring
 #include "itkCommand.h"
+#include "itkTimeProbesCollectorBase.h"
+#include "itkMemoryProbesCollectorBase.h"
 
 // additional C++ libraries
 #include <itksys/SystemTools.hxx>
@@ -225,7 +227,7 @@ std::string to_string(T t)
 	return oss.str();
 }
 
-// Write function to return the FOV of the fixed and moving images
+// Write function to return the FOV of the fixed and moving images (use for metric initialization)
 template< typename ImageType >
 typename ImageType::PointType GetImageRange( typename ImageType::Pointer image, std::string returnOption )
 {
@@ -331,6 +333,10 @@ public:
  *************************************************************************/
 int main(int argc, char * argv[])
 {
+	// set up accounting for time and memory in the program
+	itk::TimeProbesCollectorBase chronometer;
+	itk::MemoryProbesCollectorBase memorymeter;
+
 	if( argc < 4 )
 	{
 		std::cerr << "Incorrect number of inputs: " << std::endl;
@@ -339,6 +345,9 @@ int main(int argc, char * argv[])
 	}
 	
 	//*********************** INPUTS *******************************
+	memorymeter.Start( "Inputs complete" );
+	chronometer.Start( "Inputs complete" );
+
 	// fixed/moving images
 	std::string fixedImageFilename = argv[1];
 	std::string movingImageFilename = argv[2];
@@ -391,16 +400,21 @@ int main(int argc, char * argv[])
 	// define image types
 	const unsigned int		Dimension = 3;
 	typedef float			FloatPixelType;
-	//typedef unsigned char	CharPixelType;
+	typedef unsigned char	CharPixelType;
 
 	typedef itk::Image< FloatPixelType, Dimension >	FloatImageType;
-	//typedef itk::Image< CharPixelType, Dimension >  CharImageType;
+	typedef itk::Image< CharPixelType, Dimension >  CharImageType;
 
 	// read in fixed and moving images
 	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>(fixedImageFilename.c_str());
 	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>(movingImageFilename.c_str());
 
+	memorymeter.Stop( "Inputs complete" );
+	chronometer.Stop( "Inputs complete" );
 	// ************************ HISTOGRAMS *******************************
+	memorymeter.Start( "Generating histograms" );
+	chronometer.Start( "Generating histograms" );
+
 	if( argc > 4 )
 	{
 		// moving image
@@ -411,12 +425,17 @@ int main(int argc, char * argv[])
 		CreateHistogram< FloatImageType >( fixedHistogramFilename.c_str(), fixedImage, fixedBins );
 	}
 
+	memorymeter.Stop( "Generating histograms" );
+	chronometer.Stop( "Generating histograms" );
 	// ************************* TRANSFORM *******************************
 	// set up rigid transform
 	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
 
 	// ***************** GEOMETRICAL INITIALIZATION **********************
+	memorymeter.Start( "Initialization" );
+	chronometer.Start( "Initialization" );
+
 	// instantiate initializer (align geometrical center of images)
 	typedef itk::CenteredTransformInitializer< RigidTransformType, FloatImageType, FloatImageType >	InitializerType;
 	InitializerType::Pointer initializer = InitializerType::New();
@@ -442,6 +461,9 @@ int main(int argc, char * argv[])
 	// the v3 metric does not have the function GetJointPDF!!!
 	typedef itk::MattesMutualInformationImageToImageMetric< FloatImageType, FloatImageType > MetricType;
 	MetricType::Pointer metric = MetricType::New();
+
+	// set various parameters of metric
+	metric->UseAllPixelsOff();
 
 	// ******************* METRIC INITIALIZATION *************************
 	std::cout << "\nPerform metric initialization" << std::endl;
@@ -498,6 +520,8 @@ int main(int argc, char * argv[])
 	std::string rigidInitMetricFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitMetric.tfm";
 	WriteOutTransform< RigidTransformType >( rigidInitMetricFilename.c_str() , rigidTransform );
 
+	memorymeter.Stop( "Initialization" );
+	chronometer.Stop( "Initialization" );
 	// ************************ OPTIMIZER ********************************
 	typedef itk::RegularStepGradientDescentOptimizer	RigidOptimizerType;
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
@@ -553,8 +577,14 @@ int main(int argc, char * argv[])
 	std::cout << "Itr# StepSize MetricValue TransformParameters" << std::endl;
 	try
 	{
+		memorymeter.Start( "Rigid registration" );
+		chronometer.Start( "Rigid registration" );
+
 		registration->Update();
 		std::cout << "OptimizerStopCondition: " << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+
+		memorymeter.Stop( "Rigid registration" );
+		chronometer.Stop( "Rigid registration" );
 	}
 	catch( itk::ExceptionObject & err )
 	{
@@ -573,7 +603,7 @@ int main(int argc, char * argv[])
 	std::cout << " #fixed samples  : " << registration->GetMetric()->GetNumberOfFixedImageSamples() << std::endl;
 	std::cout << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
 
-	std::cout << "***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
+	std::cout << "\n***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
 	std::cout << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
 	std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
 	std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
@@ -584,6 +614,21 @@ int main(int argc, char * argv[])
 	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.tfm";
 	rigidTransform->SetParameters( registration->GetLastTransformParameters() );
 	WriteOutTransform< RigidTransformType >( finalRigidTransformFilename.c_str(), rigidTransform );
+
+	// write out joint histogram
+	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
+	typedef itk::RescaleIntensityImageFilter< JPDFImageType, CharImageType >	RescaleFilterType;
+	RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
+	rescaler->SetInput( metric->GetJointPDF() );
+	rescaler->SetOutputMinimum( 0 );
+	rescaler->SetOutputMaximum( 255 );
+	
+	std::string jointHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_JPDF.tif";
+	WriteOutImage< JPDFImageType, CharImageType >( jointHistogramFilename.c_str(), metric->GetJointPDF() );
+
+	std::cout << "\n***** TIME/MEMORY MONITORING *****" << std::endl;
+	chronometer.Report( std::cout );
+	memorymeter.Report( std::cout );
 
 	return EXIT_SUCCESS;
 }
