@@ -11,7 +11,7 @@ import pylab as pl
 # separates it into the proper categories for the monitoring file
 def parseLineInMonitorFile( str ):
 	# isolate the first two elements as the iteration and metric values
-	itr, stepSize, metric, temp = str.split(' ',3)
+	itr, stepSize, gradMag, metric, temp = str.split(' ',4)
 	# split the parameters into separate strings
 	paramStr = temp[1:-2].split(',')
 	# convert each parameter into a float value
@@ -19,7 +19,7 @@ def parseLineInMonitorFile( str ):
 	for i in range(len(paramStr)):
 		params.append(float(paramStr[i]))
 	# return the proper values from the string
-	return int(itr), float(stepSize), float(metric), params
+	return int(itr), float(stepSize), float(gradMag), float(metric), params
 	
 # ****************** FUNCTION *******************
 # create a function that parses through a string and
@@ -54,6 +54,7 @@ with open(monitorFilename) as monitoringTxt:
 	i = 0
 	itr = []
 	step = []
+	grad = []
 	metric = []
 	params = []
 	
@@ -72,9 +73,10 @@ with open(monitorFilename) as monitoringTxt:
 		elif endFlag:
 			startFlag = False
 		elif startFlag:
-			itrTemp,stepSizeTemp,metricTemp,paramsTemp = parseLineInMonitorFile( line )
+			itrTemp,stepSizeTemp,gradMagTemp,metricTemp,paramsTemp = parseLineInMonitorFile( line )
 			itr.append( itrTemp )
 			step.append( stepSizeTemp )
+			grad.append( gradMagTemp )
 			metric.append( metricTemp )
 			params.append( paramsTemp )
 		else:
@@ -87,16 +89,21 @@ params = [[row[i] for row in params] for i in range(9)]
 
 # create a line plot of the iteration number by the metric value
 mon = pl.figure(1)
-ax0a = mon.add_subplot(211)
+ax0a = mon.add_subplot(311)
 ax0a.plot(itr,metric)
 pl.xlabel('Iteration')
 pl.ylabel('Metric Value')
 pl.title('Evolution of Metric Value')
-ax0b = mon.add_subplot(212)
+ax0b = mon.add_subplot(312)
 ax0b.plot(itr,step)
 pl.xlabel('Iteration')
 pl.ylabel('StepSize')
 pl.title('Evolution of Step Size')
+ax0c = mon.add_subplot(313)
+ax0c.plot(itr,grad)
+pl.xlabel('Iteration')
+pl.ylabel('GradMag')
+pl.title('Evolution of Gradient Magnitude')
 pl.savefig(resultsDirectory + '\\metricStepPlot.png')
 
 # create a plot for the transform parameters

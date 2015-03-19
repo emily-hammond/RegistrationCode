@@ -34,7 +34,7 @@
 #include "itkImageRegistrationMethod.h"
 //#include "itkVersorRigid3DTransformOptimizer.h"
 #include "itkScaleVersor3DTransform.h"
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\RegularStepGradientDescentOptimizerNew\itkRegularStepGradientDescentOptimizer.h"
+#include "itkRegularStepGradientDescentOptimizer.h"
 
 // monitoring
 #include "itkCommand.h"
@@ -326,7 +326,7 @@ public:
 		
 
 
-		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();
+		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength() << " " << optimizer->GetGradientMagnitude();
 		std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
 	}
 };
@@ -532,6 +532,7 @@ int main(int argc, char * argv[])
 
 	memorymeter.Stop( "Initialization" );
 	chronometer.Stop( "Initialization" );
+
 	// ************************ OPTIMIZER ********************************
 	typedef itk::RegularStepGradientDescentOptimizer	RigidOptimizerType;
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
@@ -540,7 +541,7 @@ int main(int argc, char * argv[])
 	rigidOptimizer->SetMaximumStepLength( 1 );
 	rigidOptimizer->SetNumberOfIterations( 5000 );
 	rigidOptimizer->SetRelaxationFactor( 0.5 );
-	rigidOptimizer->SetGradientMagnitudeTolerance( 0.1 );
+	rigidOptimizer->SetGradientMagnitudeTolerance( 0.001 );
 	rigidOptimizer->MinimizeOn();
 
 	// set optimizer scales
