@@ -34,7 +34,7 @@
 #include "itkImageRegistrationMethod.h"
 //#include "itkVersorRigid3DTransformOptimizer.h"
 #include "itkScaleVersor3DTransform.h"
-#include "itkRegularStepGradientDescentOptimizer.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\RegularStepGradientDescentOptimizerNew\itkRegularStepGradientDescentOptimizer.h"
 
 // monitoring
 #include "itkCommand.h"
@@ -323,6 +323,9 @@ public:
 		{
 			return;
 		}
+		
+
+
 		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();
 		std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
 	}
@@ -465,8 +468,12 @@ int main(int argc, char * argv[])
 	typedef itk::MattesMutualInformationImageToImageMetric< FloatImageType, FloatImageType > MetricType;
 	MetricType::Pointer metric = MetricType::New();
 
-	// set various parameters of metric
-	metric->UseAllPixelsOff();
+	// determine number of samples to use
+	FloatImageType::SizeType size = fixedImage->GetLargestPossibleRegion().GetSize();
+	int numOfPixels = size[0]*size[1]*size[2];
+	std::cout << "Number of pixels in fixed image: " << numOfPixels << std::endl;
+	// use 1% of the fixed image samples
+	metric->SetNumberOfSpatialSamples( 0.01*numOfPixels );
 
 	// ******************* METRIC INITIALIZATION *************************
 	std::cout << "\nPerform metric initialization" << std::endl;
@@ -530,9 +537,11 @@ int main(int argc, char * argv[])
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
 	// set parameters
 	rigidOptimizer->SetMinimumStepLength( 0.001 );
-	rigidOptimizer->SetMaximumStepLength( 0.1 );
-	rigidOptimizer->SetNumberOfIterations( 1000 );
-	rigidOptimizer->SetRelaxationFactor( 0.9 );
+	rigidOptimizer->SetMaximumStepLength( 1 );
+	rigidOptimizer->SetNumberOfIterations( 5000 );
+	rigidOptimizer->SetRelaxationFactor( 0.5 );
+	rigidOptimizer->SetGradientMagnitudeTolerance( 0.1 );
+	rigidOptimizer->MinimizeOn();
 
 	// set optimizer scales
 	RigidOptimizerType::ScalesType rigidOptScales( rigidTransform->GetNumberOfParameters() );
@@ -554,8 +563,8 @@ int main(int argc, char * argv[])
 	// set the scales
 	rigidOptimizer->SetScales( rigidOptScales );
 
-	std::cout << "\nRelaxationFactor: " << rigidOptimizer->GetRelaxationFactor() << std::endl;
-	std::cout << "Scales: " << rigidOptimizer->GetScales() << std::endl;
+	std::cout << std::endl;
+	std::cout << rigidOptimizer << std::endl;
 
 	// register the optimizer with the command class
 	RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();
@@ -629,6 +638,9 @@ int main(int argc, char * argv[])
 	
 	std::string jointHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_JPDF.tif";
 	WriteOutImage< CharImageType, CharImageType >( jointHistogramFilename.c_str(), rescaler->GetOutput() );
+
+	std::cout << std::endl;
+	std::cout << rigidOptimizer << std::endl;
 
 	memorymeter.Stop( "Full program" );
 	chronometer.Stop( "Full program" );

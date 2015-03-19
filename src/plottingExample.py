@@ -64,10 +64,10 @@ with open(monitorFilename) as monitoringTxt:
 	# read in lines from file and determine start line and end line
 	for line in monitoringTxt:
 		# corresponding to the first iteration
-		if line[0] == '0':
+		if line[:3] == 'Itr':
 			startFlag = True
 		# corresponding to the print out of the Optimizer stop condition
-		elif line[0] == 'O':
+		elif line[:3] == 'Opt' and startFlag:
 			endFlag = True
 		elif endFlag:
 			startFlag = False
@@ -79,6 +79,8 @@ with open(monitorFilename) as monitoringTxt:
 			params.append( paramsTemp )
 		else:
 			endFlag = False
+	
+print "%r complete" %monitorFilename
 
 # transpose rows and columns in params
 params = [[row[i] for row in params] for i in range(9)]
@@ -145,6 +147,8 @@ with open(fixedFilename) as fixedTxt:
 		binTemp, freqTemp = parseLineInHistogramFile( line )
 		fixedBins.append( binTemp )
 		fixedFreq.append( freqTemp )
+		
+print "%r complete" %fixedFilename
 
 # plot fixed histogram
 fix = pl.figure(3)
@@ -165,6 +169,8 @@ with open(movingFilename) as movingTxt:
 		binTemp, freqTemp = parseLineInHistogramFile( line )
 		fixedBins.append( binTemp )
 		fixedFreq.append( freqTemp )
+		
+print "%r complete" %movingFilename
 
 mov = pl.figure(4)
 ax2 = mov.add_subplot(111)
