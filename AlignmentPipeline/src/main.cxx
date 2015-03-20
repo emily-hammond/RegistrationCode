@@ -28,11 +28,11 @@
 #include "itkRescaleIntensityImageFilter.h"
 
 // rigid registration
-//#include "itkVersorRigid3DTransform.h"
+#include "itkVersorRigid3DTransform.h"
 #include "itkMattesMutualInformationImageToImageMetric.h" // v4 does not yet support local-deforming transforms
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkImageRegistrationMethod.h"
-//#include "itkVersorRigid3DTransformOptimizer.h"
+#include "itkVersorRigid3DTransformOptimizer.h"
 #include "itkScaleVersor3DTransform.h"
 #include "itkRegularStepGradientDescentOptimizer.h"
 
@@ -436,6 +436,7 @@ int main(int argc, char * argv[])
 	// ************************* TRANSFORM *******************************
 	// set up rigid transform
 	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
+	//typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
 
 	// ***************** GEOMETRICAL INITIALIZATION **********************
@@ -541,13 +542,13 @@ int main(int argc, char * argv[])
 	rigidOptimizer->SetMaximumStepLength( 1 );
 	rigidOptimizer->SetNumberOfIterations( 5000 );
 	rigidOptimizer->SetRelaxationFactor( 0.5 );
-	rigidOptimizer->SetGradientMagnitudeTolerance( 0.001 );
+	rigidOptimizer->SetGradientMagnitudeTolerance( 0.05 );
 	rigidOptimizer->MinimizeOn();
 
 	// set optimizer scales
 	RigidOptimizerType::ScalesType rigidOptScales( rigidTransform->GetNumberOfParameters() );
 	// rotation
-	const double rotationScale = 1.0/0.1;
+	const double rotationScale = 1.0/0.01;
 	rigidOptScales[0] = rotationScale;
 	rigidOptScales[1] = rotationScale;
 	rigidOptScales[2] = rotationScale;
@@ -557,15 +558,12 @@ int main(int argc, char * argv[])
 	rigidOptScales[4] = translationScale;
 	rigidOptScales[5] = translationScale;
 	// scaling
-	const double scalingScale = 1.0/0.8;
+	const double scalingScale = 1.0/1.0;
 	rigidOptScales[6] = scalingScale;
 	rigidOptScales[7] = scalingScale;
 	rigidOptScales[8] = scalingScale;
 	// set the scales
 	rigidOptimizer->SetScales( rigidOptScales );
-
-	std::cout << std::endl;
-	std::cout << rigidOptimizer << std::endl;
 
 	// register the optimizer with the command class
 	RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();

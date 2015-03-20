@@ -84,8 +84,11 @@ with open(monitorFilename) as monitoringTxt:
 	
 print "%r complete" %monitorFilename
 
+# calculate number of parameters automatically
+j = len(params[0])
+
 # transpose rows and columns in params
-params = [[row[i] for row in params] for i in range(9)]
+params = [[row[i] for row in params] for i in range(j)]
 
 # create a line plot of the iteration number by the metric value
 mon = pl.figure(1)
@@ -131,17 +134,18 @@ ax5 = tran.add_subplot(338)
 ax5.plot(itr,params[5])
 pl.ylabel('TransZ')
 pl.xlabel('Iteration')
-ax6 = tran.add_subplot(333)
-ax6.plot(itr,params[6])
-pl.ylabel('ScaleX')
-pl.title('Scaling Parameters')
-ax7 = tran.add_subplot(336)
-ax7.plot(itr,params[7])
-pl.ylabel('ScaleY')
-ax8 = tran.add_subplot(339)
-ax8.plot(itr,params[8])
-pl.ylabel('ScaleZ')
-pl.xlabel('Iteration')
+if j > 6:
+	ax6 = tran.add_subplot(333)
+	ax6.plot(itr,params[6])
+	pl.ylabel('ScaleX')
+	pl.title('Scaling Parameters')
+	ax7 = tran.add_subplot(336)
+	ax7.plot(itr,params[7])
+	pl.ylabel('ScaleY')
+	ax8 = tran.add_subplot(339)
+	ax8.plot(itr,params[8])
+	pl.ylabel('ScaleZ')
+	pl.xlabel('Iteration')
 pl.savefig(resultsDirectory + '\\transformEvolutionPlot.png')
 
 with open(fixedFilename) as fixedTxt:
