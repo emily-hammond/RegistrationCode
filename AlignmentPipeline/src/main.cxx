@@ -28,13 +28,16 @@
 #include "itkRescaleIntensityImageFilter.h"
 
 // rigid registration
-#include "itkVersorRigid3DTransform.h"
 #include "itkMattesMutualInformationImageToImageMetric.h" // v4 does not yet support local-deforming transforms
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkImageRegistrationMethod.h"
-#include "itkVersorRigid3DTransformOptimizer.h"
-#include "itkScaleVersor3DTransform.h"
 #include "itkRegularStepGradientDescentOptimizer.h"
+#include "itkVersorRigid3DTransformOptimizer.h"
+
+// different transforms
+#include "itkVersorRigid3DTransform.h"
+#include "itkScaleVersor3DTransform.h"
+#include "itkAffineTransform.h"
 
 // monitoring
 #include "itkCommand.h"
@@ -352,7 +355,6 @@ int main(int argc, char * argv[])
 		std::cerr << "	main.exe fixedImage movingImage outputDirectory [#HistogramBins]" << std::endl;
 		std::cerr << "          	[fixedFiducials] [movingFiducials]" << std::endl;
 	}
-	std::cout << argv << std::endl;
 	
 	//*********************** INPUTS *******************************
 	memorymeter.Start( "Inputs complete" );
@@ -378,7 +380,6 @@ int main(int argc, char * argv[])
 
 	// joint histogram bins (curiosity)
 	int bins = 50;
-
 	if( argc > 4 )
 	{
 		bins = atoi(argv[4]);
@@ -436,9 +437,13 @@ int main(int argc, char * argv[])
 	memorymeter.Stop( "Generating histograms" );
 	chronometer.Stop( "Generating histograms" );
 	// ************************* TRANSFORM *******************************
-	// set up rigid transform
-	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
+	// set up rigid transform types
 	//typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
+	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
+	//typedef itk::AffineTransform< double >		RigidTransformType;
+	std::string transformType = "scale";
+
+	// instantiate transforms
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
 
 	// ***************** GEOMETRICAL INITIALIZATION **********************
@@ -498,6 +503,11 @@ int main(int argc, char * argv[])
 	FloatImageType::PointType fixedStart = GetImageRange< FloatImageType >( fixedImage, "start" );
 	FloatImageType::PointType fixedCenter = GetImageRange< FloatImageType >( fixedImage, "center" );
 
+	std::cout << "MovingEnd: " << movingEnd << std::endl;
+	std::cout << "MovingStart: " << movingStart << std::endl;
+	std::cout << "FixedStart: " << fixedStart << std::endl;
+	std::cout << "FixedCenter: " << fixedCenter << std::endl;
+
 	// obtain the parameters from the transform
 	RigidTransformType::ParametersType parameters = rigidTransform->GetParameters();	
 
@@ -506,11 +516,13 @@ int main(int argc, char * argv[])
 	the moving image center would occur if the two images were bottom aligned. So in math terms
 	fixedCenter - fixedStart - movingRange/2 (all only for the z direction).
 	*/
+	int z = 5; // location in the transform corresponding to the proper translation
+	
 	float range = abs( fixedCenter[2] - fixedStart[2] - abs( movingEnd[2] - movingStart[2] )/2.0 );
-	float origParam5 = parameters[5];
-	//MetricWithParameters< float, RigidTransformType::ParametersType> metricValues[50] = { };
-	//int i = 0;
+	std::cout << "Range: " << range << std::endl;
+	float origParam5 = parameters[z];
 
+	// initialize parameters
 	float minMetric = 10000000.0;
 	RigidTransformType::ParametersType minParameters;
 
@@ -519,7 +531,7 @@ int main(int argc, char * argv[])
 	for( float zTrans = origParam5 - range; zTrans < origParam5 + range; zTrans = zTrans + range/20.0 )
 	{
 		// change z parameter
-		parameters[5] = zTrans;
+		parameters[z] = zTrans;
 		// store parameters and metric value into array
 		if( metric->GetValue(parameters) < minMetric )
 		{
@@ -543,28 +555,58 @@ int main(int argc, char * argv[])
 	// set parameters
 	rigidOptimizer->SetMinimumStepLength( 0.001 );
 	rigidOptimizer->SetMaximumStepLength( 1 );
-	rigidOptimizer->SetNumberOfIterations( 5000 );
-	rigidOptimizer->SetRelaxationFactor( 0.5 );
-	rigidOptimizer->SetGradientMagnitudeTolerance( 0.005 );
+	rigidOptimizer->SetNumberOfIterations( 1000 );
+	rigidOptimizer->SetRelaxationFactor( 0.9 );
+	rigidOptimizer->SetGradientMagnitudeTolerance( 0.00005 );
 	rigidOptimizer->MinimizeOn();
 
 	// set optimizer scales
 	RigidOptimizerType::ScalesType rigidOptScales( rigidTransform->GetNumberOfParameters() );
-	// rotation
+	// identify expected movement range
 	const double rotationScale = 1.0/0.001;
-	rigidOptScales[0] = rotationScale;
-	rigidOptScales[1] = rotationScale;
-	rigidOptScales[2] = rotationScale;
-	// translation
 	const double translationScale = 1.0/10.0;
-	rigidOptScales[3] = translationScale;
-	rigidOptScales[4] = translationScale;
-	rigidOptScales[5] = translationScale;
-	// scaling
-	const double scalingScale = 1.0/1.0;
-	rigidOptScales[6] = scalingScale;
-	rigidOptScales[7] = scalingScale;
-	rigidOptScales[8] = scalingScale;
+	const double scalingScale = 1.0/0.0001;
+	// create scales
+	if( transformType.compare("versor") == 0 || transformType.compare("scale") == 0 )
+	{
+		// rotation
+		//const double rotationScale = 1.0/0.001;
+		rigidOptScales[0] = rotationScale;
+		rigidOptScales[1] = rotationScale;
+		rigidOptScales[2] = rotationScale;
+		// translation
+		//const double translationScale = 1.0/10.0;
+		rigidOptScales[3] = translationScale;
+		rigidOptScales[4] = translationScale;
+		rigidOptScales[5] = translationScale;
+		if( rigidTransform->GetNumberOfParameters() > 6 )
+		{
+			// scaling
+			//const double scalingScale = 1.0/1.0;
+			rigidOptScales[6] = scalingScale;
+			rigidOptScales[7] = scalingScale;
+			rigidOptScales[8] = scalingScale;
+		}
+	}
+	else if( transformType.compare("affine") == 0 )
+	{
+		rigidOptScales[0] = scalingScale;
+		rigidOptScales[1] = 1.0;
+		rigidOptScales[2] = 1.0;
+		rigidOptScales[3] = scalingScale;
+		rigidOptScales[4] = 1.0;
+		rigidOptScales[5] = 1.0;
+		rigidOptScales[6] = scalingScale;
+		rigidOptScales[7] = 1.0;
+		rigidOptScales[8] = 1.0;
+		rigidOptScales[9] = translationScale;
+		rigidOptScales[10] = translationScale;
+		rigidOptScales[11] = translationScale;
+	}
+	else
+	{
+		std::cout << "Transform type is wrong." << std::endl;
+	}
 	// set the scales
 	rigidOptimizer->SetScales( rigidOptScales );
 
@@ -613,7 +655,7 @@ int main(int argc, char * argv[])
 
 	// print results to the screen
 	std::cout << std::endl;
-	std::cout << "***** OPTIMIZER PARAMETERS *****" << std::endl;
+	std::cout << "\n***** OPTIMIZER PARAMETERS *****" << std::endl;
 	std::cout << " Iterations      : " << rigidOptimizer->GetCurrentIteration() << std::endl;
 	std::cout << " Metric value    : " << rigidOptimizer->GetValue() << std::endl;
 	std::cout << " #histogram bins : " << metric->GetNumberOfHistogramBins() << std::endl;
@@ -623,10 +665,25 @@ int main(int argc, char * argv[])
 
 	std::cout << "\n***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
 	std::cout << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
-	std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
-	std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
-	std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
-	std::cout << " Scale: " << rigidTransform->GetScale() << std::endl;
+	if( transformType.compare("versor") == 0 || transformType.compare("scale") == 0 )
+	{
+		std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
+		std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
+		std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
+		if( rigidTransform->GetNumberOfParameters() > 6 )
+		{
+			std::cout << " Scale: " << rigidTransform->GetScale() << std::endl;
+		}
+	}
+	else if( transformType.compare("affine") == 0 )
+	{
+		std::cout << " Matrix: " << rigidTransform->GetMatrix() << std::endl;
+		std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
+	}
+	else
+	{
+		std::cout << "Transform type is wrong." << std::endl;
+	}
 	std::cout << std::endl;
 
 	// write final rigid transform out to file
@@ -666,7 +723,7 @@ int main(int argc, char * argv[])
 	resampler->SetTransform( finalRigidTransform );
 
 	// write out image
-	std::string transformedImageFilename = outputDirectory + "\\" + baseMovingFilename + "_transformed.tif";
+	std::string transformedImageFilename = outputDirectory + "\\" + baseMovingFilename + "_transformed.mhd";
 	WriteOutImage< FloatImageType, FloatImageType >( transformedImageFilename.c_str(), resampler->GetOutput() );
 
 	memorymeter.Stop( "Outputs" );
