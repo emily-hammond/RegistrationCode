@@ -1,0 +1,22 @@
+# Emily Hammond
+# 2015.03.25
+#
+# This file is an example preliminary input file for 
+# registration with and MMI metric and rigid transform
+#
+# Inputs
+FixedImageFilename
+MovingImageFilename
+OutputDirectory
+NumberOfHistogramBins
+FixedFiducialList
+MovingFiducialList
+PercentageOfSamples
+MaximumStepLength
+NumberOfIterations
+RelationFactor
+GradientMagnitudeTolerance
+RotationScale
+TranslationScale
+ScalingScale
+DefaultPixelValue
