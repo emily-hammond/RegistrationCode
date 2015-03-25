@@ -48,7 +48,6 @@ namespace itk
  
 */
 
-//template< typename LandmarksType, typename TransformType >
 class LandmarkAnalysis: public Object
 {
 public:
