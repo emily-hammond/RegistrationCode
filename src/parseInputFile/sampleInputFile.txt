@@ -16,7 +16,7 @@ MovingFiducialList ""
 PercentageOfSamples 0.01
 MaximumStepLength 1
 NumberOfIterations 1000
-RelationFactor 0.5
+RelaxationFactor 0.5
 GradientMagnitudeTolerance 0.0001
 RotationScale 0.01
 TranslationScale 10

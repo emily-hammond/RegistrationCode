@@ -12,15 +12,16 @@ derived the additional information and print the inputs as well.
 #ifndef __itkParseInputFile_h
 #define __itkParseInputFile_h
 
+#include "itkImage.h"
 #include <itksys/SystemTools.hxx>
 #include <fstream>
 #include <cmath>
 
 namespace itk
 {
-/* class LandmarkAnalysis
+/* class ParseInputFile
  *
- * This filter analyzes fiducials between fixed/transformed moving images
+ * This filter parses an input file and allocates the proper variables
  
 */
 class ParseInputFile: public Object
@@ -32,10 +33,12 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 
 	// method for creation
-	itkNewMacro( Self );
+	itkNewMacro(Self);
 
 	// run-time type information and related methods
-	itkTypeMacro( ParseInputFile, Object );
+	itkTypeMacro(ParseInputFile, Object);
+
+	void SetFilename( std::string filename );
 
 	// get output variables
 	std::string MovingHistogramFilename() const { return this->m_MovingHistogramFilename; };
@@ -48,7 +51,7 @@ public:
 	
 protected:
 	// declare the constructor and define default parameters
-	ParseInputFile( std::string filename );
+	ParseInputFile() {}
 	
 	// destructor
 	virtual ~ParseInputFile() {}
@@ -94,6 +97,8 @@ private:
 
 	// private member functions
 	void ReadInFile( std::string filename );
+	void DeriveVariables();
+	void SetDefaults();
 };
 } // end namespace
 
