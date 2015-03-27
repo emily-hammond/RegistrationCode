@@ -107,6 +107,7 @@ protected:
 	// destructor
 	virtual ~LandmarkAnalysis() {}
 	
+	// this method is required to allocation memory for the output
 	void GenerateData();
 	
 private:

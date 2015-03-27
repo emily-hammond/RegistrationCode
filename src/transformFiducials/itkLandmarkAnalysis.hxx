@@ -33,6 +33,13 @@ namespace itk
 		std::ifstream myfile( filename );
 		LandmarksType landmarks;
 
+		// error checking
+		if( !myfile.is_open() )
+		{
+			std::cerr << "Error: Failed to open landmarks file! " << std::endl;
+			return landmarks;
+		}
+
 		// read in the lines from file
 		std::string line;
 		int count = 0;
