@@ -9,8 +9,8 @@ derived the additional information and print the inputs as well.
 
 */
 
-#ifndef __ParseInputFile_h
-#define __ParseInputFile_h
+#ifndef __itkParseInputFile_h
+#define __itkParseInputFile_h
 
 #include <itksys/SystemTools.hxx>
 #include <fstream>
@@ -48,13 +48,17 @@ public:
 	
 protected:
 	// declare the constructor and define default parameters
-	ParseInputFile();
+	ParseInputFile( std::string filename );
 	
 	// destructor
 	virtual ~ParseInputFile() {}
+
+	// this method is required to allocation memory for the output
+	void GenerateData();
 	
 private:
 	// declare variables
+	std::string m_filename;
 	//input files
 	std::string m_FixedImageFilename;
 	std::string m_MovingImageFilename;
@@ -89,11 +93,12 @@ private:
 	std::string m_BaseFixedFilename;
 
 	// private member functions
+	void ReadInFile( std::string filename );
 };
 } // end namespace
 
 #ifndef ITK_MANUAL_INSTANTIATION
-#include "itkLandmarkAnalysis.hxx"
+#include "itkParseInputFile.hxx"
 #endif
 
 #endif
