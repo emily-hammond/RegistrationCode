@@ -45,11 +45,32 @@ public:
 	// get output variables
 	std::string MovingHistogramFilename() const { return this->m_MovingHistogramFilename; };
 	std::string FixedHistogramFilename() const { return this->m_FixedHistogramFilename; };
-	std::string RigidInitGeomFilename() const { return this->m_RigidInitGeomFilename; };
-	std::string RigidInitMetricFilename() const { return this->m_RigidInitMetricFilename; };
-	std::string FinalRigidTransformFilename() const { return this->m_FinalRigidTransformFilename; };
+	std::string InitGeomFilename() const { return this->m_InitGeomFilename; };
+	std::string InitMetricFilename() const { return this->m_InitMetricFilename; };
+	std::string RigidTransformFilename() const { return this->m_RigidTransformFilename; };
 	std::string JointHistogramFilename() const { return this->m_JointHistogramFilename; };
 	std::string TransformedImageFilename() const { return this->m_TransformedImageFilename; };
+	// get input variables
+	std::string FixedImageFilename() const { return this->m_FixedImageFilename; };
+	std::string MovingImageFilename() const { m_MovingImageFilename; };
+	std::string FixedImageMaskFilename() const { m_FixedImageMaskFilename; };
+	std::string MovingImageMaskFilename() const { m_MovingImageMaskFilename; };
+	std::string OutputDirectory() const { m_OutputDirectory; };
+	std::string FixedFiducialList() const { m_FixedFiducialList; };
+	std::string MovingFiducialList() const { m_MovingFiducialList; };
+	//metric
+	int NumberOfHistogramBins() const { m_NumberOfHistogramBins; };
+	float PercentageOfSamples() const { m_PercentageOfSamples; };
+	//optimizer
+	float MaximumStepLength() const { m_MaximumStepLength; };
+	int NumberOfIterations() const { m_NumberOfIterations; };
+	float RelaxationFactor() const { m_RelaxationFactor; };
+	float GradientMagnitudeTolerance() const { m_GradientMagnitudeTolerance; };
+	float RotationScale() const { m_RotationScale; };
+	float TranslationScale() const { m_TranslationScale; };
+	float ScalingScale() const { m_ScalingScale; };
+	//resamples
+	int DefaultPixelValue() const { m_DefaultPixelValue; };
 	
 protected:
 	// declare the constructor and define default parameters
@@ -88,14 +109,11 @@ private:
 	//output files
 	std::string m_MovingHistogramFilename;
 	std::string m_FixedHistogramFilename;
-	std::string m_RigidInitGeomFilename;
-	std::string m_RigidInitMetricFilename;
-	std::string m_FinalRigidTransformFilename;
+	std::string m_InitGeomFilename;
+	std::string m_InitMetricFilename;
+	std::string m_RigidTransformFilename;
 	std::string m_JointHistogramFilename;
 	std::string m_TransformedImageFilename;
-	//derived
-	std::string m_BaseMovingFilename;
-	std::string m_BaseFixedFilename;
 
 	// private member functions
 	void ReadInFile( std::string filename );

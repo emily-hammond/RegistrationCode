@@ -140,12 +140,28 @@ namespace itk
 
 	void ParseInputFile::DeriveVariables()
 	{
-		
+		// determine the base fixed and moving image names
+		std::string baseMovingFilename = this->m_MovingImageFilename.substr( this->m_MovingImageFilename.find_last_of("/\\") + 1 );
+		baseMovingFilename = baseMovingFilename.substr(0, baseMovingFilename.find_last_of('.'));
+
+		std::string baseFixedFilename = this->m_FixedImageFilename.substr( this->m_FixedImageFilename.find_last_of("/\\") + 1 );
+		baseFixedFilename = baseFixedFilename.substr(0, baseFixedFilename.find_last_of('.'));
+
+		// create output filenames for the various outputs
+		this->m_MovingHistogramFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_Histogram.txt";
+		this->m_FixedHistogramFilename = this->m_OutputDirectory + "\\" + baseFixedFilename + "_Histogram.txt";
+		this->m_InitGeomFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_InitGeomTransform.tfm";
+		this->m_InitMetricFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_InitMetricTransform.tfm";
+		this->m_RigidTransformFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_RigidTransform.tfm";
+		this->m_JointHistogramFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_FinalJointHistogram.tif";
+		this->m_TransformedImageFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_Transformed.mhd";
+
 		return;
 	}
 	
 	void ParseInputFile::SetDefaults()
 	{
+		// set the default parameters for each input value
 		this->m_FixedImageFilename = "";
 		this->m_MovingImageFilename = "";
 		this->m_FixedImageMaskFilename = "";
@@ -172,6 +188,7 @@ namespace itk
 
 	void ParseInputFile::Print()
 	{
+		// print out all the member variables in the class
 		std::cout << std::endl;
 		std::cout << "***** INPUTS *****" << std::endl;
 		std::cout << "FixedImageFilename " << m_FixedImageFilename << std::endl;
@@ -191,6 +208,14 @@ namespace itk
 		std::cout << "TranslationScale " << m_TranslationScale << std::endl;
 		std::cout << "ScalingScale " << m_ScalingScale << std::endl;
 		std::cout << "DefaultPixelValue " << m_DefaultPixelValue << std::endl;
+		std::cout << "***** OUTPUTS *****" << std::endl;
+		std::cout << "MovingHistogramFilename " << m_MovingHistogramFilename << std::endl;
+		std::cout << "FixedHistogramFilename " << m_FixedHistogramFilename << std::endl;
+		std::cout << "InitialGeomTransform " << m_InitGeomFilename << std::endl;
+		std::cout << "InitialMetricTransform " << m_InitMetricFilename << std::endl;
+		std::cout << "RigidTransformFilename " << m_RigidTransformFilename << std::endl;
+		std::cout << "JointHistogramFilename " << m_JointHistogramFilename << std::endl;
+		std::cout << "TransformedImageFilename " << m_TransformedImageFilename << std::endl;
 	}
 
 } // end namespace
