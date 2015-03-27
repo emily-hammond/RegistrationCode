@@ -35,9 +35,7 @@
 #include "itkVersorRigid3DTransformOptimizer.h"
 
 // different transforms
-#include "itkVersorRigid3DTransform.h"
 #include "itkScaleVersor3DTransform.h"
-#include "itkAffineTransform.h"
 
 // monitoring
 #include "itkCommand.h"
@@ -56,6 +54,9 @@
 
 // landmark analysis
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\src\transformFiducials\itkLandmarkAnalysis.h"
+
+// parsing inputs
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\src\parseInputFile\itkParseInputFile.h"
 
 /*************************************************************************
  * Write templated functions for reading/writing files to clean up code 
@@ -349,61 +350,21 @@ int main(int argc, char * argv[])
 	memorymeter.Start( "Full program" );
 	chronometer.Start( "Full program" );
 
-	if( argc < 4 )
+	if( argc < 1 )
 	{
 		std::cerr << "Incorrect number of inputs: " << std::endl;
-		std::cerr << "	main.exe fixedImage movingImage outputDirectory [#HistogramBins]" << std::endl;
-		std::cerr << "          	[fixedFiducials] [movingFiducials]" << std::endl;
+		std::cerr << "	main.exe inputFilename " << std::endl;
 	}
 	
 	//*********************** INPUTS *******************************
 	memorymeter.Start( "Inputs complete" );
 	chronometer.Start( "Inputs complete" );
 
-	// fixed/moving images
-	std::string fixedImageFilename = argv[1];
-	std::string movingImageFilename = argv[2];
-
-	// mask files (add in later)
-
-	// output directory/file format
-	std::string outputDirectory = argv[3];
-	std::string outputFileFormat = ".mhd";
-
-	// breakdown files to get baseFilename
-	// moving image
-	std::string baseMovingFilename = movingImageFilename.substr( movingImageFilename.find_last_of("/\\") + 1 );
-	baseMovingFilename = baseMovingFilename.substr(0, baseMovingFilename.find_last_of('.'));
-	// fixed image
-	std::string baseFixedFilename = fixedImageFilename.substr( fixedImageFilename.find_last_of("/\\") + 1 );
-	baseFixedFilename = baseFixedFilename.substr(0, baseFixedFilename.find_last_of('.'));
-
-	// joint histogram bins (curiosity)
-	int bins = 50;
-	if( argc > 4 )
-	{
-		bins = atoi(argv[4]);
-	}
-
-	// landmark filenames (validation)
-	if( argc > 5 )
-	{
-		const char * fixedFiducialList = argv[5];
-		const char * movingFiducialList = argv[6];
-	}
-
-	// ************************* OUTPUTS *********************************
-	/*
-	std::string rigidResultFilename = outputDirectory + "\\rigidResult." + outputFileFormat;
-	std::string rigidTransformFilename = outputDirectory + "\\rigidTransformParameters.txt";
-	std::string deformableResultFilename = outputDirectory + "\\deformableResult." + outputFileFormat;
-	std::string deformableTransformFilename = outputDirectory + "\\deformableTransformParameters.txt";
-	std::string deformationFilename = outputDirectory + "\\deformation." + outputFileFormat;
-	std::string jacobianMapFilename = outputDirectory + "\\jacobianMap." + outputFileFormat;
-	std::string movingHistogramFilename = outputDirectory + "\\movingHistogram.txt";
-	std::string fixedHistogramFilename = outputDirectory + "\\fixedHistogram.txt";
-	std::string jointHistogramFilename = outputDirectory + "\\jointHistogram.tif";
-	*/
+	// parse input file
+	std::string inputFilename = argv[1];
+	typedef itk::ParseInputFile		ParsingType;
+	ParsingType::Pointer inputs = ParsingType::New();
+	inputs->SetFilename( inputFilename );
 
 	// ******************* DEFINE/READ IN IMAGES *************************
 	// define image types
@@ -415,8 +376,8 @@ int main(int argc, char * argv[])
 	typedef itk::Image< CharPixelType, Dimension >  CharImageType;
 
 	// read in fixed and moving images
-	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>(fixedImageFilename.c_str());
-	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>(movingImageFilename.c_str());
+	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>(inputs->FixedImageFilename().c_str());
+	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>(inputs->MovingImageFilename().c_str());
 
 	memorymeter.Stop( "Inputs complete" );
 	chronometer.Stop( "Inputs complete" );
@@ -427,21 +388,16 @@ int main(int argc, char * argv[])
 	if( argc > 4 )
 	{
 		// moving image
-		std::string movingHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_" + to_string( bins ) + "Histogram.txt";
-		CreateHistogram< FloatImageType >( movingHistogramFilename.c_str(), movingImage, bins );
+		CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins() );
 		// fixed image
-		std::string fixedHistogramFilename = outputDirectory + "\\" + baseFixedFilename + "_" + to_string( bins ) + "Histogram.txt";
-		CreateHistogram< FloatImageType >( fixedHistogramFilename.c_str(), fixedImage, bins );
+		CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins() );
 	}
 
 	memorymeter.Stop( "Generating histograms" );
 	chronometer.Stop( "Generating histograms" );
 	// ************************* TRANSFORM *******************************
 	// set up rigid transform types
-	//typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
 	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
-	//typedef itk::AffineTransform< double >		RigidTransformType;
-	std::string transformType = "scale";
 
 	// instantiate transforms
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
@@ -464,8 +420,7 @@ int main(int argc, char * argv[])
 	initializer->InitializeTransform();
 
 	// write out transform after initialization
-	std::string rigidInitGeomFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitGeom.tfm";
-	WriteOutTransform< RigidTransformType >( rigidInitGeomFilename.c_str() , rigidTransform );
+	WriteOutTransform< RigidTransformType >( inputs->InitGeomFilename().c_str() , rigidTransform );
 
 	// *********************** INTERPOLATOR ******************************
 	typedef itk::LinearInterpolateImageFunction< FloatImageType, double >	InterpolatorType;
@@ -481,8 +436,8 @@ int main(int argc, char * argv[])
 	int numOfPixels = size[0]*size[1]*size[2];
 	std::cout << "Number of pixels in fixed image: " << numOfPixels << std::endl;
 	// use 1% of the fixed image samples
-	metric->SetNumberOfSpatialSamples( 0.01*numOfPixels );
-	metric->SetNumberOfHistogramBins( bins );
+	metric->SetNumberOfSpatialSamples( inputs->PercentageOfSamples()*numOfPixels );
+	metric->SetNumberOfHistogramBins( inputs->NumberOfHistogramBins() );
 
 	// ******************* METRIC INITIALIZATION *************************
 	std::cout << "\nPerform metric initialization" << std::endl;
@@ -543,8 +498,7 @@ int main(int argc, char * argv[])
 
 	// insert the new initialization parameters into the transform and print out
 	rigidTransform->SetParameters( minParameters );
-	std::string rigidInitMetricFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidInitMetric.tfm";
-	WriteOutTransform< RigidTransformType >( rigidInitMetricFilename.c_str() , rigidTransform );
+	WriteOutTransform< RigidTransformType >( inputs->InitMetricFilename().c_str() , rigidTransform );
 
 	memorymeter.Stop( "Initialization" );
 	chronometer.Stop( "Initialization" );
@@ -554,59 +508,28 @@ int main(int argc, char * argv[])
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
 	// set parameters
 	rigidOptimizer->SetMinimumStepLength( 0.001 );
-	rigidOptimizer->SetMaximumStepLength( 1 );
-	rigidOptimizer->SetNumberOfIterations( 1000 );
-	rigidOptimizer->SetRelaxationFactor( 0.9 );
-	rigidOptimizer->SetGradientMagnitudeTolerance( 0.00005 );
+	rigidOptimizer->SetMaximumStepLength( inputs->MaximumStepLength() );
+	rigidOptimizer->SetNumberOfIterations( inputs->NumberOfIterations() );
+	rigidOptimizer->SetRelaxationFactor( inputs->RelaxationFactor() );
+	rigidOptimizer->SetGradientMagnitudeTolerance( inputs->GradientMagnitudeTolerance() );
 	rigidOptimizer->MinimizeOn();
 
 	// set optimizer scales
 	RigidOptimizerType::ScalesType rigidOptScales( rigidTransform->GetNumberOfParameters() );
-	// identify expected movement range
-	const double rotationScale = 1.0/0.001;
-	const double translationScale = 1.0/10.0;
-	const double scalingScale = 1.0/0.0001;
-	// create scales
-	if( transformType.compare("versor") == 0 || transformType.compare("scale") == 0 )
-	{
-		// rotation
-		//const double rotationScale = 1.0/0.001;
-		rigidOptScales[0] = rotationScale;
-		rigidOptScales[1] = rotationScale;
-		rigidOptScales[2] = rotationScale;
-		// translation
-		//const double translationScale = 1.0/10.0;
-		rigidOptScales[3] = translationScale;
-		rigidOptScales[4] = translationScale;
-		rigidOptScales[5] = translationScale;
-		if( rigidTransform->GetNumberOfParameters() > 6 )
-		{
-			// scaling
-			//const double scalingScale = 1.0/1.0;
-			rigidOptScales[6] = scalingScale;
-			rigidOptScales[7] = scalingScale;
-			rigidOptScales[8] = scalingScale;
-		}
-	}
-	else if( transformType.compare("affine") == 0 )
-	{
-		rigidOptScales[0] = scalingScale;
-		rigidOptScales[1] = 1.0;
-		rigidOptScales[2] = 1.0;
-		rigidOptScales[3] = scalingScale;
-		rigidOptScales[4] = 1.0;
-		rigidOptScales[5] = 1.0;
-		rigidOptScales[6] = scalingScale;
-		rigidOptScales[7] = 1.0;
-		rigidOptScales[8] = 1.0;
-		rigidOptScales[9] = translationScale;
-		rigidOptScales[10] = translationScale;
-		rigidOptScales[11] = translationScale;
-	}
-	else
-	{
-		std::cout << "Transform type is wrong." << std::endl;
-	}
+
+	// rotation
+	rigidOptScales[0] = inputs->RotationScale();
+	rigidOptScales[1] = inputs->RotationScale();
+	rigidOptScales[2] = inputs->RotationScale();
+	// translation
+	rigidOptScales[3] = inputs->TranslationScale();
+	rigidOptScales[4] = inputs->TranslationScale();
+	rigidOptScales[5] = inputs->TranslationScale();
+	// scaling
+	rigidOptScales[6] = inputs->ScalingScale();
+	rigidOptScales[7] = inputs->ScalingScale();
+	rigidOptScales[8] = inputs->ScalingScale();
+
 	// set the scales
 	rigidOptimizer->SetScales( rigidOptScales );
 
@@ -654,6 +577,7 @@ int main(int argc, char * argv[])
 	chronometer.Start( "Outputs" );
 
 	// print results to the screen
+	/*
 	std::cout << std::endl;
 	std::cout << "\n***** OPTIMIZER PARAMETERS *****" << std::endl;
 	std::cout << " Iterations      : " << rigidOptimizer->GetCurrentIteration() << std::endl;
@@ -662,39 +586,23 @@ int main(int argc, char * argv[])
 	std::cout << " #spatial samples: " << registration->GetMetric()->GetNumberOfSpatialSamples() << std::endl;
 	std::cout << " #fixed samples  : " << registration->GetMetric()->GetNumberOfFixedImageSamples() << std::endl;
 	std::cout << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
+	*/
 
 	std::cout << "\n***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
 	std::cout << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
-	if( transformType.compare("versor") == 0 || transformType.compare("scale") == 0 )
-	{
-		std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
-		std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
-		std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
-		if( rigidTransform->GetNumberOfParameters() > 6 )
-		{
-			std::cout << " Scale: " << rigidTransform->GetScale() << std::endl;
-		}
-	}
-	else if( transformType.compare("affine") == 0 )
-	{
-		std::cout << " Matrix: " << rigidTransform->GetMatrix() << std::endl;
-		std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
-	}
-	else
-	{
-		std::cout << "Transform type is wrong." << std::endl;
-	}
+	std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
+	std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
+	std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 	std::cout << std::endl;
 
 	// write final rigid transform out to file
-	std::string finalRigidTransformFilename = outputDirectory + "\\" + baseMovingFilename + "_rigidTransform.tfm";
 	// instantiate new transform and insert parameters
 	RigidTransformType::Pointer finalRigidTransform = RigidTransformType::New();
 	finalRigidTransform->SetParameters( registration->GetLastTransformParameters() );
 	finalRigidTransform->SetFixedParameters( rigidTransform->GetFixedParameters() );
-	WriteOutTransform< RigidTransformType >( finalRigidTransformFilename.c_str(), finalRigidTransform );
+	WriteOutTransform< RigidTransformType >( inputs->RigidTransformFilename().c_str(), finalRigidTransform );
 
-	// write out joint histogram
+	// obtain joint histogram
 	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
 	typedef itk::RescaleIntensityImageFilter< JPDFImageType, CharImageType >	RescaleFilterType;
 	RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
@@ -702,11 +610,14 @@ int main(int argc, char * argv[])
 	rescaler->SetOutputMinimum( 0 );
 	rescaler->SetOutputMaximum( 255 );
 	
-	std::string jointHistogramFilename = outputDirectory + "\\" + baseMovingFilename + "_JPDF.tif";
-	WriteOutImage< CharImageType, CharImageType >( jointHistogramFilename.c_str(), rescaler->GetOutput() );
+	// write out joint histogram
+	WriteOutImage< CharImageType, CharImageType >( inputs->JointHistogramFilename().c_str(), rescaler->GetOutput() );
 
 	std::cout << std::endl;
 	std::cout << rigidOptimizer << std::endl;
+
+	std::cout << std::endl;
+	std::cout << metric << std::endl;
 
 	// ********************** APPLY TRANSFORM ***************************
 	// apply transform to image and write out result to file
@@ -717,14 +628,13 @@ int main(int argc, char * argv[])
 	resampler->SetOutputOrigin( fixedImage->GetOrigin() );
 	resampler->SetOutputSpacing( fixedImage->GetSpacing() );
 	resampler->SetOutputDirection( fixedImage->GetDirection() );
-	resampler->SetDefaultPixelValue( 1000 );
+	resampler->SetDefaultPixelValue( inputs->DefaultPixelValue() );
 	// send inputs
 	resampler->SetInput( movingImage );
 	resampler->SetTransform( finalRigidTransform );
 
 	// write out image
-	std::string transformedImageFilename = outputDirectory + "\\" + baseMovingFilename + "_transformed.mhd";
-	WriteOutImage< FloatImageType, FloatImageType >( transformedImageFilename.c_str(), resampler->GetOutput() );
+	WriteOutImage< FloatImageType, FloatImageType >( inputs->TransformedImageFilename().c_str(), resampler->GetOutput() );
 
 	memorymeter.Stop( "Outputs" );
 	chronometer.Stop( "Outputs" );

@@ -52,25 +52,25 @@ public:
 	std::string TransformedImageFilename() const { return this->m_TransformedImageFilename; };
 	// get input variables
 	std::string FixedImageFilename() const { return this->m_FixedImageFilename; };
-	std::string MovingImageFilename() const { m_MovingImageFilename; };
-	std::string FixedImageMaskFilename() const { m_FixedImageMaskFilename; };
-	std::string MovingImageMaskFilename() const { m_MovingImageMaskFilename; };
-	std::string OutputDirectory() const { m_OutputDirectory; };
-	std::string FixedFiducialList() const { m_FixedFiducialList; };
-	std::string MovingFiducialList() const { m_MovingFiducialList; };
+	std::string MovingImageFilename() const { return this->m_MovingImageFilename; };
+	std::string FixedImageMaskFilename() const { return this->m_FixedImageMaskFilename; };
+	std::string MovingImageMaskFilename() const { return this->m_MovingImageMaskFilename; };
+	std::string OutputDirectory() const { return this->m_OutputDirectory; };
+	std::string FixedFiducialList() const { return this->m_FixedFiducialList; };
+	std::string MovingFiducialList() const { return this->m_MovingFiducialList; };
 	//metric
-	int NumberOfHistogramBins() const { m_NumberOfHistogramBins; };
-	float PercentageOfSamples() const { m_PercentageOfSamples; };
+	int NumberOfHistogramBins() const { return this->m_NumberOfHistogramBins; };
+	float PercentageOfSamples() const { return this->m_PercentageOfSamples; };
 	//optimizer
-	float MaximumStepLength() const { m_MaximumStepLength; };
-	int NumberOfIterations() const { m_NumberOfIterations; };
-	float RelaxationFactor() const { m_RelaxationFactor; };
-	float GradientMagnitudeTolerance() const { m_GradientMagnitudeTolerance; };
-	float RotationScale() const { m_RotationScale; };
-	float TranslationScale() const { m_TranslationScale; };
-	float ScalingScale() const { m_ScalingScale; };
+	float MaximumStepLength() const { return this->m_MaximumStepLength; };
+	int NumberOfIterations() const { return this->m_NumberOfIterations; };
+	float RelaxationFactor() const { return this->m_RelaxationFactor; };
+	float GradientMagnitudeTolerance() const { return this->m_GradientMagnitudeTolerance; };
+	float RotationScale() const { return this->m_RotationScale; };
+	float TranslationScale() const { return this->m_TranslationScale; };
+	float ScalingScale() const { return this->m_ScalingScale; };
 	//resamples
-	int DefaultPixelValue() const { m_DefaultPixelValue; };
+	int DefaultPixelValue() const { return this->m_DefaultPixelValue; };
 	
 protected:
 	// declare the constructor and define default parameters

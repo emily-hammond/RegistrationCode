@@ -11,7 +11,7 @@
 // test all functionality
 int main( int argc, char * argv[] )
 {
-	std::string filename = "C:\\Users\\ehammond\\Documents\\ITKprojects\\RegistrationCode\\src\\parseInputFile\\sampleInputFile.txt";
+	const char * filename = "C:\\Users\\ehammond\\Documents\\ITKprojects\\RegistrationCode\\src\\parseInputFile\\sampleInputFile.txt";
 
 	// test itkLandmarkAnalysis class
 	typedef itk::ParseInputFile		ParsingType;
