@@ -5,14 +5,10 @@
 # registration with and MMI metric and rigid transform
 #
 # Inputs
-FixedImageFilename "H:\Results\SampleMhdImages_IngridT3\AP20376_20130207_CT\CAP_30_B35f.mhd"
-MovingImageFilename "H:\Results\SampleMhdImages_IngridT3\AP20376_20130207_MR\T2Var155_Ax_Ab.mhd"
-FixedImageMaskFilename ""
-MovingImageMaskFilename ""
-OutputDirectory "H:\Results\2015.03.23_DifferentTransforms\T2Var155_Ax_Ab"
+FixedImageFilename H:\Results\SampleMhdImages_IngridT3\AP20376_20130207_CT\CAP_30_B35f.mhd
+MovingImageFilename H:\Results\SampleMhdImages_IngridT3\AP20376_20130207_MR\T2Var155_Ax_Ab.mhd
+OutputDirectory H:\Results\2015.03.23_DifferentTransforms\T2Var155_Ax_Ab
 NumberOfHistogramBins 50
-FixedFiducialList ""
-MovingFiducialList ""
 PercentageOfSamples 0.01
 MaximumStepLength 1
 NumberOfIterations 1000

@@ -16,6 +16,7 @@ derived the additional information and print the inputs as well.
 #include <itksys/SystemTools.hxx>
 #include <fstream>
 #include <cmath>
+#include <sstream>
 
 namespace itk
 {
@@ -39,6 +40,7 @@ public:
 	itkTypeMacro(ParseInputFile, Object);
 
 	void SetFilename( std::string filename );
+	void Print();
 
 	// get output variables
 	std::string MovingHistogramFilename() const { return this->m_MovingHistogramFilename; };

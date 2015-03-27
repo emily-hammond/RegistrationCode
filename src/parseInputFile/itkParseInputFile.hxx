@@ -39,78 +39,94 @@ namespace itk
 		std::string line;
 		while( getline( myfile, line ) )
 		{
-			std::cout << line << std::endl;
-			std::size_t first;
+			std::string name;
 			// search for the correct input
 			if( line.compare( 0, 1, "#" ) != 0 ) // skip commented lines
 			{
 				if( line.find("FixedImageFilename") != std::string::npos )
 				{
-
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_FixedImageFilename;
 				}
 				else if( line.find("MovingImageFilename") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_MovingImageFilename;
 				}
 				else if( line.find("FixedImageMaskFilename") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_FixedImageMaskFilename;
 				}
 				else if( line.find("MovingImageMaskFilename") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_MovingImageMaskFilename;
 				}
 				else if( line.find("OutputDirectory") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_OutputDirectory;
 				}
 				else if( line.find("NumberOfHistogramBins") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_NumberOfHistogramBins;
 				}
 				else if( line.find("FixedFiducialList") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_FixedFiducialList;
 				}
 				else if( line.find("MovingFiducialList") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_MovingFiducialList;
 				}
 				else if( line.find("PercentageOfSamples") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_PercentageOfSamples;
 				}
 				else if( line.find("MaximumStepLength") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_MaximumStepLength;
 				}
 				else if( line.find("NumberOfIterations") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_NumberOfIterations;
 				}
 				else if( line.find("RelaxationFactor") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_RelaxationFactor;
 				}
 				else if( line.find("GradientMagnitudeTolerance") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_GradientMagnitudeTolerance;
 				}
 				else if( line.find("RotationScale") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_RotationScale;
 				}
 				else if( line.find("TranslationScale") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_TranslationScale;
 				}
 				else if( line.find("ScalingScale") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_ScalingScale;
 				}
 				else if( line.find("DefaultPixelValue") != std::string::npos )
 				{
-					// allocate variable
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_DefaultPixelValue;
 				}
 				else
 				{
@@ -124,6 +140,7 @@ namespace itk
 
 	void ParseInputFile::DeriveVariables()
 	{
+		
 		return;
 	}
 	
@@ -153,6 +170,28 @@ namespace itk
 		return;
 	}
 
+	void ParseInputFile::Print()
+	{
+		std::cout << std::endl;
+		std::cout << "***** INPUTS *****" << std::endl;
+		std::cout << "FixedImageFilename " << m_FixedImageFilename << std::endl;
+		std::cout << "MovingImageFilename " << m_MovingImageFilename << std::endl;
+		std::cout << "FixedImageMaskFilename " << m_FixedImageMaskFilename << std::endl;
+		std::cout << "MovingImageMaskFilename " << m_MovingImageMaskFilename << std::endl;
+		std::cout << "FixedFiducialList " << m_FixedFiducialList << std::endl;
+		std::cout << "MovingFiducialList " << m_MovingFiducialList << std::endl;
+		std::cout << "OutputDirectory " << m_OutputDirectory << std::endl;
+		std::cout << "NumberOfHistogramBins " << m_NumberOfHistogramBins << std::endl;
+		std::cout << "PercentageOfSamples " << m_PercentageOfSamples << std::endl;
+		std::cout << "MaximumStepLength " << m_MaximumStepLength << std::endl;
+		std::cout << "NumberOfIterations " << m_NumberOfIterations << std::endl;
+		std::cout << "RelaxationFactor " << m_RelaxationFactor << std::endl;
+		std::cout << "GradientMagnitudeTolerance " << m_GradientMagnitudeTolerance << std::endl;
+		std::cout << "RotationScale " << m_RotationScale << std::endl;
+		std::cout << "TranslationScale " << m_TranslationScale << std::endl;
+		std::cout << "ScalingScale " << m_ScalingScale << std::endl;
+		std::cout << "DefaultPixelValue " << m_DefaultPixelValue << std::endl;
+	}
 
 } // end namespace
 

@@ -19,6 +19,7 @@ int main( int argc, char * argv[] )
 
 	// set filename
 	parseFile->SetFilename( filename );
+	parseFile->Print();
 
 	return EXIT_SUCCESS;
 }
