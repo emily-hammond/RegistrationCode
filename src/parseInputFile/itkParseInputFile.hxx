@@ -32,6 +32,7 @@ namespace itk
 		if( !myfile.is_open() )
 		{
 			std::cout << "Error: Failed to open input file! " << std::endl;
+			this->m_IsOpen = false;
 			return;
 		}
 
@@ -128,6 +129,22 @@ namespace itk
 					std::stringstream convertor(line);
 					convertor >> name >> this->m_DefaultPixelValue;
 				}
+				else if( line.find("Write") != std::string::npos )
+				{
+					if( line.find("True") != std::string::npos )
+					{
+						this->m_WriteImage = true;
+					}
+					else if( line.find("False") != std::string::npos )
+					{
+						this->m_WriteImage = false;
+					}
+					else
+					{
+						std::cout << "Write option is not recognized." << std::endl;
+						std::cout << "   Please choose True or False" << std::endl;
+					}
+				}
 				else
 				{
 					std::cout << "Error! Input variable not found." << std::endl;
@@ -155,6 +172,7 @@ namespace itk
 		this->m_RigidTransformFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_RigidTransform.tfm";
 		this->m_JointHistogramFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_FinalJointHistogram.tif";
 		this->m_TransformedImageFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_Transformed.mhd";
+		this->m_PrematureTransformFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_PrematureTransform.mhd";
 
 		return;
 	}
@@ -182,6 +200,7 @@ namespace itk
 		this->m_ScalingScale = 1.0;
 		//resamples
 		this->m_DefaultPixelValue = 0;
+		this->m_WriteImage = false;
 
 		return;
 	}
@@ -208,6 +227,7 @@ namespace itk
 		std::cout << "TranslationScale " << m_TranslationScale << std::endl;
 		std::cout << "ScalingScale " << m_ScalingScale << std::endl;
 		std::cout << "DefaultPixelValue " << m_DefaultPixelValue << std::endl;
+		std::cout << "WriteImage " << m_WriteImage << std::endl;
 		std::cout << "***** OUTPUTS *****" << std::endl;
 		std::cout << "MovingHistogramFilename " << m_MovingHistogramFilename << std::endl;
 		std::cout << "FixedHistogramFilename " << m_FixedHistogramFilename << std::endl;

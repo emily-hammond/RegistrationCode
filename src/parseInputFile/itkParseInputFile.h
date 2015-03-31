@@ -42,6 +42,8 @@ public:
 	void SetFilename( std::string filename );
 	void Print();
 
+	// error
+	bool IsOpen() const { return this->m_IsOpen; };
 	// get output variables
 	std::string MovingHistogramFilename() const { return this->m_MovingHistogramFilename; };
 	std::string FixedHistogramFilename() const { return this->m_FixedHistogramFilename; };
@@ -50,6 +52,7 @@ public:
 	std::string RigidTransformFilename() const { return this->m_RigidTransformFilename; };
 	std::string JointHistogramFilename() const { return this->m_JointHistogramFilename; };
 	std::string TransformedImageFilename() const { return this->m_TransformedImageFilename; };
+	std::string PrematureTransformFilename() const { return this->m_PrematureTransformFilename; };
 	// get input variables
 	std::string FixedImageFilename() const { return this->m_FixedImageFilename; };
 	std::string MovingImageFilename() const { return this->m_MovingImageFilename; };
@@ -71,6 +74,7 @@ public:
 	float ScalingScale() const { return this->m_ScalingScale; };
 	//resamples
 	int DefaultPixelValue() const { return this->m_DefaultPixelValue; };
+	bool WriteImage() const { return this->m_WriteImage; };
 	
 protected:
 	// declare the constructor and define default parameters
@@ -85,6 +89,7 @@ protected:
 private:
 	// declare variables
 	std::string m_filename;
+	bool m_IsOpen;
 	//input files
 	std::string m_FixedImageFilename;
 	std::string m_MovingImageFilename;
@@ -106,6 +111,7 @@ private:
 	float m_ScalingScale;
 	//resamples
 	int m_DefaultPixelValue;
+	bool m_WriteImage;
 	//output files
 	std::string m_MovingHistogramFilename;
 	std::string m_FixedHistogramFilename;
@@ -114,6 +120,7 @@ private:
 	std::string m_RigidTransformFilename;
 	std::string m_JointHistogramFilename;
 	std::string m_TransformedImageFilename;
+	std::string m_PrematureTransformFilename;
 
 	// private member functions
 	void ReadInFile( std::string filename );

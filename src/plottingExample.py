@@ -10,7 +10,7 @@ import pylab as pl
 # create a function that parses through a string and
 # separates it into the proper categories for the monitoring file
 def parseLineInMonitorFile( str ):
-	# isolate the first two elements as the iteration and metric values
+	# isolate the first four elements
 	itr, stepSize, gradMag, metric, temp = str.split(' ',4)
 	# split the parameters into separate strings
 	paramStr = temp[1:-2].split(',')
@@ -36,13 +36,13 @@ def parseLineInHistogramFile( str ):
 
 # ****************** MAIN CODE *******************
 # read in filename from the command line as the first argument
-script, fixedImage, bins1, movingImage, bins2, resultsDirectory = argv
+script, fixedImage, movingImage, resultsDirectory = argv
 print argv
 
 # find the different files to take from
-monitorFilename = resultsDirectory + "\\" + movingImage + "log.txt"
-fixedFilename = resultsDirectory + "\\" + fixedImage + "_" + bins1 + "Histogram.txt"
-movingFilename = resultsDirectory + "\\" + movingImage + "_" + bins2 + "Histogram.txt"
+monitorFilename = resultsDirectory + "\\" + movingImage + "_log.txt"
+fixedFilename = resultsDirectory + "\\" + fixedImage + "_" + "Histogram.txt"
+movingFilename = resultsDirectory + "\\" + movingImage + "_" + "Histogram.txt"
 
 # Open a file and read in lines corresponding to data
 #filename = raw_input('Enter in name of file: ')
@@ -65,10 +65,10 @@ with open(monitorFilename) as monitoringTxt:
 	# read in lines from file and determine start line and end line
 	for line in monitoringTxt:
 		# corresponding to the first iteration
-		if line[:3] == 'Itr':
+		if line.find('Itr#') != -1:
 			startFlag = True
 		# corresponding to the print out of the Optimizer stop condition
-		elif line[:3] == 'Opt' and startFlag:
+		elif (line.find('Optimizer')!= -1 or line.find('Exception')!= -1) and startFlag:
 			endFlag = True
 		elif endFlag:
 			startFlag = False
@@ -107,7 +107,7 @@ ax0c.plot(itr,grad)
 pl.xlabel('Iteration')
 pl.ylabel('GradMag')
 pl.title('Evolution of Gradient Magnitude')
-pl.savefig(resultsDirectory + '\\metricStepPlot.png')
+pl.savefig(resultsDirectory + '\\' + movingImage + '_metricStepPlot.png')
 
 # create a plot for the transform parameters
 # rotation
@@ -146,7 +146,7 @@ if j > 6:
 	ax8.plot(itr,params[8])
 	pl.ylabel('ScaleZ')
 	pl.xlabel('Iteration')
-pl.savefig(resultsDirectory + '\\transformEvolutionPlot.png')
+pl.savefig(resultsDirectory + '\\' + movingImage + '_transformEvolutionPlot.png')
 
 with open(fixedFilename) as fixedTxt:
 	# initialize variables
@@ -168,7 +168,7 @@ ax1.bar(fixedBins, fixedFreq)
 pl.title('Fixed Histogram with %d bins' %len(fixedBins))
 pl.xlabel('Bin value')
 pl.ylabel('Frequency')
-pl.savefig(resultsDirectory + '\\fixedHistogram.png')
+pl.savefig(resultsDirectory + '\\' + fixedImage + '_fixedHistogram.png')
 
 with open(movingFilename) as movingTxt:
 	# initialize variables
@@ -189,4 +189,4 @@ ax2.bar(fixedBins, fixedFreq)
 pl.title('Moving Histogram with %d bins' %len(fixedBins))
 pl.xlabel('Bin value')
 pl.ylabel('Frequency')
-pl.savefig(resultsDirectory + '\\movingHistogram.png')
+pl.savefig(resultsDirectory + '\\' + movingImage + '_movingHistogram.png')

@@ -57,6 +57,8 @@
 
 // parsing inputs
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\src\parseInputFile\itkParseInputFile.h"
+// creating the output directory (NOT CROSS PLATFORM!!!!)
+#include <windows.h>
 
 /*************************************************************************
  * Write templated functions for reading/writing files to clean up code 
@@ -138,6 +140,7 @@ int WriteOutTransform( const char * transformFilename, typename TransformType::P
 		std::cerr << "Exception Object Caught!" << std::endl;
 		std::cerr << err << std::endl;
 		std::cerr << std::endl;
+		return EXIT_FAILURE;
 	}
 	
 	// return output
@@ -365,6 +368,17 @@ int main(int argc, char * argv[])
 	typedef itk::ParseInputFile		ParsingType;
 	ParsingType::Pointer inputs = ParsingType::New();
 	inputs->SetFilename( inputFilename );
+	if( !inputs->IsOpen() )
+	{
+		return EXIT_FAILURE;
+	}
+	inputs->Print();
+
+	// create output directory
+	if( !CreateDirectory( inputs->OutputDirectory().c_str(), NULL ) )
+	{
+		std::cout << "Output Directory already exists." << std::endl;
+	}
 
 	// ******************* DEFINE/READ IN IMAGES *************************
 	// define image types
@@ -385,13 +399,10 @@ int main(int argc, char * argv[])
 	memorymeter.Start( "Generating histograms" );
 	chronometer.Start( "Generating histograms" );
 
-	if( argc > 4 )
-	{
-		// moving image
-		CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins() );
-		// fixed image
-		CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins() );
-	}
+	// write out histograms for the moving image
+	CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins() );
+	// fixed image
+	CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins() );
 
 	memorymeter.Stop( "Generating histograms" );
 	chronometer.Stop( "Generating histograms" );
@@ -588,11 +599,6 @@ int main(int argc, char * argv[])
 	std::cout << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
 	*/
 
-	std::cout << "\n***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
-	std::cout << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
-	std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
-	std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
-	std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 	std::cout << std::endl;
 
 	// write final rigid transform out to file
@@ -613,6 +619,15 @@ int main(int argc, char * argv[])
 	// write out joint histogram
 	WriteOutImage< CharImageType, CharImageType >( inputs->JointHistogramFilename().c_str(), rescaler->GetOutput() );
 
+	std::cout << "\n***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
+	std::cout << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
+	std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
+	std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
+	std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
+
+	std::cout << std::endl;
+	std::cout << finalRigidTransform << std::endl;
+
 	std::cout << std::endl;
 	std::cout << rigidOptimizer << std::endl;
 
@@ -620,21 +635,24 @@ int main(int argc, char * argv[])
 	std::cout << metric << std::endl;
 
 	// ********************** APPLY TRANSFORM ***************************
-	// apply transform to image and write out result to file
-	typedef itk::ResampleImageFilter< FloatImageType, FloatImageType >	ResampleFilterType;
-	ResampleFilterType::Pointer resampler = ResampleFilterType::New();
-	// initialize with fixed image parameters
-	resampler->SetSize( fixedImage->GetLargestPossibleRegion().GetSize() );
-	resampler->SetOutputOrigin( fixedImage->GetOrigin() );
-	resampler->SetOutputSpacing( fixedImage->GetSpacing() );
-	resampler->SetOutputDirection( fixedImage->GetDirection() );
-	resampler->SetDefaultPixelValue( inputs->DefaultPixelValue() );
-	// send inputs
-	resampler->SetInput( movingImage );
-	resampler->SetTransform( finalRigidTransform );
+	if( inputs->WriteImage() )
+	{
+		// apply transform to image and write out result to file
+		typedef itk::ResampleImageFilter< FloatImageType, FloatImageType >	ResampleFilterType;
+		ResampleFilterType::Pointer resampler = ResampleFilterType::New();
+		// initialize with fixed image parameters
+		resampler->SetSize( fixedImage->GetLargestPossibleRegion().GetSize() );
+		resampler->SetOutputOrigin( fixedImage->GetOrigin() );
+		resampler->SetOutputSpacing( fixedImage->GetSpacing() );
+		resampler->SetOutputDirection( fixedImage->GetDirection() );
+		resampler->SetDefaultPixelValue( inputs->DefaultPixelValue() );
+		// send inputs
+		resampler->SetInput( movingImage );
+		resampler->SetTransform( finalRigidTransform );
 
-	// write out image
-	WriteOutImage< FloatImageType, FloatImageType >( inputs->TransformedImageFilename().c_str(), resampler->GetOutput() );
+		// write out image
+		WriteOutImage< FloatImageType, FloatImageType >( inputs->TransformedImageFilename().c_str(), resampler->GetOutput() );
+	}
 
 	memorymeter.Stop( "Outputs" );
 	chronometer.Stop( "Outputs" );
