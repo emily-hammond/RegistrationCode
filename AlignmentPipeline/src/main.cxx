@@ -32,10 +32,11 @@
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkImageRegistrationMethod.h"
 #include "itkRegularStepGradientDescentOptimizer.h"
-#include "itkVersorRigid3DTransformOptimizer.h"
 
 // different transforms
 #include "itkScaleVersor3DTransform.h"
+//#include "itkVersorRigid3DTransform.h"
+//#include "itkVersorRigid3DTransformOptimizer.h"
 
 // monitoring
 #include "itkCommand.h"
@@ -321,6 +322,7 @@ protected:
 	RigidCommandIterationUpdate() {};
 public:
 	typedef itk::RegularStepGradientDescentOptimizer	OptimizerType;
+	//typedef itk::VersorRigid3DTransformOptimizer		OptimizerType;
 	typedef const OptimizerType *						OptimizerPointer;
 	void Execute( itk::Object *caller, const itk::EventObject &event)
 	{
@@ -409,6 +411,7 @@ int main(int argc, char * argv[])
 	// ************************* TRANSFORM *******************************
 	// set up rigid transform types
 	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
+	//typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
 
 	// instantiate transforms
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
@@ -447,10 +450,17 @@ int main(int argc, char * argv[])
 	int numOfPixels = size[0]*size[1]*size[2];
 	std::cout << "Number of pixels in fixed image: " << numOfPixels << std::endl;
 	// use 1% of the fixed image samples
-	metric->SetNumberOfSpatialSamples( inputs->PercentageOfSamples()*numOfPixels );
-	metric->SetNumberOfHistogramBins( inputs->NumberOfHistogramBins() );
+	if( inputs->PercentageOfSamples() > 0 )
+	{
+		metric->SetNumberOfSpatialSamples( inputs->PercentageOfSamples()*numOfPixels );
+	}
+	if( inputs->NumberOfHistogramBins() > 0 )
+	{
+		metric->SetNumberOfHistogramBins( inputs->NumberOfHistogramBins() );
+	}
 
 	// ******************* METRIC INITIALIZATION *************************
+	/*
 	std::cout << "\nPerform metric initialization" << std::endl;
 	// iterate through the transform in the z direction and calculate metric
 	// for an additional initialization
@@ -477,11 +487,11 @@ int main(int argc, char * argv[])
 	// obtain the parameters from the transform
 	RigidTransformType::ParametersType parameters = rigidTransform->GetParameters();	
 
-	/* This portion of code identifies where to perform the gross translation in the z direction.
-	The range is defined as the distance from the center of the fixed image to the location where
-	the moving image center would occur if the two images were bottom aligned. So in math terms
-	fixedCenter - fixedStart - movingRange/2 (all only for the z direction).
-	*/
+	// This portion of code identifies where to perform the gross translation in the z direction.
+	// The range is defined as the distance from the center of the fixed image to the location where
+	// the moving image center would occur if the two images were bottom aligned. So in math terms
+	// fixedCenter - fixedStart - movingRange/2 (all only for the z direction).
+	
 	int z = 5; // location in the transform corresponding to the proper translation
 	
 	float range = abs( fixedCenter[2] - fixedStart[2] - abs( movingEnd[2] - movingStart[2] )/2.0 );
@@ -510,39 +520,56 @@ int main(int argc, char * argv[])
 	// insert the new initialization parameters into the transform and print out
 	rigidTransform->SetParameters( minParameters );
 	WriteOutTransform< RigidTransformType >( inputs->InitMetricFilename().c_str() , rigidTransform );
+	*/
 
 	memorymeter.Stop( "Initialization" );
 	chronometer.Stop( "Initialization" );
 
 	// ************************ OPTIMIZER ********************************
 	typedef itk::RegularStepGradientDescentOptimizer	RigidOptimizerType;
+	//typedef itk::VersorRigid3DTransformOptimizer		RigidOptimizerType;
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
 	// set parameters
 	rigidOptimizer->SetMinimumStepLength( 0.001 );
-	rigidOptimizer->SetMaximumStepLength( inputs->MaximumStepLength() );
-	rigidOptimizer->SetNumberOfIterations( inputs->NumberOfIterations() );
-	rigidOptimizer->SetRelaxationFactor( inputs->RelaxationFactor() );
-	rigidOptimizer->SetGradientMagnitudeTolerance( inputs->GradientMagnitudeTolerance() );
+	if( inputs->MaximumStepLength() > 0 )
+	{
+		rigidOptimizer->SetMaximumStepLength( inputs->MaximumStepLength() );
+	}
+	if( inputs->NumberOfIterations() > 0 )
+	{
+		rigidOptimizer->SetNumberOfIterations( inputs->NumberOfIterations() );
+	}
+	if( inputs->RelaxationFactor() > 0 )
+	{
+		rigidOptimizer->SetRelaxationFactor( inputs->RelaxationFactor() );
+	}
+	if( inputs->GradientMagnitudeTolerance() > 0 )
+	{
+		rigidOptimizer->SetGradientMagnitudeTolerance( inputs->GradientMagnitudeTolerance() );
+	}
 	rigidOptimizer->MinimizeOn();
 
-	// set optimizer scales
-	RigidOptimizerType::ScalesType rigidOptScales( rigidTransform->GetNumberOfParameters() );
+	if( inputs->RotationScale() > 0 || inputs->TranslationScale() > 0 || inputs->ScalingScale() > 0 )
+	{
+		// set optimizer scales
+		RigidOptimizerType::ScalesType rigidOptScales( rigidTransform->GetNumberOfParameters() );
 
-	// rotation
-	rigidOptScales[0] = inputs->RotationScale();
-	rigidOptScales[1] = inputs->RotationScale();
-	rigidOptScales[2] = inputs->RotationScale();
-	// translation
-	rigidOptScales[3] = inputs->TranslationScale();
-	rigidOptScales[4] = inputs->TranslationScale();
-	rigidOptScales[5] = inputs->TranslationScale();
-	// scaling
-	rigidOptScales[6] = inputs->ScalingScale();
-	rigidOptScales[7] = inputs->ScalingScale();
-	rigidOptScales[8] = inputs->ScalingScale();
+		// rotation
+		rigidOptScales[0] = 1.0/inputs->RotationScale();
+		rigidOptScales[1] = 1.0/inputs->RotationScale();
+		rigidOptScales[2] = 1.0/inputs->RotationScale();
+		// translation
+		rigidOptScales[3] = 1.0/inputs->TranslationScale();
+		rigidOptScales[4] = 1.0/inputs->TranslationScale();
+		rigidOptScales[5] = 1.0/inputs->TranslationScale();
+		// scaling
+		rigidOptScales[6] = 1.0/inputs->ScalingScale();
+		rigidOptScales[7] = 1.0/inputs->ScalingScale();
+		rigidOptScales[8] = 1.0/inputs->ScalingScale();
 
-	// set the scales
-	rigidOptimizer->SetScales( rigidOptScales );
+		// set the scales
+		rigidOptimizer->SetScales( rigidOptScales );
+	}
 
 	// register the optimizer with the command class
 	RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();
@@ -608,6 +635,8 @@ int main(int argc, char * argv[])
 	finalRigidTransform->SetFixedParameters( rigidTransform->GetFixedParameters() );
 	WriteOutTransform< RigidTransformType >( inputs->RigidTransformFilename().c_str(), finalRigidTransform );
 
+	std::cout << finalRigidTransform << std::endl;
+
 	// obtain joint histogram
 	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
 	typedef itk::RescaleIntensityImageFilter< JPDFImageType, CharImageType >	RescaleFilterType;
@@ -626,13 +655,7 @@ int main(int argc, char * argv[])
 	std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 
 	std::cout << std::endl;
-	std::cout << finalRigidTransform << std::endl;
-
-	std::cout << std::endl;
 	std::cout << rigidOptimizer << std::endl;
-
-	std::cout << std::endl;
-	std::cout << metric << std::endl;
 
 	// ********************** APPLY TRANSFORM ***************************
 	if( inputs->WriteImage() )
