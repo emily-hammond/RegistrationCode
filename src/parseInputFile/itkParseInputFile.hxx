@@ -189,15 +189,15 @@ namespace itk
 		this->m_MovingFiducialList = "";
 		//metric
 		this->m_NumberOfHistogramBins = 50;
-		this->m_PercentageOfSamples = 0.01;
+		this->m_PercentageOfSamples = 0;
 		//optimizer
-		this->m_MaximumStepLength = 1.0;
-		this->m_NumberOfIterations = 200;
-		this->m_RelaxationFactor = 0.5;
-		this->m_GradientMagnitudeTolerance = 0.01;
-		this->m_RotationScale = 0.01;
-		this->m_TranslationScale = 10.0;
-		this->m_ScalingScale = 1.0;
+		this->m_MaximumStepLength = 0;
+		this->m_NumberOfIterations = 0;
+		this->m_RelaxationFactor = 0;
+		this->m_GradientMagnitudeTolerance = 0;
+		this->m_RotationScale = 0;
+		this->m_TranslationScale = 0;
+		this->m_ScalingScale = 0;
 		//resamples
 		this->m_DefaultPixelValue = 0;
 		this->m_WriteImage = false;
