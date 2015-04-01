@@ -61,6 +61,7 @@
 // creating the output directory (NOT CROSS PLATFORM!!!!)
 #include <windows.h>
 
+
 /*************************************************************************
  * Write templated functions for reading/writing files to clean up code 
  *************************************************************************/
@@ -460,7 +461,6 @@ int main(int argc, char * argv[])
 	}
 
 	// ******************* METRIC INITIALIZATION *************************
-	/*
 	std::cout << "\nPerform metric initialization" << std::endl;
 	// iterate through the transform in the z direction and calculate metric
 	// for an additional initialization
@@ -520,7 +520,6 @@ int main(int argc, char * argv[])
 	// insert the new initialization parameters into the transform and print out
 	rigidTransform->SetParameters( minParameters );
 	WriteOutTransform< RigidTransformType >( inputs->InitMetricFilename().c_str() , rigidTransform );
-	*/
 
 	memorymeter.Stop( "Initialization" );
 	chronometer.Stop( "Initialization" );
