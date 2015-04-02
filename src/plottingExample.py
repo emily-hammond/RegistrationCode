@@ -37,7 +37,6 @@ def parseLineInHistogramFile( str ):
 # ****************** MAIN CODE *******************
 # read in filename from the command line as the first argument
 script, fixedImage, movingImage, resultsDirectory = argv
-print argv
 
 # find the different files to take from
 monitorFilename = resultsDirectory + "\\" + movingImage + "_log.txt"

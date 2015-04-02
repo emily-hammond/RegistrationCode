@@ -473,53 +473,85 @@ int main(int argc, char * argv[])
 	// initialize
 	metric->Initialize();
 
-	// identify FOVs of both images
-	FloatImageType::PointType movingEnd = GetImageRange< FloatImageType >( movingImage, "end" );
-	FloatImageType::PointType movingStart = GetImageRange< FloatImageType >( movingImage, "start" );
-	FloatImageType::PointType fixedStart = GetImageRange< FloatImageType >( fixedImage, "start" );
-	FloatImageType::PointType fixedCenter = GetImageRange< FloatImageType >( fixedImage, "center" );
-
-	std::cout << "MovingEnd: " << movingEnd << std::endl;
-	std::cout << "MovingStart: " << movingStart << std::endl;
-	std::cout << "FixedStart: " << fixedStart << std::endl;
-	std::cout << "FixedCenter: " << fixedCenter << std::endl;
-
-	// obtain the parameters from the transform
-	RigidTransformType::ParametersType parameters = rigidTransform->GetParameters();	
-
-	// This portion of code identifies where to perform the gross translation in the z direction.
-	// The range is defined as the distance from the center of the fixed image to the location where
-	// the moving image center would occur if the two images were bottom aligned. So in math terms
-	// fixedCenter - fixedStart - movingRange/2 (all only for the z direction).
-	
-	int z = 5; // location in the transform corresponding to the proper translation
-	
-	float range = abs( fixedCenter[2] - fixedStart[2] - abs( movingEnd[2] - movingStart[2] )/2.0 );
-	std::cout << "Range: " << range << std::endl;
-	float origParam5 = parameters[z];
-
-	// initialize parameters
-	float minMetric = 10000000.0;
-	RigidTransformType::ParametersType minParameters;
-
-	// change the parameter corresponding to the z translation and obtain the metric
-	std::cout << "\nMETRIC PARAMETERS" << std::endl;
-	for( float zTrans = origParam5 - range; zTrans < origParam5 + range; zTrans = zTrans + range/20.0 )
+	if( inputs->MetricInitialization() )
 	{
-		// change z parameter
-		parameters[z] = zTrans;
-		// store parameters and metric value into array
-		if( metric->GetValue(parameters) < minMetric )
-		{
-			minMetric = metric->GetValue(parameters);
-			minParameters = parameters;
-		}
-		std::cout << metric->GetValue( parameters ) << " " << parameters << std::endl;
-	}
+		// identify FOVs of both images
+		FloatImageType::PointType movingEnd = GetImageRange< FloatImageType >( movingImage, "end" );
+		FloatImageType::PointType movingStart = GetImageRange< FloatImageType >( movingImage, "start" );
+		FloatImageType::PointType fixedStart = GetImageRange< FloatImageType >( fixedImage, "start" );
+		FloatImageType::PointType fixedCenter = GetImageRange< FloatImageType >( fixedImage, "center" );
 
-	// insert the new initialization parameters into the transform and print out
-	rigidTransform->SetParameters( minParameters );
-	WriteOutTransform< RigidTransformType >( inputs->InitMetricFilename().c_str() , rigidTransform );
+		std::cout << "MovingEnd: " << movingEnd << std::endl;
+		std::cout << "MovingStart: " << movingStart << std::endl;
+		std::cout << "FixedStart: " << fixedStart << std::endl;
+		std::cout << "FixedCenter: " << fixedCenter << std::endl;
+
+		// obtain the parameters from the transform
+		RigidTransformType::ParametersType parameters = rigidTransform->GetParameters();	
+
+		// This portion of code identifies where to perform the gross translation in the z direction.
+		// The range is defined as the distance from the center of the fixed image to the location where
+		// the moving image center would occur if the two images were bottom aligned. So in math terms
+		// fixedCenter - fixedStart - movingRange/2 (all only for the z direction).
+		
+		int zCor = 5; // location in the transform corresponding to the proper translation
+		int ySag = 4;
+		
+		// find range to move over in the coronal direction
+		float rangeCor = abs( fixedCenter[2] - fixedStart[2] - abs( movingEnd[2] - movingStart[2] )/2.0 );
+		std::cout << "Coronal Range: " << rangeCor << std::endl;
+		float origParam5 = parameters[zCor];
+
+		// find range to move over in the sagittal direction
+		float rangeSag = abs( fixedCenter[1] - fixedStart[1] - abs( movingEnd[1] - movingStart[1] )/2.0 );
+		std::cout << "Sagittal Range: " << rangeSag << std::endl;
+		float origParam4 = parameters[ySag];
+
+		// initialize parameters
+		float minMetric = 10000000.0;
+		RigidTransformType::ParametersType minParameters;
+
+		// change the parameter corresponding to the z translation and obtain the metric
+		std::cout << "\nMETRIC PARAMETERS" << std::endl;
+		for( float zTrans = origParam5 - rangeCor - 10.0; zTrans < origParam5 + rangeCor + 10.0; zTrans = zTrans + rangeCor/20.0 )
+		{
+			// change z parameter
+			parameters[zCor] = zTrans;
+			// store parameters and metric value into array
+			if( metric->GetValue(parameters) < minMetric )
+			{
+				minMetric = metric->GetValue(parameters);
+				minParameters = parameters;
+			}
+			std::cout << metric->GetValue( parameters ) << " " << parameters << std::endl;
+		}
+
+		/*
+		// reset everything
+		minMetric = 10000000.0;
+		rigidTransform->SetParameters( minParameters );
+		parameters = rigidTransform->GetParameters();
+		std::string filenameTran = "H:\\Results\\2015.04.01_UsingTextFileInput\\3DSpace_Ax\\FirstMetricInitTransform.tfm";
+		WriteOutTransform< RigidTransformType >( filenameTran.c_str() , rigidTransform );
+
+		// change parameter corresponding to y translation
+		for( float yTrans = origParam4 - rangeSag; yTrans < origParam4 + rangeSag; yTrans = yTrans + rangeSag/5.0 )
+		{
+			// change y parameter
+			parameters[ySag] = yTrans;
+			// store parameters and metric value into array
+			if( metric->GetValue(parameters) < minMetric )
+			{
+				minMetric = metric->GetValue(parameters);
+				minParameters = parameters;
+			}
+			std::cout << metric->GetValue(parameters) << " " << parameters << std::endl;
+		}*/
+
+		// insert the new initialization parameters into the transform and print out
+		rigidTransform->SetParameters( minParameters );
+		WriteOutTransform< RigidTransformType >( inputs->InitMetricFilename().c_str() , rigidTransform );
+	}
 
 	memorymeter.Stop( "Initialization" );
 	chronometer.Stop( "Initialization" );

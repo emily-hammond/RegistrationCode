@@ -75,6 +75,7 @@ public:
 	//resamples
 	int DefaultPixelValue() const { return this->m_DefaultPixelValue; };
 	bool WriteImage() const { return this->m_WriteImage; };
+	bool MetricInitialization() const { return this->m_MetricInitialization; };
 	
 protected:
 	// declare the constructor and define default parameters
@@ -112,6 +113,7 @@ private:
 	//resamples
 	int m_DefaultPixelValue;
 	bool m_WriteImage;
+	bool m_MetricInitialization;
 	//output files
 	std::string m_MovingHistogramFilename;
 	std::string m_FixedHistogramFilename;

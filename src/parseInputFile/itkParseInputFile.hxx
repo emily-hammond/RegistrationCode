@@ -145,6 +145,22 @@ namespace itk
 						std::cout << "   Please choose True or False" << std::endl;
 					}
 				}
+				else if( line.find("MetricInitialization") != std::string::npos )
+				{
+					if( line.find("True") != std::string::npos )
+					{
+						this->m_MetricInitialization = true;
+					}
+					else if( line.find("False") != std::string::npos )
+					{
+						this->m_MetricInitialization = false;
+					}
+					else
+					{
+						std::cout << "Write option is not recognized." << std::endl;
+						std::cout << "   Please choose True or False" << std::endl;
+					}
+				}
 				else
 				{
 					std::cout << "Error! Input variable not found." << std::endl;
@@ -201,6 +217,7 @@ namespace itk
 		//resamples
 		this->m_DefaultPixelValue = 0;
 		this->m_WriteImage = false;
+		this->m_MetricInitialization = false;
 
 		return;
 	}
@@ -228,6 +245,7 @@ namespace itk
 		std::cout << "ScalingScale " << m_ScalingScale << std::endl;
 		std::cout << "DefaultPixelValue " << m_DefaultPixelValue << std::endl;
 		std::cout << "WriteImage " << m_WriteImage << std::endl;
+		std::cout << "MetricInitialization " << m_MetricInitialization << std::endl;
 		std::cout << "***** OUTPUTS *****" << std::endl;
 		std::cout << "MovingHistogramFilename " << m_MovingHistogramFilename << std::endl;
 		std::cout << "FixedHistogramFilename " << m_FixedHistogramFilename << std::endl;
