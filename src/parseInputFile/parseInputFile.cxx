@@ -12,7 +12,7 @@
 // test all functionality
 int main( int argc, char * argv[] )
 {
-	const char * filename = "C:\\Users\\ehammond\\Documents\\ITKprojects\\RegistrationCode\\src\\parseInputFile\\sampleInputFile.txt";
+	const char * filename = "H:\\Results\\MR_CT_RigidRegistrations\\2015.04.02_Results\\AP30372_TP1_results\\AP30372_TP1_Vibe3D_BH_pre_parameters.txt";
 
 	// test itkLandmarkAnalysis class
 	typedef itk::ParseInputFile		ParsingType;

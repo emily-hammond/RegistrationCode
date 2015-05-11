@@ -353,13 +353,16 @@ int main(int argc, char * argv[])
 	itk::TimeProbesCollectorBase chronometer;
 	itk::MemoryProbesCollectorBase memorymeter;
 
+	std::cout << argc << std::endl;
+
 	memorymeter.Start( "Full program" );
 	chronometer.Start( "Full program" );
 
-	if( argc < 1 )
+	if( argc < 2 )
 	{
 		std::cerr << "Incorrect number of inputs: " << std::endl;
 		std::cerr << "	main.exe inputFilename " << std::endl;
+		return EXIT_FAILURE;
 	}
 	
 	//*********************** INPUTS *******************************
@@ -370,11 +373,12 @@ int main(int argc, char * argv[])
 	std::string inputFilename = argv[1];
 	typedef itk::ParseInputFile		ParsingType;
 	ParsingType::Pointer inputs = ParsingType::New();
-	inputs->SetFilename( inputFilename );
-	if( !inputs->IsOpen() )
+	inputs->SetFilename( inputFilename.c_str() );
+/*	if( !inputs->IsOpen() )
 	{
+		std::cout << "File is not open." << std::endl;
 		return EXIT_FAILURE;
-	}
+	}*/
 	inputs->Print();
 
 	// create output directory
