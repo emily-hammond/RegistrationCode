@@ -1,0 +1,64 @@
+// 2014.10.29
+// Emily Hammond
+// rigid_SPIE_registration.txt
+// Elastix v4.7
+
+// Description: These parameters are used to perform temporal rigid registration
+// between multiple time points. This analysis is to determine consistent and 
+// reproducible positioning for imaging. Post registration, the results are to
+// be thresholded via an ITK program and loaded into Slicer for model making and
+// fiducial placement/measurement. This file is called with SPIE_registration.bat.
+
+//************************ Image Characteristics ***************************
+(FixedInternalImagePixelType "short")
+(MovingInternalImagePixelType "short")
+(FixedImageDimension 3)
+(MovingImageDimension 3)
+(UseDirectionCosines "true")
+
+//*************************** Main Components ******************************
+(Registration "MultiResolutionRegistration")
+(Interpolator "BSplineInterpolator")
+(ResampleInterpolator "FinalBSplineInterpolator")
+(Resampler "DefaultResampler")
+
+(FixedImagePyramid "FixedRecursiveImagePyramid")
+(MovingImagePyramid "MovingRecursiveImagePyramid")
+(NumberOfResolutions 3)
+(ImagePyramidSchedule 4 4 4 2 2 2 1 1 1)
+
+(Optimizer "AdaptiveStochasticGradientDescent")
+(Transform "SimilarityTransform")
+(Metric "AdvancedMattesMutualInformation")
+
+//*************************** Transformation *******************************
+
+(AutomaticScalesEstimation "true")
+(AutomaticTransformInitialization "true")
+(AutomaticTransformInitializationMethod "GeometricalCenter") 
+(HowToCombineTransforms "Compose")
+
+//************************** SimilarityMeasure *****************************
+(NumberOfHistogramBins 32)
+
+//***************************** Optimizer **********************************
+(MaximumNumberOfIterations 500)
+(AutomaticParameterEstimation "true")
+(UseAdaptiveStepSizes "true") 
+(Scales "float")
+(MaximumStepLength 0.1)
+//(SP_A 20.0)
+//(SP_alpha 0.602)
+
+//************************** Image Sampling ********************************
+(NumberOfSpatialSamples 4000)
+(NewSamplesEveryIteration "true")
+(ImageSampler "Random")
+
+//******************** Interpolation and Resampling ************************
+(BSplineInterpolationOrder 1)
+(FinalBSplineInterpolationOrder 3)
+(DefaultPixelValue 128)
+(WriteResultImage "true")
+(ResultImagePixelType "float")
+(ResultImageFormat "mhd")
