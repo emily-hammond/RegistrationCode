@@ -1,4 +1,4 @@
-Filename: VersorToAffine.cxx
+Filename: VersorToAffine
 
 This code was written for Multidimensional Image Processing (MDIP) taught by Dr. Hans Johnson in Spring 2014. The goal is to register CT/MR images with a rigid transform (versor df:6) and an affine transform (df:12) if desired with the optional use of masks.
 
