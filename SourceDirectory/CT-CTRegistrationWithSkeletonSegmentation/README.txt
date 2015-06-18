@@ -34,16 +34,17 @@ This code was written to automatically segment out the skeleton in a CT scan. It
 
 
 Call function:
-IsolateSkeleton.exe UniversityID TP
+IsolateSkeleton.exe inputFilename TP outputDirectory
 
 Flow of code:
 - Declarations
 - Functions
 -- Read in images
 -- Write out images
-- Derive input/output filenames
+- Take in inputs
 - Read in image
 - Find min/max pixel values in image
+- If min is not = 0 then rescale image up by min
 - Binary threshold the image >1200 (images stored as mhd images NOT dicom)
 - Define structuring element
 - Dilate thresholded image

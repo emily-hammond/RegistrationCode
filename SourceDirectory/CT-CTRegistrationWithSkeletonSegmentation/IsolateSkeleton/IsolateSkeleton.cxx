@@ -18,6 +18,9 @@ Steps:
 #include "itkImageFileWriter.h"
 #include "itkCastImageFilter.h"
 
+// rescale image if min != 0
+#include "itkRescaleIntensityImageFilter.h"
+
 // threshold image/combine labels
 #include "itkMinimumMaximumImageCalculator.h"
 #include "itkBinaryThresholdImageFilter.h"
@@ -94,6 +97,7 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 
 int main(int argc, char * argv[])
 {
+	/*
 	std::string animalTag = argv[1];
 	std::string TP = argv[2];
 	const char * TPchar = TP.c_str();
@@ -103,16 +107,28 @@ int main(int argc, char * argv[])
 //	std::string inputFilename = basePath + animalTag + "\\T" + TP + "\\T" + TP + "_" + animalTag + ".mhd";	// for original files
 	std::string outputDirectory = "C:\\Experiments\\SPIEMhdFiles\\" + animalTag + "\\Results\\";	// for registered files
 	std::string inputFilename = basePath + animalTag + "\\Results\\TP" + TP + "result.mhd";		// for registered files
+	*/
+
+	std::string inputFilename = argv[1];
+	std::string outputDirectory = argv[2];
+
+	// parse through inputFilename to extract just the filename
+	std::cout << inputFilename << std::endl;
+	std::size_t found1 = inputFilename.find_last_of("/\\");
+	std::string filename = inputFilename.substr(found1+1);
+	std::size_t found2 = filename.rfind(".");
 
 	unsigned int radius = 1;
 
-	std::string thresholdImageFilename = outputDirectory + "TP" + TP + "thresholdedImage.mhd";
-	std::string dilatedImageFilename = outputDirectory + "TP" + TP + "dilatedImage.mhd";
-	std::string connectedImageFilename = outputDirectory + "TP" + TP + "connectedImage.mhd";
-	std::string relabeledImageFilename = outputDirectory + "TP" + TP + "relabeledImage.mhd";
-	std::string combinedImageFilename = outputDirectory + "TP" + TP + "combinedImage.mhd";
-	std::string erodedImageFilename = outputDirectory + "TP" + TP + "erodedImage.mhd";
-	std::string labelMapImageFilename = outputDirectory + "TP" + TP + "labelMap.mhd";
+	/*
+	std::string thresholdImageFilename = outputDirectory + "\\" + TP + "thresholdedImage.mhd";
+	std::string dilatedImageFilename = outputDirectory + "\\" + TP + "dilatedImage.mhd";
+	std::string connectedImageFilename = outputDirectory + "\\" + TP + "connectedImage.mhd";
+	std::string relabeledImageFilename = outputDirectory + "\\" + TP + "relabeledImage.mhd";
+	std::string combinedImageFilename = outputDirectory + "\\" + TP + "combinedImage.mhd";
+	std::string labelMapImageFilename = outputDirectory + "\\" + TP + "labelMap.mhd";
+	*/
+	std::string erodedImageFilename = outputDirectory + "\\" + filename.substr(0,found2) + "-label.mhd";
 
 	// determine which images are going to be needed
 	const unsigned int Dimension = 3;
@@ -133,17 +149,38 @@ int main(int argc, char * argv[])
 	FloatImageType::PixelType min = minMaxCalc->GetMinimum();
 	FloatImageType::PixelType max = minMaxCalc->GetMaximum();
 
+	// rescale image if min is not zero
+	typedef itk::RescaleIntensityImageFilter< FloatImageType, FloatImageType >	RescaleFilterType;
+	RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
+	if( min != 0 )
+	{	
+		rescaler->SetInput( image );
+		rescaler->SetOutputMinimum( 0.0 );
+		rescaler->SetOutputMaximum( min + max );
+		// determine new min and max
+		max = min + max;
+		min = 0.0;
+	}
+
 	// threshold the image
 	typedef itk::BinaryThresholdImageFilter< FloatImageType, CharImageType >	BinaryThresholdType;
 	BinaryThresholdType::Pointer thresholdFilter = BinaryThresholdType::New();
-
-	thresholdFilter->SetInput( image );
+	if( min != 0 )
+	{
+		thresholdFilter->SetInput( rescaler->GetOutput() );
+	}
+	else
+	{
+		thresholdFilter->SetInput( image );
+	}
 	thresholdFilter->SetLowerThreshold( min + 1200 );
 	thresholdFilter->SetUpperThreshold( max );
 	thresholdFilter->SetInsideValue( 1 );
 	thresholdFilter->SetOutsideValue( 0 );
 
 	thresholdFilter->Update();
+
+	std::cout << "Threshold filter complete" << std::endl;
 
 	// define the structuring element
 	typedef itk::BinaryBallStructuringElement< CharImageType::PixelType, 3 >	StructuringElementType;
