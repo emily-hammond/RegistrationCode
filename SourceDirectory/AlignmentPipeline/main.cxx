@@ -54,10 +54,10 @@
 #include <stdlib.h>
 
 // landmark analysis
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\src\transformFiducials\itkLandmarkAnalysis.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\SupplementaryCode\transformFiducials\itkLandmarkAnalysis.h"
 
 // parsing inputs
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\src\parseInputFile\itkParseInputFile.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\SupplementaryCode\parseInputFile\itkParseInputFile.h"
 // creating the output directory (NOT CROSS PLATFORM!!!!)
 #include <windows.h>
 
@@ -339,7 +339,7 @@ public:
 		
 
 
-		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength() << " " << optimizer->GetGradientMagnitude();
+		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
 		std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
 	}
 };
