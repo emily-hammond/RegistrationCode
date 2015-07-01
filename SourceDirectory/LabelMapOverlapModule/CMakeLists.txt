@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 2.8.9)
+
+find_package(Slicer COMPONENTS ConfigurePrerequisites)
+
+if(NOT Slicer_DIR)
+  
+message(FATAL_ERROR "Slicer_DIR must be defined before continuing")
+  
+return()
+
+endif()
+
+project(LabelMapOverlapModule)
+
+find_package(Slicer REQUIRED)
+
+include(${Slicer_USE_FILE})
+
+
+
+find_package(SlicerExecutionModel REQUIRED GenerateCLP)
+
+include(${GenerateCLP_USE_FILE})
+
+find_package(ITK REQUIRED)
+include(${ITK_USE_FILE})
+
+set(LabelMapOverlapModule LabelMapOverlapModule.cxx)
+generateclp(LabelMapOverlapModule LabelMapOverlapModule.xml)
+
+## Build Slicer3 Shared Library module
+add_library(LabelMapOverlapModuleLib SHARED ${LabelMapOverlapModule})
+set_target_properties (LabelMapOverlapModuleLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint")
+target_link_libraries (LabelMapOverlapModuleLib ${ITK_LIBRARIES})
+
+## Build stand-alone command line module.
+add_executable(LabelMapOverlapModule ${LabelMapOverlapModule})
+target_link_libraries(LabelMapOverlapModule ${ITK_LIBRARIES})

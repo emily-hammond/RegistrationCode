@@ -158,7 +158,7 @@ int main(int argc, char * argv[])
 		rescaler->SetOutputMinimum( 0.0 );
 		rescaler->SetOutputMaximum( min + max );
 		// determine new min and max
-		max = min + max;
+		max = -min + max;
 		min = 0.0;
 	}
 
