@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <executable>
   <category>
-   LongitudinalRegistration.LabelMapOverlapModule
+   LongitudinalRegistration
   </category>
   <title>
    Label Map Overlap Module
@@ -19,10 +19,46 @@
   <parameters>
     <label>Number of label maps</label>
     <description>Select the number of label maps for comparison</description>
+	<integer>
+	  <name>numberOfLM</name>
+	  <label>Number of Label Maps</label>
+	  <channel>input</channel>
+	  <longflag>numberOfLM</longflag> 
+	</integer>
   </parameters>
   <parameters>
     <label>Label maps</label>
     <description>Select each label map</description>
+	<image type="label">
+	  <name>labelMap1</name>
+	  <label>Label Map 1</label>
+	  <channel>input</channel>
+	  <longflag>labelMap1</longflag>
+	</image>
+	<image type="label">
+	  <name>labelMap2</name>
+	  <label>Label Map 2</label>
+	  <channel>input</channel>
+	  <longflag>labelMap2</longflag>
+	</image>
+	<image type="label">
+	  <name>labelMap3</name>
+	  <label>Label Map 3</label>
+	  <channel>input</channel>
+	  <longflag>labelMap3</longflag>
+	</image>
+	<image type="label">
+	  <name>labelMap4</name>
+	  <label>Label Map 4</label>
+	  <channel>input</channel>
+	  <longflag>labelMap4</longflag>
+	</image>
+	<image type="label">
+	  <name>labelMap5</name>
+	  <label>Label Map 5</label>
+	  <channel>input</channel>
+	  <longflag>labelMap5</longflag>
+	</image>
   </parameters>
   <parameters>
     <label>Desired index</label>
