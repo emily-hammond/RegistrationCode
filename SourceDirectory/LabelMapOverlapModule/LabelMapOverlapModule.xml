@@ -23,7 +23,7 @@
 	  <name>numberOfLM</name>
 	  <label>Number of Label Maps</label>
 	  <channel>input</channel>
-	  <longflag>numberOfLM</longflag> 
+	  <longflag>numberOfLM</longflag>
 	</integer>
   </parameters>
   <parameters>
@@ -59,6 +59,17 @@
 	  <channel>input</channel>
 	  <longflag>labelMap5</longflag>
 	</image>
+  </parameters>
+  <parameters>
+    <label>Output</label>
+	<description>File to output date</description>
+	<string>
+	  <name>outputFilename</name>
+	  <label>Output Filename</label>
+	  <channel>output</channel>
+	  <longflag>outputFilename</longflag>
+	  <default>output.csv</default>
+	</string>
   </parameters>
   <parameters>
     <label>Desired index</label>
