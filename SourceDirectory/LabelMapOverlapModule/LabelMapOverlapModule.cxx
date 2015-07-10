@@ -172,6 +172,7 @@ int main(int argc, char * argv[])
 			
 			// insert labelmaps into filter
 			overlapFilter->SetTargetImage( *it3 );
+			overlapFilter->Update();
 
 			// get DICE coefficient
 			std::cout << "DICE: " << overlapFilter->GetDiceCoefficient() << std::endl;
