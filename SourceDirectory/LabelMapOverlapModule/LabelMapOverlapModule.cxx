@@ -41,40 +41,13 @@ int main(int argc, char * argv[])
 	char * labelMap4 = "";
 	char * labelMap5 = "";
 
-	if( argc < 3 )
+	if( argc < 4 )
 	{
 		std::cout << "Please enter more inputs." << std::endl;
 		std::cout << argv[0] << " outputFilename labelMap1" << std::endl;
 		return EXIT_FAILURE;
 	}
-	if( argc >= 3 )
-	{ 
-		outputFilename = argv[1];
-		//std::cout << argv[1] << std::endl;
-		labelMap1 = argv[2]; 
-		//std::cout << argv[2] << std::endl;
-	}
-	if( argc >= 4 )
-	{ 
-		labelMap2 = argv[3];
-		//std::cout << argv[3] << std::endl;
-	}
-	if( argc >= 5 )
-	{ 
-		labelMap3 = argv[4];
-		//std::cout << argv[4] << std::endl;
-	}
-	if( argc >= 6 )
-	{ 
-		labelMap4 = argv[5]; 
-		//std::cout << argv[5] << std::endl;
-	}
-	if( argc >= 7 )
-	{ 
-		labelMap5 = argv[6];
-		//std::cout << argv[6] << std::endl;
-	}
-	if( argc > 8 )
+	if( argc > 7 )
 	{
 		std::cout << "Too many arguments." << std::endl;
 		return EXIT_FAILURE;
@@ -109,14 +82,14 @@ int main(int argc, char * argv[])
 	std::list< LabelImageType::Pointer >::iterator it2 = lmImages.begin();
 	it = lmFilenames.begin();
 
-	std::cout << std::endl;
-	std::cout << "Reader created." << std::endl;
-	std::cout << std::endl;
+	//std::cout << std::endl;
+	//std::cout << "Reader created." << std::endl;
+	//std::cout << std::endl;
 
 	// read in images
 	while( it != lmFilenames.end() )
 	{
-		std::cout << *it << std::endl;
+		//std::cout << *it << std::endl;
 		reader->SetFileName( *it );
 		try
 		{
@@ -142,11 +115,11 @@ int main(int argc, char * argv[])
 
 	// create arrays to store values
 	int n = lmFilenames.size();
-	std::cout << "Size: " << n << std::endl;
+	std::cout << "Number of label maps: " << n << std::endl;
 	OverlapFilter::RealType *dice = new OverlapFilter::RealType[n*n];
 	OverlapFilter::RealType *jaccard = new OverlapFilter::RealType[n*n];
 
-	std::cout << "dice and jaccard arrays created." << std::endl;
+	//std::cout << "dice and jaccard arrays created." << std::endl;
 
 	// initialize iterators
 	std::list< LabelImageType::Pointer >::iterator it3 = lmImages.begin();
@@ -155,32 +128,32 @@ int main(int argc, char * argv[])
 	// iterate through label maps and compare with all other label maps
 	for( int i=0; i<n; i++)
 	{
-		std::cout << std::endl;
-		std::cout << "Source: " << (*(*it2)).GetNameOfClass() << std::endl;
+		//std::cout << std::endl;
+		//std::cout << "Source: " << (*(*it2)).GetNameOfClass() << std::endl;
 		overlapFilter->SetSourceImage( *it2 );
 		it3 = lmImages.begin();
 
 		for( int j=0; j<n; j++)
 		{
-			std::cout << std::endl;
-			std::cout << "i: " << i << "  j: " << j << std::endl;
+			//std::cout << std::endl;
+			//std::cout << "i: " << i << "  j: " << j << std::endl;
 			// calculate index
 			int ind = (n)*i+j;
-			std::cout << ind << std::endl;
+			//std::cout << ind << std::endl;
 
-			std::cout << "Target: " << (*(*it3)).GetNameOfClass() << std::endl;
+			//std::cout << "Target: " << (*(*it3)).GetNameOfClass() << std::endl;
 			
 			// insert labelmaps into filter
 			overlapFilter->SetTargetImage( *it3 );
 			overlapFilter->Update();
 
 			// get DICE coefficient
-			std::cout << "DICE: " << overlapFilter->GetDiceCoefficient() << std::endl;
-			dice[ind] = overlapFilter->GetDiceCoefficient();
+			//std::cout << "DICE: " << overlapFilter->GetDiceCoefficient() << std::endl;
+			dice[ind] = overlapFilter->GetDiceCoefficient(2);
 
 			// get Jaccard coefficient
-			std::cout << "JACC: " << overlapFilter->GetJaccardCoefficient() << std::endl;
-			jaccard[ind] = overlapFilter->GetJaccardCoefficient();
+			//std::cout << "JACC: " << overlapFilter->GetJaccardCoefficient() << std::endl;
+			jaccard[ind] = overlapFilter->GetJaccardCoefficient(2);
 
 			// increase iterator
 			++it3;
