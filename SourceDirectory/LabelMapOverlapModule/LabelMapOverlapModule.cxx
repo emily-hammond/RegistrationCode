@@ -155,25 +155,30 @@ int main(int argc, char * argv[])
 	// iterate through label maps and compare with all other label maps
 	for( int i=0; i<n; i++)
 	{
+		std::cout << std::endl;
+		std::cout << "Source: " << (*(*it2)).GetNameOfClass() << std::endl;
+		overlapFilter->SetSourceImage( *it2 );
+		it3 = lmImages.begin();
+
 		for( int j=0; j<n; j++)
 		{
+			std::cout << std::endl;
 			std::cout << "i: " << i << "  j: " << j << std::endl;
 			// calculate index
 			int ind = (n)*i+j;
 			std::cout << ind << std::endl;
 
-			std::cout << "Images: " << std::endl;
-			std::cout << (*it2).GetNameOfClass() << std::endl;
-			std::cout << (*it3).GetNameOfClass() << std::endl;
+			std::cout << "Target: " << (*(*it3)).GetNameOfClass() << std::endl;
 			
 			// insert labelmaps into filter
-			overlapFilter->SetSourceImage( *it2 );
 			overlapFilter->SetTargetImage( *it3 );
 
 			// get DICE coefficient
+			std::cout << "DICE: " << overlapFilter->GetDiceCoefficient() << std::endl;
 			dice[ind] = overlapFilter->GetDiceCoefficient();
 
 			// get Jaccard coefficient
+			std::cout << "JACC: " << overlapFilter->GetJaccardCoefficient() << std::endl;
 			jaccard[ind] = overlapFilter->GetJaccardCoefficient();
 
 			// increase iterator
@@ -182,13 +187,13 @@ int main(int argc, char * argv[])
 		// increase iterator
 		++it2;
 	}
-/*
+
 	// write results out to file
 	std::ofstream outputFile;
 	outputFile.open( outputFilename );
 
 	// write out DICE results
-	outputFile << "DICE\n\n";
+	outputFile << "DICE\n";
 	outputFile << "0,1,2,3,4,5\n";
 	for( int i=1; i<=n; i++)
 	{
@@ -203,7 +208,7 @@ int main(int argc, char * argv[])
 	}
 
 	// write out JACCARD results
-	outputFile << "JACCARD\n\n";
+	outputFile << "\n\nJACCARD\n";
 	outputFile << "0,1,2,3,4,5\n";
 	for( int i=1; i<=n; i++)
 	{
@@ -216,7 +221,7 @@ int main(int argc, char * argv[])
 		}
 		outputFile << "\n";
 	}
-*/	
+	
 	// clean up memory
 	delete[] dice;
 	delete[] jaccard;
