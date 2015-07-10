@@ -21,6 +21,68 @@ Goals:
 
 //#include "LabelMapOverlapModuleCLP.h"
 
+template<typename ImageType>
+int LabelOverlapMeasures( typename ImageType::Pointer labelMap1, typename ImageType::Pointer labelMap2, std::ofstream& file )
+{
+	// instantiate overlap calculation filter
+	typedef itk::LabelOverlapMeasuresImageFilter< ImageType >	OverlapFilter;
+	OverlapFilter::Pointer overlap = OverlapFilter::New();
+
+	// set images and calculate data
+	overlap->SetSourceImage( labelMap1 );
+	overlap->SetTargetImage( labelMap2 );
+	overlap->Update();
+
+	// write out data to file
+	file << "******************** All Labels ********************\n";
+	file << file.width( 10 ) << "   "
+		 << file.width( 17 ) << "Total"
+		 << file.width( 17 ) << "Union (jaccard)"
+		 << file.width( 17 ) << "Mean (dice)"
+		 << file.width( 17 ) << "Volume sim."
+		 << file.width( 17 ) << "False negative"
+		 << file.width( 17 ) << "False positive\n";
+	file << file.width( 10 ) << "   ";
+	file << file.width( 17 ) << overlap->GetTotalOverlap();
+	file << file.width( 17 ) << overlap->GetUnionOverlap();
+	file << file.width( 17 ) << overlap->GetMeanOverlap();
+	file << file.width( 17 ) << overlap->GetVolumeSimilarity();
+	file << file.width( 17 ) << overlap->GetFalseNegativeError();
+	file << file.width( 17 ) << overlap->GetFalsePositiveError();
+	file << "\n";
+
+	file << "***************** Individual Labels *****************\n";
+	file << file.width( 10 ) << "Label"
+		 << file.width( 17 ) << "Target"
+		 << file.width( 17 ) << "Union (jaccard)"
+		 << file.width( 17 ) << "Mean (dice)"
+		 << file.width( 17 ) << "Volume sim."
+		 << file.width( 17 ) << "False negative"
+		 << file.width( 17 ) << "False positive\n";
+
+	typename OverlapFilter::MapType labelMap = overlap->GetLabelSetMeasures();
+	typename OverlapFilter::MapType::const_iterator itM;
+	for( itM = labelMap.begin(); itM != labelMap.end(); ++itM )
+	{
+		if( (*itM).first == 0 )
+		{
+			continue;
+		}
+
+		int label = (*itM).first;
+		file << file.width( 10 ) << label;
+		file << file.width( 17 ) << overlap->GetTargetOverlap( label );
+		file << file.width( 17 ) << overlap->GetUnionOverlap( label );
+		file << file.width( 17 ) << overlap->GetMeanOverlap( label );
+		file << file.width( 17 ) << overlap->GetVolumeSimilarity( label );
+		file << file.width( 17 ) << overlap->GetFalseNegativeError( label );
+		file << file.width( 17 ) << overlap->GetFalsePositiveError( label );
+		file << "\n";
+	}
+
+	return EXIT_SUCCESS;
+}
+
 int main(int argc, char * argv[])
 {
 	// parse through arguments from interface
@@ -73,7 +135,7 @@ int main(int argc, char * argv[])
 	std::cout << std::endl;
 
 	// read in images and store in list
-	typedef itk::Image< unsigned char, 3 >			LabelImageType;
+	typedef itk::Image< unsigned int, 3 >			LabelImageType;
 	typedef itk::ImageFileReader< LabelImageType >	ImageReaderType;
 	ImageReaderType::Pointer reader = ImageReaderType::New();
 	
@@ -116,8 +178,10 @@ int main(int argc, char * argv[])
 	// create arrays to store values
 	int n = lmFilenames.size();
 	std::cout << "Number of label maps: " << n << std::endl;
+	/*
 	OverlapFilter::RealType *dice = new OverlapFilter::RealType[n*n];
 	OverlapFilter::RealType *jaccard = new OverlapFilter::RealType[n*n];
+	*/
 
 	//std::cout << "dice and jaccard arrays created." << std::endl;
 
@@ -125,12 +189,15 @@ int main(int argc, char * argv[])
 	std::list< LabelImageType::Pointer >::iterator it3 = lmImages.begin();
 	it2 = lmImages.begin();
 
+	std::ofstream outputFile;
+	outputFile.open( outputFilename );
+
 	// iterate through label maps and compare with all other label maps
 	for( int i=0; i<n; i++)
 	{
 		//std::cout << std::endl;
 		//std::cout << "Source: " << (*(*it2)).GetNameOfClass() << std::endl;
-		overlapFilter->SetSourceImage( *it2 );
+		//overlapFilter->SetSourceImage( *it2 );
 		it3 = lmImages.begin();
 
 		for( int j=0; j<n; j++)
@@ -138,30 +205,32 @@ int main(int argc, char * argv[])
 			//std::cout << std::endl;
 			//std::cout << "i: " << i << "  j: " << j << std::endl;
 			// calculate index
-			int ind = (n)*i+j;
+			//int ind = (n)*i+j;
 			//std::cout << ind << std::endl;
 
 			//std::cout << "Target: " << (*(*it3)).GetNameOfClass() << std::endl;
 			
 			// insert labelmaps into filter
-			overlapFilter->SetTargetImage( *it3 );
-			overlapFilter->Update();
+			//overlapFilter->SetTargetImage( *it3 );
+			//overlapFilter->Update();
 
 			// get DICE coefficient
 			//std::cout << "DICE: " << overlapFilter->GetDiceCoefficient() << std::endl;
-			dice[ind] = overlapFilter->GetDiceCoefficient(2);
+			//dice[ind] = overlapFilter->GetDiceCoefficient();
 
 			// get Jaccard coefficient
 			//std::cout << "JACC: " << overlapFilter->GetJaccardCoefficient() << std::endl;
-			jaccard[ind] = overlapFilter->GetJaccardCoefficient(2);
+			//jaccard[ind] = overlapFilter->GetJaccardCoefficient();
 
 			// increase iterator
+
+			LabelOverlapMeasures< LabelImageType >( *it2, *it3, outputFile );
 			++it3;
 		}
 		// increase iterator
 		++it2;
 	}
-
+/*
 	// write results out to file
 	std::ofstream outputFile;
 	outputFile.open( outputFilename );
@@ -199,6 +268,6 @@ int main(int argc, char * argv[])
 	// clean up memory
 	delete[] dice;
 	delete[] jaccard;
-
+*/
     return EXIT_SUCCESS;
 }
