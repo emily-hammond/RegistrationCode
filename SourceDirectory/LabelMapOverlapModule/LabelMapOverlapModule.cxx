@@ -17,14 +17,38 @@ Goals:
 #include <iomanip>
 
 // write function to perform the overlap measures
-template < typename ImageType >
-int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType::Pointer target )
+int LabelOverlapMeasures( char * filename1 , char * filename2 )
 {
+	// define image and reader
+	typedef unsigned int PixelType;
+	int Dimension = 3;
+	typedef itk::Image< PixelType, 3 > ImageType;
+
+	typedef itk::ImageFileReader< ImageType >  ReaderType;
+	ReaderType::Pointer reader1 = ReaderType::New();
+	reader1->SetFileName( filename1 );
+	ReaderType::Pointer reader2 = ReaderType::New();
+	reader2->SetFileName( filename2 );
+
+	// read in images
+	try
+	{
+		reader1->Update();
+		reader2->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
+
 	// instantiate filter and insert images
-	typedef itk::LabelOverlapMeasuresImageFilter<typename ImageType> FilterType;
-	typename FilterType::Pointer filter = FilterType::New();
-	filter->SetSourceImage( source );
-	filter->SetTargetImage( target );
+	typedef itk::LabelOverlapMeasuresImageFilter< ImageType >  FilterType;
+	FilterType::Pointer filter = FilterType::New();
+	filter->SetSourceImage( reader1->GetOutput() );
+	filter->SetTargetImage( reader2->GetOutput() );
+
 	// update filter
 	try
 	{
@@ -68,8 +92,8 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
             << std::setw( 17 ) << "False positive" << std::endl;
 
 	// for each individual labels
-	typename FilterType::MapType labelMap = filter->GetLabelSetMeasures();
-	typename FilterType::MapType::const_iterator it;
+	FilterType::MapType labelMap = filter->GetLabelSetMeasures();
+	FilterType::MapType::const_iterator it;
 	for( it = labelMap.begin(); it != labelMap.end(); ++it )
     {
 		if( (*it).first == 0 )
@@ -101,41 +125,17 @@ int main( int argc, char *argv[] )
 		return EXIT_FAILURE;
     }
 
-	// define image and reader
-	typedef unsigned int PixelType;
-	int Dimension = 3;
-	typedef itk::Image<PixelType, 3> ImageType;
-
-	typedef itk::ImageFileReader<ImageType>  ReaderType;
-	ReaderType::Pointer reader = ReaderType::New();
-
-	// create map for images to contain filename and corresponding image
-	std::map< char *, ImageType::Pointer > images;
-
+	// perform comparisons
 	for( int n = 2; n < argc; ++n )
 	{
-		// insert filename
-		reader->SetFileName( argv[n] );
-		// read in image
-		try
+		for( int m = n+1; m < argc; ++m )
 		{
-			reader->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-		// insert filename and image into map
-		images.insert( std::pair< char *, ImageType::Pointer >( argv[n], reader->GetOutput() ) );
-	}
-
-	for( int n = 2; n < argc; ++n )
-	{
-		for( int m = n; m < argc; ++m )
-		{
-			LabelOverlapMeasures<ImageType>( images[ argv[n] ], images[ argv[m] ] );
+			std::cout << std::endl;
+			std::cout << "Source: " << argv[n] << std::endl;
+			std::cout << "Target: " << argv[m] << std::endl;
+			std::cout << std::endl;
+			LabelOverlapMeasures( argv[n], argv[m] );
+			std::cout << std::endl;
 		}
 	}
 
