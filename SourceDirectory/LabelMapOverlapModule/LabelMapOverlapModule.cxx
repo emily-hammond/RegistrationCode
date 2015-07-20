@@ -5,51 +5,27 @@ Date: 7.1.2015
 The purpose of this program is to calculate the dice and jaccard coefficients of two label maps.
 
 Goals:
-1. read in n label maps
+1. read in n label maps (defined by number of input arguments) and store into a list
 2. obtain the dice/jaccard coefficients to get overlap of n label maps
 3. write out results
 
 */
+
 #include "itkImage.h"
 #include "itkImageFileReader.h"
 #include "itkLabelOverlapMeasuresImageFilter.h"
-
-#include "itkAddImageFilter.h"
-
 #include <iomanip>
 
-template <unsigned int ImageDimension>
-int LabelOverlapMeasures( int argc, char * argv[] )
+// write function to perform the overlap measures
+template < typename ImageType >
+int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType::Pointer target )
 {
-	typedef unsigned int PixelType;
-	typedef itk::Image<PixelType, ImageDimension> ImageType;
-
-	typedef itk::ImageFileReader<ImageType>  ReaderType;
-	typename ReaderType::Pointer reader1 = ReaderType::New();
-	reader1->SetFileName( argv[2] );
-
-	typename ReaderType::Pointer reader2 = ReaderType::New();
-	reader2->SetFileName( argv[3] );
-
-	try
-	{
-		reader1->Update();
-		reader2->Update();
-	}
-	catch(itk::ExceptionObject & err)
-	{
-		std::cerr << "Exception Object Caught!" << std::endl;
-		std::cerr << err << std::endl;
-		std::cerr << std::endl;
-	}
-
-	typedef itk::LabelOverlapMeasuresImageFilter<ImageType> FilterType;
+	// instantiate filter and insert images
+	typedef itk::LabelOverlapMeasuresImageFilter<typename ImageType> FilterType;
 	typename FilterType::Pointer filter = FilterType::New();
-	filter->SetSourceImage( reader1->GetOutput() );
-	filter->SetTargetImage( reader2->GetOutput() );
-	std::cout << "\n" << argv[3] << " has been read in.\n";
-	std::cout << "\n" << argv[2] << " has been read in.\n";
-
+	filter->SetSourceImage( source );
+	filter->SetTargetImage( target );
+	// update filter
 	try
 	{
 		filter->Update();
@@ -61,8 +37,8 @@ int LabelOverlapMeasures( int argc, char * argv[] )
 		std::cerr << std::endl;
 	}
 
- 
-
+	// write out results to the screen
+	// for all labels
 	std::cout << "                                          "
             << "************ All Labels *************" << std::endl;
 	std::cout << std::setw( 10 ) << "   "
@@ -91,6 +67,7 @@ int LabelOverlapMeasures( int argc, char * argv[] )
             << std::setw( 17 ) << "False negative"
             << std::setw( 17 ) << "False positive" << std::endl;
 
+	// for each individual labels
 	typename FilterType::MapType labelMap = filter->GetLabelSetMeasures();
 	typename FilterType::MapType::const_iterator it;
 	for( it = labelMap.begin(); it != labelMap.end(); ++it )
@@ -127,15 +104,15 @@ int main( int argc, char *argv[] )
 	// define image and reader
 	typedef unsigned int PixelType;
 	int Dimension = 3;
-	typedef itk::Image<PixelType, Dimension> ImageType;
+	typedef itk::Image<PixelType, 3> ImageType;
 
 	typedef itk::ImageFileReader<ImageType>  ReaderType;
-	typename ReaderType::Pointer reader = ReaderType::New();
+	ReaderType::Pointer reader = ReaderType::New();
 
 	// create map for images to contain filename and corresponding image
 	std::map< char *, ImageType::Pointer > images;
 
-	for( int n = 2; n > argc; ++n )
+	for( int n = 2; n < argc; ++n )
 	{
 		// insert filename
 		reader->SetFileName( argv[n] );
@@ -151,21 +128,16 @@ int main( int argc, char *argv[] )
 			std::cerr << std::endl;
 		}
 		// insert filename and image into map
-		images.insert( std::pair< char *, ImageType::Pointer >( argv[n], reader->GetOutput() );
+		images.insert( std::pair< char *, ImageType::Pointer >( argv[n], reader->GetOutput() ) );
 	}
-  
-	switch( Dimension )
+
+	for( int n = 2; n < argc; ++n )
 	{
-		case 2:
-			std::cout << "DIMENSION = 2" << std::endl;
-			LabelOverlapMeasures<2>( argc, argv );
-			break;
-		case 3:
-			std::cout << "DIMENSION = 3" << std::endl;
-			LabelOverlapMeasures<3>( argc, argv );
-			break;
-		default:
-			std::cerr << "Unsupported dimension" << std::endl;
-			exit( EXIT_FAILURE );
-   }
+		for( int m = n; m < argc; ++m )
+		{
+			LabelOverlapMeasures<ImageType>( images[ argv[n] ], images[ argv[m] ] );
+		}
+	}
+
+	return EXIT_SUCCESS;
 }
