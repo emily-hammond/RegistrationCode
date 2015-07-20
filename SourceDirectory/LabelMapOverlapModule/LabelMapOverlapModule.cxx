@@ -17,7 +17,7 @@ Goals:
 #include <iomanip>
 
 // write function to perform the overlap measures
-int LabelOverlapMeasures( char * filename1 , char * filename2 )
+int LabelOverlapMeasures( char * filename1 , char * filename2, std::ofstream & file )
 {
 	// define image and reader
 	typedef unsigned int PixelType;
@@ -63,54 +63,42 @@ int LabelOverlapMeasures( char * filename1 , char * filename2 )
 
 	// write out results to the screen
 	// for all labels
-	std::cout << "                                          "
-            << "************ All Labels *************" << std::endl;
-	std::cout << std::setw( 10 ) << "   "
-    << std::setw( 17 ) << "Total"
-    << std::setw( 17 ) << "Union (jaccard)"
-    << std::setw( 17 ) << "Mean (dice)"
-    << std::setw( 17 ) << "Volume sim."
-    << std::setw( 17 ) << "False negative"
-    << std::setw( 17 ) << "False positive" << std::endl;
-	std::cout << std::setw( 10 ) << "   ";
-	std::cout << std::setw( 17 ) << filter->GetTotalOverlap();
-	std::cout << std::setw( 17 ) << filter->GetUnionOverlap();
-	std::cout << std::setw( 17 ) << filter->GetMeanOverlap();
-	std::cout << std::setw( 17 ) << filter->GetVolumeSimilarity();
-	std::cout << std::setw( 17 ) << filter->GetFalseNegativeError();
-	std::cout << std::setw( 17 ) << filter->GetFalsePositiveError();
-	std::cout << std::endl;
+	file << " ** All Labels ** " << std::endl;
+	file << ",Total,Union (jaccard),Mean (dice),Volume sim.,False negative,False positive\n";
+	file << "," << filter->GetTotalOverlap();
+	file << "," << filter->GetUnionOverlap();
+	file << "," << filter->GetMeanOverlap();
+	file << "," << filter->GetVolumeSimilarity();
+	file << "," << filter->GetFalseNegativeError();
+	file << "," << filter->GetFalsePositiveError();
+	file << std::endl;
 
-	std::cout << "                                       "
-            << "************ Individual Labels *************" << std::endl;
-	std::cout << std::setw( 10 ) << "Label"
-            << std::setw( 17 ) << "Target"
-            << std::setw( 17 ) << "Union (jaccard)"
-            << std::setw( 17 ) << "Mean (dice)"
-            << std::setw( 17 ) << "Volume sim."
-            << std::setw( 17 ) << "False negative"
-            << std::setw( 17 ) << "False positive" << std::endl;
+	file << " ** Individual Labels ** " << std::endl;
+	file << "Label,Target,Union (jaccard),Mean (dice),Volume sim.,False negative,False positive\n";
 
 	// for each individual labels
 	FilterType::MapType labelMap = filter->GetLabelSetMeasures();
 	FilterType::MapType::const_iterator it;
 	for( it = labelMap.begin(); it != labelMap.end(); ++it )
     {
+		// ignore label 0 (background)
 		if( (*it).first == 0 )
 		{
 			continue;
 		}
 
+		// identify label
 		int label = (*it).first;
 
-		std::cout << std::setw( 10 ) << label;
-		std::cout << std::setw( 17 ) << filter->GetTargetOverlap( label );
-		std::cout << std::setw( 17 ) << filter->GetUnionOverlap( label );
-		std::cout << std::setw( 17 ) << filter->GetMeanOverlap( label );
-		std::cout << std::setw( 17 ) << filter->GetVolumeSimilarity( label );
-		std::cout << std::setw( 17 ) << filter->GetFalseNegativeError( label );
-		std::cout << std::setw( 17 ) << filter->GetFalsePositiveError( label );
-		std::cout << std::endl;
+		// write out to file
+		file << label;
+		file << "," << filter->GetTargetOverlap( label );
+		file << "," << filter->GetUnionOverlap( label );
+		file << "," << filter->GetMeanOverlap( label );
+		file << "," << filter->GetVolumeSimilarity( label );
+		file << "," << filter->GetFalseNegativeError( label );
+		file << "," << filter->GetFalsePositiveError( label );
+		file << std::endl;
     }
 
 	return EXIT_SUCCESS;
@@ -125,19 +113,25 @@ int main( int argc, char *argv[] )
 		return EXIT_FAILURE;
     }
 
+	// open file to place results into
+	std::ofstream file;
+	file.open( argv[1] );
+
 	// perform comparisons
 	for( int n = 2; n < argc; ++n )
 	{
 		for( int m = n+1; m < argc; ++m )
 		{
-			std::cout << std::endl;
-			std::cout << "Source: " << argv[n] << std::endl;
-			std::cout << "Target: " << argv[m] << std::endl;
-			std::cout << std::endl;
-			LabelOverlapMeasures( argv[n], argv[m] );
-			std::cout << std::endl;
+			file << std::endl;
+			file << "Source: " << argv[n] << std::endl;
+			file << "Target: " << argv[m] << std::endl;
+			file << std::endl;
+			LabelOverlapMeasures( argv[n], argv[m], file );
+			file << std::endl;
 		}
 	}
+
+	file.close();
 
 	return EXIT_SUCCESS;
 }
