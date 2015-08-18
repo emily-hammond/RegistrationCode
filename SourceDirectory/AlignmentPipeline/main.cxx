@@ -52,9 +52,15 @@
 #include <fstream>
 #include <string>
 #include <stdlib.h>
+#include <iomanip>
 
 // landmark analysis
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\SupplementaryCode\transformFiducials\itkLandmarkAnalysis.h"
+//#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\SupplementaryCode\transformFiducials\itkLandmarkAnalysis.h"
+
+// overlap analysis
+#include "itkImage.h"
+#include "itkImageFileReader.h"
+#include "itkLabelOverlapMeasuresImageFilter.h"
 
 // parsing inputs
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\SupplementaryCode\parseInputFile\itkParseInputFile.h"
@@ -307,6 +313,71 @@ typename ImageType::PointType GetImageRange( typename ImageType::Pointer image, 
 	{
 		return FOVcenter;
 	}
+}
+
+// Write function to perform overlap statistics
+template< typename ImageType >
+int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType::Pointer target, std::ofstream & file )
+{
+	// instantiate filter and insert images
+	typedef itk::LabelOverlapMeasuresImageFilter< ImageType >  FilterType;
+	FilterType::Pointer filter = FilterType::New();
+	filter->SetSourceImage( source );
+	filter->SetTargetImage( target );
+
+	// update filter
+	try
+	{
+		filter->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
+
+	// write out results to the screen
+	// for all labels
+	file << " ** All Labels ** " << std::endl;
+	file << ",Total,Union (jaccard),Mean (dice),Volume sim.,False negative,False positive\n";
+	file << "," << filter->GetTotalOverlap();
+	file << "," << filter->GetUnionOverlap();
+	file << "," << filter->GetMeanOverlap();
+	file << "," << filter->GetVolumeSimilarity();
+	file << "," << filter->GetFalseNegativeError();
+	file << "," << filter->GetFalsePositiveError();
+	file << std::endl;
+
+	file << " ** Individual Labels ** " << std::endl;
+	file << "Label,Target,Union (jaccard),Mean (dice),Volume sim.,False negative,False positive\n";
+
+	// for each individual labels
+	FilterType::MapType labelMap = filter->GetLabelSetMeasures();
+	FilterType::MapType::const_iterator it;
+	for( it = labelMap.begin(); it != labelMap.end(); ++it )
+    {
+		// ignore label 0 (background)
+		if( (*it).first == 0 )
+		{
+			continue;
+		}
+
+		// identify label
+		int label = (*it).first;
+
+		// write out to file
+		file << label;
+		file << "," << filter->GetTargetOverlap( label );
+		file << "," << filter->GetUnionOverlap( label );
+		file << "," << filter->GetMeanOverlap( label );
+		file << "," << filter->GetVolumeSimilarity( label );
+		file << "," << filter->GetFalseNegativeError( label );
+		file << "," << filter->GetFalsePositiveError( label );
+		file << std::endl;
+    }
+
+	return EXIT_SUCCESS;
 }
 
 /*************************************************************************
