@@ -17,37 +17,14 @@ Goals:
 #include <iomanip>
 
 // write function to perform the overlap measures
-int LabelOverlapMeasures( char * filename1 , char * filename2, std::ofstream & file )
+template< typename ImageType >
+int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType::Pointer target, std::ofstream & file )
 {
-	// define image and reader
-	typedef unsigned int PixelType;
-	int Dimension = 3;
-	typedef itk::Image< PixelType, 3 > ImageType;
-
-	typedef itk::ImageFileReader< ImageType >  ReaderType;
-	ReaderType::Pointer reader1 = ReaderType::New();
-	reader1->SetFileName( filename1 );
-	ReaderType::Pointer reader2 = ReaderType::New();
-	reader2->SetFileName( filename2 );
-
-	// read in images
-	try
-	{
-		reader1->Update();
-		reader2->Update();
-	}
-	catch(itk::ExceptionObject & err)
-	{
-		std::cerr << "Exception Object Caught!" << std::endl;
-		std::cerr << err << std::endl;
-		std::cerr << std::endl;
-	}
-
 	// instantiate filter and insert images
 	typedef itk::LabelOverlapMeasuresImageFilter< ImageType >  FilterType;
 	FilterType::Pointer filter = FilterType::New();
-	filter->SetSourceImage( reader1->GetOutput() );
-	filter->SetTargetImage( reader2->GetOutput() );
+	filter->SetSourceImage( source );
+	filter->SetTargetImage( target );
 
 	// update filter
 	try
@@ -122,11 +99,35 @@ int main( int argc, char *argv[] )
 	{
 		for( int m = n+1; m < argc; ++m )
 		{
+			// define image and reader
+			typedef unsigned int PixelType;
+			int Dimension = 3;
+			typedef itk::Image< PixelType, 3 > ImageType;
+
+			typedef itk::ImageFileReader< ImageType >  ReaderType;
+			ReaderType::Pointer reader1 = ReaderType::New();
+			reader1->SetFileName( argv[n] );
+			ReaderType::Pointer reader2 = ReaderType::New();
+			reader2->SetFileName( argv[m] );
+
+			// read in images
+			try
+			{
+				reader1->Update();
+				reader2->Update();
+			}
+			catch(itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
+
 			file << std::endl;
 			file << "Source: " << argv[n] << std::endl;
 			file << "Target: " << argv[m] << std::endl;
 			file << std::endl;
-			LabelOverlapMeasures( argv[n], argv[m], file );
+			LabelOverlapMeasures<ImageType>( reader1->GetOutput() , reader2->GetOutput(), file );
 			file << std::endl;
 		}
 	}
