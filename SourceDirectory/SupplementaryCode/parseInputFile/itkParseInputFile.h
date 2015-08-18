@@ -61,6 +61,7 @@ public:
 	std::string OutputDirectory() const { return this->m_OutputDirectory; };
 	std::string FixedFiducialList() const { return this->m_FixedFiducialList; };
 	std::string MovingFiducialList() const { return this->m_MovingFiducialList; };
+	std::string InitialTransformFilename() const { return this->m_InitialTransformFilename; };
 	//metric
 	int NumberOfHistogramBins() const { return this->m_NumberOfHistogramBins; };
 	float PercentageOfSamples() const { return this->m_PercentageOfSamples; };
@@ -76,6 +77,7 @@ public:
 	int DefaultPixelValue() const { return this->m_DefaultPixelValue; };
 	bool WriteImage() const { return this->m_WriteImage; };
 	bool MetricInitialization() const { return this->m_MetricInitialization; };
+	bool PerformOverlapMeasures() const { return this->m_PerformOverlapMeasures; };
 	
 protected:
 	// declare the constructor and define default parameters
@@ -99,6 +101,7 @@ private:
 	std::string m_OutputDirectory;
 	std::string m_FixedFiducialList;
 	std::string m_MovingFiducialList;
+	std::string m_InitialTransformFilename;
 	//metric
 	int m_NumberOfHistogramBins;
 	float m_PercentageOfSamples;
@@ -114,6 +117,7 @@ private:
 	int m_DefaultPixelValue;
 	bool m_WriteImage;
 	bool m_MetricInitialization;
+	bool m_PerformOverlapMeasures;
 	//output files
 	std::string m_MovingHistogramFilename;
 	std::string m_FixedHistogramFilename;

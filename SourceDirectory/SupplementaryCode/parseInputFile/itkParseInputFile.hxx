@@ -84,6 +84,11 @@ namespace itk
 					std::stringstream convertor(line);
 					convertor >> name >> this->m_MovingFiducialList;
 				}
+				else if( line.find("InitialTransformFilename") != std::string::npos )
+				{
+					std::stringstream convertor(line);
+					convertor >> name >> this->m_InitialTransformFilename;
+				}
 				else if( line.find("PercentageOfSamples") != std::string::npos )
 				{
 					std::stringstream convertor(line);
@@ -157,7 +162,23 @@ namespace itk
 					}
 					else
 					{
-						std::cout << "Write option is not recognized." << std::endl;
+						std::cout << "MetricInitialization option is not recognized." << std::endl;
+						std::cout << "   Please choose True or False" << std::endl;
+					}
+				}
+				else if( line.find("PerformOverlapMeasures") != std::string::npos )
+				{
+					if( line.find("True") != std::string::npos )
+					{
+						this->m_MetricInitialization = true;
+					}
+					else if( line.find("False") != std::string::npos )
+					{
+						this->m_MetricInitialization = false;
+					}
+					else
+					{
+						std::cout << "PerformOverlapMeasures option is not recognized." << std::endl;
 						std::cout << "   Please choose True or False" << std::endl;
 					}
 				}
@@ -203,6 +224,7 @@ namespace itk
 		this->m_OutputDirectory = "";
 		this->m_FixedFiducialList = "";
 		this->m_MovingFiducialList = "";
+		this->m_InitialTransformFilename = "";
 		//metric
 		this->m_NumberOfHistogramBins = 50;
 		this->m_PercentageOfSamples = 0;
@@ -218,6 +240,7 @@ namespace itk
 		this->m_DefaultPixelValue = 0;
 		this->m_WriteImage = false;
 		this->m_MetricInitialization = false;
+		this->m_PerformOverlapMeasures = false;
 
 		return;
 	}
@@ -233,6 +256,7 @@ namespace itk
 		std::cout << "MovingImageMaskFilename " << m_MovingImageMaskFilename << std::endl;
 		std::cout << "FixedFiducialList " << m_FixedFiducialList << std::endl;
 		std::cout << "MovingFiducialList " << m_MovingFiducialList << std::endl;
+		std::cout << "InitialTransformFilename " << m_InitialTransformFilename << std::endl;
 		std::cout << "OutputDirectory " << m_OutputDirectory << std::endl;
 		std::cout << "NumberOfHistogramBins " << m_NumberOfHistogramBins << std::endl;
 		std::cout << "PercentageOfSamples " << m_PercentageOfSamples << std::endl;
@@ -246,6 +270,7 @@ namespace itk
 		std::cout << "DefaultPixelValue " << m_DefaultPixelValue << std::endl;
 		std::cout << "WriteImage " << m_WriteImage << std::endl;
 		std::cout << "MetricInitialization " << m_MetricInitialization << std::endl;
+		std::cout << "PerformOverlapMeasures " << m_PerformOverlapMeasures << std::endl;
 		std::cout << "***** OUTPUTS *****" << std::endl;
 		std::cout << "MovingHistogramFilename " << m_MovingHistogramFilename << std::endl;
 		std::cout << "FixedHistogramFilename " << m_FixedHistogramFilename << std::endl;
