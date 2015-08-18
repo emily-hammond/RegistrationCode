@@ -84,10 +84,10 @@ namespace itk
 					std::stringstream convertor(line);
 					convertor >> name >> this->m_MovingFiducialList;
 				}
-				else if( line.find("InitialTransformFilename") != std::string::npos )
+				else if( line.find("InitTransformFilename") != std::string::npos )
 				{
 					std::stringstream convertor(line);
-					convertor >> name >> this->m_InitialTransformFilename;
+					convertor >> name >> this->m_InitTransformFilename;
 				}
 				else if( line.find("PercentageOfSamples") != std::string::npos )
 				{
@@ -210,6 +210,9 @@ namespace itk
 		this->m_JointHistogramFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_FinalJointHistogram.tif";
 		this->m_TransformedImageFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_Transformed.mhd";
 		this->m_PrematureTransformFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_PrematureTransform.mhd";
+		this->m_InitGeomOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_InitGeomOverlapMeasures.csv";
+		this->m_InitMetricOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_InitMetricOverlapMeasures.csv";
+		this->m_FinalOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_FinalOverlapMeasures.csv";
 
 		return;
 	}
@@ -224,7 +227,7 @@ namespace itk
 		this->m_OutputDirectory = "";
 		this->m_FixedFiducialList = "";
 		this->m_MovingFiducialList = "";
-		this->m_InitialTransformFilename = "";
+		this->m_InitTransformFilename = "";
 		//metric
 		this->m_NumberOfHistogramBins = 50;
 		this->m_PercentageOfSamples = 0;
@@ -256,7 +259,7 @@ namespace itk
 		std::cout << "MovingImageMaskFilename " << m_MovingImageMaskFilename << std::endl;
 		std::cout << "FixedFiducialList " << m_FixedFiducialList << std::endl;
 		std::cout << "MovingFiducialList " << m_MovingFiducialList << std::endl;
-		std::cout << "InitialTransformFilename " << m_InitialTransformFilename << std::endl;
+		std::cout << "InitTransformFilename " << m_InitTransformFilename << std::endl;
 		std::cout << "OutputDirectory " << m_OutputDirectory << std::endl;
 		std::cout << "NumberOfHistogramBins " << m_NumberOfHistogramBins << std::endl;
 		std::cout << "PercentageOfSamples " << m_PercentageOfSamples << std::endl;
@@ -279,6 +282,9 @@ namespace itk
 		std::cout << "RigidTransformFilename " << m_RigidTransformFilename << std::endl;
 		std::cout << "JointHistogramFilename " << m_JointHistogramFilename << std::endl;
 		std::cout << "TransformedImageFilename " << m_TransformedImageFilename << std::endl;
+		std::cout << "InitGeomOverlapMeasuresFilename" << m_InitGeomOverlapMeasuresFilename << std::endl;
+		std::cout << "InitMetricOverlapMeasuresFilename" << m_InitMetricOverlapMeasuresFilename << std::endl;
+		std::cout << "FinalOverlapMeasuresFilename" << m_FinalOverlapMeasuresFilename << std::endl;
 	}
 
 } // end namespace

@@ -61,7 +61,10 @@ public:
 	std::string OutputDirectory() const { return this->m_OutputDirectory; };
 	std::string FixedFiducialList() const { return this->m_FixedFiducialList; };
 	std::string MovingFiducialList() const { return this->m_MovingFiducialList; };
-	std::string InitialTransformFilename() const { return this->m_InitialTransformFilename; };
+	std::string InitTransformFilename() const { return this->m_InitTransformFilename; };
+	std::string InitGeomOverlapMeasuresFilename() const { return this->m_InitGeomOverlapMeasuresFilename; };
+	std::string InitMetricOverlapMeasuresFilename() const { return this->m_InitMetricOverlapMeasuresFilename; };
+	std::string FinalOverlapMeasuresFilename() const { return this->m_FinalOverlapMeasuresFilename; };
 	//metric
 	int NumberOfHistogramBins() const { return this->m_NumberOfHistogramBins; };
 	float PercentageOfSamples() const { return this->m_PercentageOfSamples; };
@@ -101,7 +104,7 @@ private:
 	std::string m_OutputDirectory;
 	std::string m_FixedFiducialList;
 	std::string m_MovingFiducialList;
-	std::string m_InitialTransformFilename;
+	std::string m_InitTransformFilename;
 	//metric
 	int m_NumberOfHistogramBins;
 	float m_PercentageOfSamples;
@@ -127,6 +130,9 @@ private:
 	std::string m_JointHistogramFilename;
 	std::string m_TransformedImageFilename;
 	std::string m_PrematureTransformFilename;
+	std::string m_InitGeomOverlapMeasuresFilename;
+	std::string m_InitMetricOverlapMeasuresFilename;
+	std::string m_FinalOverlapMeasuresFilename;
 
 	// private member functions
 	void ReadInFile( std::string filename );

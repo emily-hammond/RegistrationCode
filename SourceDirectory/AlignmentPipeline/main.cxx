@@ -470,11 +470,27 @@ int main(int argc, char * argv[])
 	typedef itk::Image< LabelMapPixelType, Dimension >	LabelMapImageType;
 
 	// read in fixed and moving images
-	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>(inputs->FixedImageFilename().c_str());
-	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>(inputs->MovingImageFilename().c_str());
+	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>( inputs->FixedImageFilename().c_str() );
+	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>( inputs->MovingImageFilename().c_str() );
 
-	// read in mask images
-	
+	// read in mask images only if label map measures are to be used
+	LabelMapImageType::Pointer fixedMask = LabelMapImageType::New();
+	LabelMapImageType::Pointer movingMask = LabelMapImageType::New();
+	if( inputs->PerformOverlapMeasures() )
+	{
+		fixedMask = ReadInImage<LabelMapImageType>( inputs->FixedImageMaskFilename().c_str() );
+		movingMask = ReadInImage<LabelMapImageType>( inputs->MovingImageMaskFilename().c_str() );
+	}
+
+	// define resampler to be used for overlap measures
+	typedef itk::ResampleImageFilter< LabelMapImageType, LabelMapImageType >	LMResampleFilterType;
+	LMResampleFilterType::Pointer lmresampler = LMResampleFilterType::New();
+	// initialize with fixed image parameters
+	lmresampler->SetSize( fixedImage->GetLargestPossibleRegion().GetSize() );
+	lmresampler->SetOutputOrigin( fixedImage->GetOrigin() );
+	lmresampler->SetOutputSpacing( fixedImage->GetSpacing() );
+	lmresampler->SetOutputDirection( fixedImage->GetDirection() );
+	lmresampler->SetDefaultPixelValue( inputs->DefaultPixelValue() );
 
 	memorymeter.Stop( "Inputs complete" );
 	chronometer.Stop( "Inputs complete" );
@@ -499,14 +515,14 @@ int main(int argc, char * argv[])
 
 	// *************** PREDEFINED FILE INITIALIZATION ********************
 	// if there is an defined initial transform, load in and use for initialization
-	if( !(inputs->InitialTransformFilename()).empty() )
+	if( !(inputs->InitTransformFilename()).empty() )
 	{
 		// define transform reader
 		typedef itk::TransformFileReader	TransformReaderType;
 		TransformReaderType::Pointer transformReader = TransformReaderType::New();
 		
 		// read in transform and store in rigid transform
-		transformReader->SetFileName( inputs->InitialTransformFilename().c_str() );
+		transformReader->SetFileName( inputs->InitTransformFilename().c_str() );
 		try
 		{
 			transformReader->Update();
@@ -529,12 +545,12 @@ int main(int argc, char * argv[])
 		// store initial transform into rigid transform
 		TransformReaderType::TransformListType::const_iterator it = transforms->begin();
 		rigidTransform = static_cast< RigidTransformType * >( (*it).GetPointer() );
-		std::cout << "Initialization from file (" << inputs->InitialTransformFilename() << ") complete!" << std::endl;
+		std::cout << "Initialization from file (" << inputs->InitTransformFilename() << ") complete!" << std::endl;
 	}
 
 	// ***************** GEOMETRICAL INITIALIZATION **********************
 	// if there is no initial transform filename given then perform geometric initialization
-	if( inputs->InitialTransformFilename().empty() )
+	if( inputs->InitTransformFilename().empty() )
 	{
 		memorymeter.Start( "Initialization" );
 		chronometer.Start( "Initialization" );
@@ -558,7 +574,21 @@ int main(int argc, char * argv[])
 		// perform overlap measures if desired
 		if( inputs->PerformOverlapMeasures() )
 		{
-			// resample moving image and moving mask image
+			// resample moving mask image
+			lmresampler->SetInput( movingMask );
+			lmresampler->SetTransform( rigidTransform );
+
+			// compare results with fixed image mask
+			// open file to place results into
+			std::ofstream file;
+			file.open( inputs->InitGeomOverlapMeasuresFilename().c_str() );
+			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
+			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
+			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
+			file << std::endl;
+			file.close();
+		}
+
 	}
 
 	// *********************** INTERPOLATOR ******************************
@@ -597,7 +627,7 @@ int main(int argc, char * argv[])
 	// initialize
 	metric->Initialize();
 
-	if( inputs->MetricInitialization() )
+	if( inputs->MetricInitialization() && inputs->InitTransformFilename().empty() )
 	{
 		// identify FOVs of both images
 		FloatImageType::PointType movingEnd = GetImageRange< FloatImageType >( movingImage, "end" );
@@ -675,6 +705,24 @@ int main(int argc, char * argv[])
 		// insert the new initialization parameters into the transform and print out
 		rigidTransform->SetParameters( minParameters );
 		WriteOutTransform< RigidTransformType >( inputs->InitMetricFilename().c_str() , rigidTransform );
+		
+		// perform overlap measures if desired
+		if( inputs->PerformOverlapMeasures() )
+		{
+			// resample moving mask image
+			lmresampler->SetInput( movingMask );
+			lmresampler->SetTransform( rigidTransform );
+
+			// compare results with fixed image mask
+			// open file to place results into
+			std::ofstream file;
+			file.open( inputs->InitMetricOverlapMeasuresFilename().c_str() );
+			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
+			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
+			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
+			file << std::endl;
+			file.close();
+		}
 	}
 
 	memorymeter.Stop( "Initialization" );
@@ -813,9 +861,9 @@ int main(int argc, char * argv[])
 	std::cout << rigidOptimizer << std::endl;
 
 	// ********************** APPLY TRANSFORM ***************************
-	if( inputs->WriteImage() )
+	if( inputs->WriteImage() || inputs->PerformOverlapMeasures() )
 	{
-		// apply transform to image and write out result to file
+		// resample image
 		typedef itk::ResampleImageFilter< FloatImageType, FloatImageType >	ResampleFilterType;
 		ResampleFilterType::Pointer resampler = ResampleFilterType::New();
 		// initialize with fixed image parameters
@@ -824,12 +872,32 @@ int main(int argc, char * argv[])
 		resampler->SetOutputSpacing( fixedImage->GetSpacing() );
 		resampler->SetOutputDirection( fixedImage->GetDirection() );
 		resampler->SetDefaultPixelValue( inputs->DefaultPixelValue() );
-		// send inputs
 		resampler->SetInput( movingImage );
 		resampler->SetTransform( finalRigidTransform );
 
 		// write out image
-		WriteOutImage< FloatImageType, FloatImageType >( inputs->TransformedImageFilename().c_str(), resampler->GetOutput() );
+		if( inputs->WriteImage() )
+		{
+			WriteOutImage< FloatImageType, FloatImageType >( inputs->TransformedImageFilename().c_str(), resampler->GetOutput() );
+		}
+			
+		// perform overlap measures if desired
+		if( inputs->PerformOverlapMeasures() )
+		{
+			// resample moving mask image
+			lmresampler->SetInput( movingMask );
+			lmresampler->SetTransform( rigidTransform );
+
+			// compare results with fixed image mask
+			// open file to place results into
+			std::ofstream file;
+			file.open( inputs->InitGeomOverlapMeasuresFilename().c_str() );
+			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
+			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
+			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
+			file << std::endl;
+			file.close();
+		}
 	}
 
 	memorymeter.Stop( "Outputs" );
