@@ -7,13 +7,13 @@ LabelMapOverlapModule.exe output.csv labelMap1 labelMap2 [labelMap3] [labelMap4]
 
 Flow of code: ITKv3
 - define LabelOverlapMeasures function
--- define image type
--- read in images
 -- instantiate filter
 -- perform calculations within filter
 -- write out values to csv file (both overall and individual measures)
 - identify inputs
 - open file
+- define image type
+- read in images
 - perform comparisons
 - send images and file to function
 - close file

@@ -463,13 +463,18 @@ int main(int argc, char * argv[])
 	const unsigned int		Dimension = 3;
 	typedef float			FloatPixelType;
 	typedef unsigned char	CharPixelType;
+	typedef unsigned int	LabelMapPixelType;
 
-	typedef itk::Image< FloatPixelType, Dimension >	FloatImageType;
-	typedef itk::Image< CharPixelType, Dimension >  CharImageType;
+	typedef itk::Image< FloatPixelType, Dimension >		FloatImageType;
+	typedef itk::Image< CharPixelType, Dimension >		CharImageType;
+	typedef itk::Image< LabelMapPixelType, Dimension >	LabelMapImageType;
 
 	// read in fixed and moving images
 	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>(inputs->FixedImageFilename().c_str());
 	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>(inputs->MovingImageFilename().c_str());
+
+	// read in mask images
+	
 
 	memorymeter.Stop( "Inputs complete" );
 	chronometer.Stop( "Inputs complete" );
@@ -492,25 +497,69 @@ int main(int argc, char * argv[])
 	// instantiate transforms
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
 
+	// *************** PREDEFINED FILE INITIALIZATION ********************
+	// if there is an defined initial transform, load in and use for initialization
+	if( !(inputs->InitialTransformFilename()).empty() )
+	{
+		// define transform reader
+		typedef itk::TransformFileReader	TransformReaderType;
+		TransformReaderType::Pointer transformReader = TransformReaderType::New();
+		
+		// read in transform and store in rigid transform
+		transformReader->SetFileName( inputs->InitialTransformFilename().c_str() );
+		try
+		{
+			transformReader->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		// check to make sure there is only one transform here
+		TransformReaderType::TransformListType * transforms = transformReader->GetTransformList();
+		if( transforms->size() != 1 )
+		{
+			std::cout << "There is more than 1 transform in initial transform file" << std::endl;
+			return EXIT_FAILURE;
+		}
+
+		// store initial transform into rigid transform
+		TransformReaderType::TransformListType::const_iterator it = transforms->begin();
+		rigidTransform = static_cast< RigidTransformType * >( (*it).GetPointer() );
+		std::cout << "Initialization from file (" << inputs->InitialTransformFilename() << ") complete!" << std::endl;
+	}
+
 	// ***************** GEOMETRICAL INITIALIZATION **********************
-	memorymeter.Start( "Initialization" );
-	chronometer.Start( "Initialization" );
+	// if there is no initial transform filename given then perform geometric initialization
+	if( inputs->InitialTransformFilename().empty() )
+	{
+		memorymeter.Start( "Initialization" );
+		chronometer.Start( "Initialization" );
 
-	// instantiate initializer (align geometrical center of images)
-	typedef itk::CenteredTransformInitializer< RigidTransformType, FloatImageType, FloatImageType >	InitializerType;
-	InitializerType::Pointer initializer = InitializerType::New();
-	
-	// input images
-	initializer->SetFixedImage( fixedImage );
-	initializer->SetMovingImage( movingImage );
+		// instantiate initializer (align geometrical center of images)
+		typedef itk::CenteredTransformInitializer< RigidTransformType, FloatImageType, FloatImageType >	InitializerType;
+		InitializerType::Pointer initializer = InitializerType::New();
+		
+		// input images
+		initializer->SetFixedImage( fixedImage );
+		initializer->SetMovingImage( movingImage );
 
-	// initialize by geometry
-	initializer->SetTransform( rigidTransform );
-	initializer->GeometryOn();
-	initializer->InitializeTransform();
+		// initialize by geometry
+		initializer->SetTransform( rigidTransform );
+		initializer->GeometryOn();
+		initializer->InitializeTransform();
 
-	// write out transform after initialization
-	WriteOutTransform< RigidTransformType >( inputs->InitGeomFilename().c_str() , rigidTransform );
+		// write out transform after initialization
+		WriteOutTransform< RigidTransformType >( inputs->InitGeomFilename().c_str() , rigidTransform );
+
+		// perform overlap measures if desired
+		if( inputs->PerformOverlapMeasures() )
+		{
+			// resample moving image and moving mask image
+	}
 
 	// *********************** INTERPOLATOR ******************************
 	typedef itk::LinearInterpolateImageFunction< FloatImageType, double >	InterpolatorType;
