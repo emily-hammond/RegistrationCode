@@ -134,7 +134,7 @@ namespace itk
 					std::stringstream convertor(line);
 					convertor >> name >> this->m_DefaultPixelValue;
 				}
-				else if( line.find("Write") != std::string::npos )
+				else if( line.find("WriteImage") != std::string::npos )
 				{
 					if( line.find("True") != std::string::npos )
 					{
@@ -170,15 +170,31 @@ namespace itk
 				{
 					if( line.find("True") != std::string::npos )
 					{
-						this->m_MetricInitialization = true;
+						this->m_PerformOverlapMeasures = true;
 					}
 					else if( line.find("False") != std::string::npos )
 					{
-						this->m_MetricInitialization = false;
+						this->m_PerformOverlapMeasures = false;
 					}
 					else
 					{
 						std::cout << "PerformOverlapMeasures option is not recognized." << std::endl;
+						std::cout << "   Please choose True or False" << std::endl;
+					}
+				}
+				else if( line.find("GenerateHistograms") != std::string::npos )
+				{
+					if( line.find("True") != std::string::npos )
+					{
+						this->m_GenerateHistograms = true;
+					}
+					else if( line.find("False") != std::string::npos )
+					{
+						this->m_GenerateHistograms = false;
+					}
+					else
+					{
+						std::cout << "GenerateHistograms option is not recognized." << std::endl;
 						std::cout << "   Please choose True or False" << std::endl;
 					}
 				}
@@ -244,6 +260,7 @@ namespace itk
 		this->m_WriteImage = false;
 		this->m_MetricInitialization = false;
 		this->m_PerformOverlapMeasures = false;
+		this->m_GenerateHistograms = false;
 
 		return;
 	}
@@ -274,6 +291,7 @@ namespace itk
 		std::cout << "WriteImage " << m_WriteImage << std::endl;
 		std::cout << "MetricInitialization " << m_MetricInitialization << std::endl;
 		std::cout << "PerformOverlapMeasures " << m_PerformOverlapMeasures << std::endl;
+		std::cout << "GenerateHistograms " << m_GenerateHistograms << std::endl;
 		std::cout << "***** OUTPUTS *****" << std::endl;
 		std::cout << "MovingHistogramFilename " << m_MovingHistogramFilename << std::endl;
 		std::cout << "FixedHistogramFilename " << m_FixedHistogramFilename << std::endl;

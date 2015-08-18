@@ -376,6 +376,7 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		file << "," << filter->GetFalsePositiveError( label );
 		file << std::endl;
     }
+	std::cout << "Overlap Measures acquired." << std::endl;
 
 	return EXIT_SUCCESS;
 }
@@ -423,8 +424,6 @@ int main(int argc, char * argv[])
 	// set up accounting for time and memory in the program
 	itk::TimeProbesCollectorBase chronometer;
 	itk::MemoryProbesCollectorBase memorymeter;
-
-	std::cout << argc << std::endl;
 
 	memorymeter.Start( "Full program" );
 	chronometer.Start( "Full program" );
@@ -495,16 +494,19 @@ int main(int argc, char * argv[])
 	memorymeter.Stop( "Inputs complete" );
 	chronometer.Stop( "Inputs complete" );
 	// ************************ HISTOGRAMS *******************************
-	memorymeter.Start( "Generating histograms" );
-	chronometer.Start( "Generating histograms" );
+	if( inputs->GenerateHistograms() )
+	{
+		memorymeter.Start( "Generating histograms" );
+		chronometer.Start( "Generating histograms" );
 
-	// write out histograms for the moving image
-	CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins() );
-	// fixed image
-	CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins() );
+		// write out histograms for the moving image
+		CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins() );
+		// fixed image
+		CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins() );
 
-	memorymeter.Stop( "Generating histograms" );
-	chronometer.Stop( "Generating histograms" );
+		memorymeter.Stop( "Generating histograms" );
+		chronometer.Stop( "Generating histograms" );
+	}
 	// ************************* TRANSFORM *******************************
 	// set up rigid transform types
 	//typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
@@ -512,10 +514,15 @@ int main(int argc, char * argv[])
 
 	// instantiate transforms
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
+	std::cout << std::endl;
+	std::cout << "Transform set up." << std::endl;
 
 	// *************** PREDEFINED FILE INITIALIZATION ********************
+	memorymeter.Start( "Initialization" );
+	chronometer.Start( "Initialization" );
+	
 	// if there is an defined initial transform, load in and use for initialization
-	if( !(inputs->InitTransformFilename()).empty() )
+	if( !(inputs->InitTransformFilename().empty()) )
 	{
 		// define transform reader
 		typedef itk::TransformFileReader	TransformReaderType;
@@ -545,6 +552,7 @@ int main(int argc, char * argv[])
 		// store initial transform into rigid transform
 		TransformReaderType::TransformListType::const_iterator it = transforms->begin();
 		rigidTransform = static_cast< RigidTransformType * >( (*it).GetPointer() );
+		WriteOutTransform< RigidTransformType >( inputs->InitGeomFilename().c_str() , rigidTransform );
 		std::cout << "Initialization from file (" << inputs->InitTransformFilename() << ") complete!" << std::endl;
 	}
 
@@ -552,9 +560,6 @@ int main(int argc, char * argv[])
 	// if there is no initial transform filename given then perform geometric initialization
 	if( inputs->InitTransformFilename().empty() )
 	{
-		memorymeter.Start( "Initialization" );
-		chronometer.Start( "Initialization" );
-
 		// instantiate initializer (align geometrical center of images)
 		typedef itk::CenteredTransformInitializer< RigidTransformType, FloatImageType, FloatImageType >	InitializerType;
 		InitializerType::Pointer initializer = InitializerType::New();
@@ -588,12 +593,13 @@ int main(int argc, char * argv[])
 			file << std::endl;
 			file.close();
 		}
-
+		std::cout << "Geometric initialization complete." << std::endl;
 	}
 
 	// *********************** INTERPOLATOR ******************************
 	typedef itk::LinearInterpolateImageFunction< FloatImageType, double >	InterpolatorType;
 	InterpolatorType::Pointer interpolator = InterpolatorType::New();
+	std::cout << "Interpolator set up." << std::endl;
 
 	// *************************** METRIC ********************************
 	// the v3 metric does not have the function GetJointPDF!!!
@@ -603,6 +609,7 @@ int main(int argc, char * argv[])
 	// determine number of samples to use
 	FloatImageType::SizeType size = fixedImage->GetLargestPossibleRegion().GetSize();
 	int numOfPixels = size[0]*size[1]*size[2];
+	std::cout << std::endl;
 	std::cout << "Number of pixels in fixed image: " << numOfPixels << std::endl;
 	// use 1% of the fixed image samples
 	if( inputs->PercentageOfSamples() > 0 )
@@ -613,9 +620,9 @@ int main(int argc, char * argv[])
 	{
 		metric->SetNumberOfHistogramBins( inputs->NumberOfHistogramBins() );
 	}
+	std::cout << "Metric set up." << std::endl;
 
 	// ******************* METRIC INITIALIZATION *************************
-	std::cout << "\nPerform metric initialization" << std::endl;
 	// iterate through the transform in the z direction and calculate metric
 	// for an additional initialization
 	metric->SetFixedImage( fixedImage );
@@ -723,6 +730,7 @@ int main(int argc, char * argv[])
 			file << std::endl;
 			file.close();
 		}
+		std::cout << "Metric Initialization complete." << std::endl;
 	}
 
 	memorymeter.Stop( "Initialization" );
@@ -777,6 +785,7 @@ int main(int argc, char * argv[])
 	// register the optimizer with the command class
 	RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();
 	rigidOptimizer->AddObserver( itk::IterationEvent(), rigidObserver );
+	std::cout << "Optimizer set up." << std::endl;
 
 	// ********************** REGISTRATION METHOD ***************************
 	typedef itk::ImageRegistrationMethod< FloatImageType, FloatImageType >		RegistrationType;

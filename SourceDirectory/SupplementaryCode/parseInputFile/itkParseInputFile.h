@@ -53,6 +53,9 @@ public:
 	std::string JointHistogramFilename() const { return this->m_JointHistogramFilename; };
 	std::string TransformedImageFilename() const { return this->m_TransformedImageFilename; };
 	std::string PrematureTransformFilename() const { return this->m_PrematureTransformFilename; };
+	std::string InitGeomOverlapMeasuresFilename() const { return this->m_InitGeomOverlapMeasuresFilename; };
+	std::string InitMetricOverlapMeasuresFilename() const { return this->m_InitMetricOverlapMeasuresFilename; };
+	std::string FinalOverlapMeasuresFilename() const { return this->m_FinalOverlapMeasuresFilename; };
 	// get input variables
 	std::string FixedImageFilename() const { return this->m_FixedImageFilename; };
 	std::string MovingImageFilename() const { return this->m_MovingImageFilename; };
@@ -62,9 +65,6 @@ public:
 	std::string FixedFiducialList() const { return this->m_FixedFiducialList; };
 	std::string MovingFiducialList() const { return this->m_MovingFiducialList; };
 	std::string InitTransformFilename() const { return this->m_InitTransformFilename; };
-	std::string InitGeomOverlapMeasuresFilename() const { return this->m_InitGeomOverlapMeasuresFilename; };
-	std::string InitMetricOverlapMeasuresFilename() const { return this->m_InitMetricOverlapMeasuresFilename; };
-	std::string FinalOverlapMeasuresFilename() const { return this->m_FinalOverlapMeasuresFilename; };
 	//metric
 	int NumberOfHistogramBins() const { return this->m_NumberOfHistogramBins; };
 	float PercentageOfSamples() const { return this->m_PercentageOfSamples; };
@@ -81,6 +81,7 @@ public:
 	bool WriteImage() const { return this->m_WriteImage; };
 	bool MetricInitialization() const { return this->m_MetricInitialization; };
 	bool PerformOverlapMeasures() const { return this->m_PerformOverlapMeasures; };
+	bool GenerateHistograms() const { return this->m_GenerateHistograms; };
 	
 protected:
 	// declare the constructor and define default parameters
@@ -121,6 +122,7 @@ private:
 	bool m_WriteImage;
 	bool m_MetricInitialization;
 	bool m_PerformOverlapMeasures;
+	bool m_GenerateHistograms;
 	//output files
 	std::string m_MovingHistogramFilename;
 	std::string m_FixedHistogramFilename;
