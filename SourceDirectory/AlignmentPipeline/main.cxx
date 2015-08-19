@@ -92,6 +92,7 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename, std::ofstre
 	}
 	catch(itk::ExceptionObject & err)
 	{
+		std::cout << ImageFilename << std::endl;
 		std::cerr << "Exception Object Caught!" << std::endl;
 		std::cerr << err << std::endl;
 		std::cerr << std::endl;
@@ -409,10 +410,6 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		file << "," << distance->GetHausdorffDistance();
 		file << "," << distance->GetAverageHausdorffDistance();
 		file << std::endl;
-
-		file << "," << distance->GetHausdorffDistance();
-		file << "," << distance->GetAverageHausdorffDistance();
-		file << std::endl;
 	}
 	outFile << "Overlap Measures acquired." << std::endl;
 
@@ -489,6 +486,7 @@ int main(int argc, char * argv[])
 	// open log file
 	std::ofstream outFile;
 	outFile.open( inputs->LogFilename().c_str() );
+	std::cout << "Log file created." << std::endl;
 	inputs->PrintToFile( outFile );
 	outFile << std::endl;
 
