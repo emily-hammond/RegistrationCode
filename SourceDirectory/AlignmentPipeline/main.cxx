@@ -74,7 +74,7 @@
 
 // Write a function to read in images templated over dimension and pixel type
 template<typename ImageType>
-typename ImageType::Pointer ReadInImage( const char * ImageFilename )
+typename ImageType::Pointer ReadInImage( const char * ImageFilename, std::ofstream & file )
 {
 	typedef itk::ImageFileReader<ImageType>		ReaderType;	
 	typename ReaderType::Pointer reader = ReaderType::New();
@@ -84,7 +84,7 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 	try
 	{
 		reader->Update();
-		std::cout << ImageFilename << " has been read in!" << std::endl;
+		file << ImageFilename << " has been read in!" << std::endl;
 	}
 	catch(itk::ExceptionObject & err)
 	{
@@ -100,7 +100,7 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 
 // Write a function to write out images templated over input and output pixel type
 template<typename inputImageType, typename outputImageType>
-int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer image )
+int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer image, std::ofstream & file )
 {
 	typedef itk::CastImageFilter<inputImageType, outputImageType> CastFilterType;
 	typename CastFilterType::Pointer caster = CastFilterType::New();
@@ -115,7 +115,7 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 	try
 	{
 		writer->Update();
-		std::cout << ImageFilename << " has been written. " << std::endl;
+		file << ImageFilename << " has been written. " << std::endl;
 	}
 	catch(itk::ExceptionObject & err)
 	{
@@ -131,7 +131,7 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 
 // Write a function to write out a transform
 template<typename TransformType>
-int WriteOutTransform( const char * transformFilename, typename TransformType::Pointer transform )
+int WriteOutTransform( const char * transformFilename, typename TransformType::Pointer transform, std::ofstream & file )
 {
 	typedef itk::TransformFileWriterTemplate< double > TransformWriterType;
 	TransformWriterType::Pointer writer = TransformWriterType::New();
@@ -152,18 +152,18 @@ int WriteOutTransform( const char * transformFilename, typename TransformType::P
 	}
 	
 	// return output
-	std::cout << transformFilename << " has successfully been created." << std::endl;
+	file << transformFilename << " has successfully been created." << std::endl;
 	return EXIT_SUCCESS;
 }
 
 // Write function to output the histogram
 template<typename ImageType>
-int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer image, const int bins )
+int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer image, const int bins, std::ofstream & file )
 {
 	// check to make sure bins in >0
 	if (bins < 1)
 	{
-		std::cout << "Invalid value for bins" << std::endl;
+		std::cerr << "Invalid value for bins" << std::endl;
 		return EXIT_FAILURE;
 	}
 
@@ -231,7 +231,7 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 
 	histogramTextFile.close();
 
-	std::cout << histogramFilename << " has been successfully created and written to file." << std::endl;
+	file << histogramFilename << " has been successfully created and written to file." << std::endl;
 
 	return EXIT_SUCCESS;
 }
@@ -317,7 +317,7 @@ typename ImageType::PointType GetImageRange( typename ImageType::Pointer image, 
 
 // Write function to perform overlap statistics
 template< typename ImageType >
-int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType::Pointer target, std::ofstream & file )
+int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType::Pointer target, std::ofstream & file, std::ofstream & outFile )
 {
 	// instantiate filter and insert images
 	typedef itk::LabelOverlapMeasuresImageFilter< ImageType >  FilterType;
@@ -376,7 +376,7 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		file << "," << filter->GetFalsePositiveError( label );
 		file << std::endl;
     }
-	std::cout << "Overlap Measures acquired." << std::endl;
+	outFile << "Overlap Measures acquired." << std::endl;
 
 	return EXIT_SUCCESS;
 }
@@ -397,7 +397,7 @@ public:
 	//typedef itk::RegularStepGradientDescentOptimizer	OptimizerType;
 	typedef itk::VersorRigid3DTransformOptimizer		OptimizerType;
 	typedef const OptimizerType *						OptimizerPointer;
-	void Execute( itk::Object *caller, const itk::EventObject &event)
+	void Execute( itk::Object *caller, const itk::EventObject &event )
 	{
 		Execute( (const itk::Object *)caller, event);
 	}
@@ -409,10 +409,8 @@ public:
 			return;
 		}
 		
-
-
-		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
-		std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
+		//std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
+		//std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
 	}
 };
 
@@ -446,16 +444,20 @@ int main(int argc, char * argv[])
 	inputs->SetFilename( inputFilename.c_str() );
 /*	if( !inputs->IsOpen() )
 	{
-		std::cout << "File is not open." << std::endl;
+		outFile << "File is not open." << std::endl;
 		return EXIT_FAILURE;
 	}*/
-	inputs->Print();
-	std::cout << std::endl;
+
+	// open log file
+	std::ofstream outFile;
+	outFile.open( inputs->LogFilename().c_str() );
+	inputs->PrintToFile( outFile );
+	outFile << std::endl;
 
 	// create output directory
 	if( !CreateDirectory( inputs->OutputDirectory().c_str(), NULL ) )
 	{
-		std::cout << "Output Directory already exists." << std::endl;
+		outFile << "Output Directory already exists." << std::endl;
 	}
 
 	// ******************* DEFINE/READ IN IMAGES *************************
@@ -470,16 +472,16 @@ int main(int argc, char * argv[])
 	typedef itk::Image< LabelMapPixelType, Dimension >	LabelMapImageType;
 
 	// read in fixed and moving images
-	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>( inputs->FixedImageFilename().c_str() );
-	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>( inputs->MovingImageFilename().c_str() );
+	FloatImageType::Pointer fixedImage = ReadInImage<FloatImageType>( inputs->FixedImageFilename().c_str(), outFile );
+	FloatImageType::Pointer movingImage = ReadInImage<FloatImageType>( inputs->MovingImageFilename().c_str(), outFile );
 
 	// read in mask images only if label map measures are to be used
 	LabelMapImageType::Pointer fixedMask = LabelMapImageType::New();
 	LabelMapImageType::Pointer movingMask = LabelMapImageType::New();
 	if( inputs->PerformOverlapMeasures() )
 	{
-		fixedMask = ReadInImage<LabelMapImageType>( inputs->FixedImageMaskFilename().c_str() );
-		movingMask = ReadInImage<LabelMapImageType>( inputs->MovingImageMaskFilename().c_str() );
+		fixedMask = ReadInImage<LabelMapImageType>( inputs->FixedImageMaskFilename().c_str(), outFile );
+		movingMask = ReadInImage<LabelMapImageType>( inputs->MovingImageMaskFilename().c_str(), outFile );
 	}
 
 	// define resampler to be used for overlap measures
@@ -501,9 +503,9 @@ int main(int argc, char * argv[])
 		chronometer.Start( "Generating histograms" );
 
 		// write out histograms for the moving image
-		CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins() );
+		CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins(), outFile );
 		// fixed image
-		CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins() );
+		CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins(), outFile );
 
 		memorymeter.Stop( "Generating histograms" );
 		chronometer.Stop( "Generating histograms" );
@@ -515,8 +517,8 @@ int main(int argc, char * argv[])
 
 	// instantiate transforms
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
-	std::cout << std::endl;
-	std::cout << "Transform set up." << std::endl;
+	outFile << std::endl;
+	outFile << "Transform set up." << std::endl;
 
 	// *************** PREDEFINED FILE INITIALIZATION ********************
 	memorymeter.Start( "Initialization" );
@@ -546,15 +548,15 @@ int main(int argc, char * argv[])
 		TransformReaderType::TransformListType * transforms = transformReader->GetTransformList();
 		if( transforms->size() != 1 )
 		{
-			std::cout << "There is more than 1 transform in initial transform file" << std::endl;
+			std::cerr << "There is more than 1 transform in initial transform file" << std::endl;
 			return EXIT_FAILURE;
 		}
 
 		// store initial transform into rigid transform
 		TransformReaderType::TransformListType::const_iterator it = transforms->begin();
 		rigidTransform = static_cast< RigidTransformType * >( (*it).GetPointer() );
-		WriteOutTransform< RigidTransformType >( inputs->InitGeomFilename().c_str() , rigidTransform );
-		std::cout << "Initialization from file (" << inputs->InitTransformFilename() << ") complete!" << std::endl;
+		WriteOutTransform< RigidTransformType >( inputs->InitGeomFilename().c_str() , rigidTransform, outFile );
+		outFile << "Initialization from file (" << inputs->InitTransformFilename() << ") complete!" << std::endl;
 	}
 
 	// ***************** GEOMETRICAL INITIALIZATION **********************
@@ -575,7 +577,7 @@ int main(int argc, char * argv[])
 		initializer->InitializeTransform();
 
 		// write out transform after initialization
-		WriteOutTransform< RigidTransformType >( inputs->InitGeomFilename().c_str() , rigidTransform );
+		WriteOutTransform< RigidTransformType >( inputs->InitGeomFilename().c_str() , rigidTransform, outFile );
 
 		// perform overlap measures if desired
 		if( inputs->PerformOverlapMeasures() )
@@ -588,20 +590,20 @@ int main(int argc, char * argv[])
 			// open file to place results into
 			std::ofstream file;
 			file.open( inputs->InitGeomOverlapMeasuresFilename().c_str() );
-			std::cout << inputs->InitGeomOverlapMeasuresFilename() << " has been created." << std::endl;
+			outFile << inputs->InitGeomOverlapMeasuresFilename() << " has been created." << std::endl;
 			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
 			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
-			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
+			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file, outFile );
 			file << std::endl;
 			file.close();
 		}
-		std::cout << "Geometric initialization complete." << std::endl;
+		outFile << "Geometric initialization complete." << std::endl;
 	}
 
 	// *********************** INTERPOLATOR ******************************
 	typedef itk::LinearInterpolateImageFunction< FloatImageType, double >	InterpolatorType;
 	InterpolatorType::Pointer interpolator = InterpolatorType::New();
-	std::cout << "Interpolator set up." << std::endl;
+	outFile << "Interpolator set up." << std::endl;
 
 	// *************************** METRIC ********************************
 	// the v3 metric does not have the function GetJointPDF!!!
@@ -611,8 +613,8 @@ int main(int argc, char * argv[])
 	// determine number of samples to use
 	FloatImageType::SizeType size = fixedImage->GetLargestPossibleRegion().GetSize();
 	int numOfPixels = size[0]*size[1]*size[2];
-	std::cout << std::endl;
-	std::cout << "Number of pixels in fixed image: " << numOfPixels << std::endl;
+	outFile << std::endl;
+	outFile << "Number of pixels in fixed image: " << numOfPixels << std::endl;
 	// use 1% of the fixed image samples
 	if( inputs->PercentageOfSamples() > 0 )
 	{
@@ -622,7 +624,7 @@ int main(int argc, char * argv[])
 	{
 		metric->SetNumberOfHistogramBins( inputs->NumberOfHistogramBins() );
 	}
-	std::cout << "Metric set up." << std::endl;
+	outFile << "Metric set up." << std::endl;
 
 	// ******************* METRIC INITIALIZATION *************************
 	// iterate through the transform in the z direction and calculate metric
@@ -644,10 +646,10 @@ int main(int argc, char * argv[])
 		FloatImageType::PointType fixedStart = GetImageRange< FloatImageType >( fixedImage, "start" );
 		FloatImageType::PointType fixedCenter = GetImageRange< FloatImageType >( fixedImage, "center" );
 
-		std::cout << "MovingEnd: " << movingEnd << std::endl;
-		std::cout << "MovingStart: " << movingStart << std::endl;
-		std::cout << "FixedStart: " << fixedStart << std::endl;
-		std::cout << "FixedCenter: " << fixedCenter << std::endl;
+		outFile << "MovingEnd: " << movingEnd << std::endl;
+		outFile << "MovingStart: " << movingStart << std::endl;
+		outFile << "FixedStart: " << fixedStart << std::endl;
+		outFile << "FixedCenter: " << fixedCenter << std::endl;
 
 		// obtain the parameters from the transform
 		RigidTransformType::ParametersType parameters = rigidTransform->GetParameters();	
@@ -662,78 +664,85 @@ int main(int argc, char * argv[])
 		
 		// find range to move over in the coronal direction
 		float rangeCor = abs( fixedCenter[2] - fixedStart[2] - abs( movingEnd[2] - movingStart[2] )/2.0 );
-		std::cout << "Coronal Range: " << rangeCor << std::endl;
+		outFile << "Coronal Range: " << rangeCor << std::endl;
 		float origParam5 = parameters[zCor];
 
 		// find range to move over in the sagittal direction
 		float rangeSag = abs( fixedCenter[1] - fixedStart[1] - abs( movingEnd[1] - movingStart[1] )/2.0 );
-		std::cout << "Sagittal Range: " << rangeSag << std::endl;
+		outFile << "Sagittal Range: " << rangeSag << std::endl;
 		float origParam4 = parameters[ySag];
 
-		// initialize parameters
-		float minMetric = 10000000.0;
-		RigidTransformType::ParametersType minParameters;
-
-		// change the parameter corresponding to the z translation and obtain the metric
-		std::cout << "\nMETRIC PARAMETERS" << std::endl;
-		for( float zTrans = origParam5 - rangeCor - 10.0; zTrans < origParam5 + rangeCor + 10.0; zTrans = zTrans + rangeCor/20.0 )
+		if( rangeCor == 0 )
 		{
-			// change z parameter
-			parameters[zCor] = zTrans;
-			// store parameters and metric value into array
-			if( metric->GetValue(parameters) < minMetric )
+			// initialize parameters
+			float minMetric = 10000000.0;
+			RigidTransformType::ParametersType minParameters;
+
+			// change the parameter corresponding to the z translation and obtain the metric
+			outFile << "\nMETRIC PARAMETERS" << std::endl;
+			for( float zTrans = origParam5 - rangeCor - 10.0; zTrans < origParam5 + rangeCor + 10.0; zTrans = zTrans + rangeCor/20.0 )
 			{
-				minMetric = metric->GetValue(parameters);
-				minParameters = parameters;
+				// change z parameter
+				parameters[zCor] = zTrans;
+				// store parameters and metric value into array
+				if( metric->GetValue(parameters) < minMetric )
+				{
+					minMetric = metric->GetValue(parameters);
+					minParameters = parameters;
+				}
+				outFile << metric->GetValue( parameters ) << " " << parameters << std::endl;
 			}
-			std::cout << metric->GetValue( parameters ) << " " << parameters << std::endl;
-		}
 
-		/*
-		// reset everything
-		minMetric = 10000000.0;
-		rigidTransform->SetParameters( minParameters );
-		parameters = rigidTransform->GetParameters();
-		std::string filenameTran = "H:\\Results\\2015.04.01_UsingTextFileInput\\3DSpace_Ax\\FirstMetricInitTransform.tfm";
-		WriteOutTransform< RigidTransformType >( filenameTran.c_str() , rigidTransform );
+			/*
+			// reset everything
+			minMetric = 10000000.0;
+			rigidTransform->SetParameters( minParameters );
+			parameters = rigidTransform->GetParameters();
+			std::string filenameTran = "H:\\Results\\2015.04.01_UsingTextFileInput\\3DSpace_Ax\\FirstMetricInitTransform.tfm";
+			WriteOutTransform< RigidTransformType >( filenameTran.c_str() , rigidTransform );
 
-		// change parameter corresponding to y translation
-		for( float yTrans = origParam4 - rangeSag; yTrans < origParam4 + rangeSag; yTrans = yTrans + rangeSag/5.0 )
-		{
-			// change y parameter
-			parameters[ySag] = yTrans;
-			// store parameters and metric value into array
-			if( metric->GetValue(parameters) < minMetric )
+			// change parameter corresponding to y translation
+			for( float yTrans = origParam4 - rangeSag; yTrans < origParam4 + rangeSag; yTrans = yTrans + rangeSag/5.0 )
 			{
-				minMetric = metric->GetValue(parameters);
-				minParameters = parameters;
+				// change y parameter
+				parameters[ySag] = yTrans;
+				// store parameters and metric value into array
+				if( metric->GetValue(parameters) < minMetric )
+				{
+					minMetric = metric->GetValue(parameters);
+					minParameters = parameters;
+				}
+				outFile << metric->GetValue(parameters) << " " << parameters << std::endl;
+			}*/
+
+			// insert the new initialization parameters into the transform and print out
+			rigidTransform->SetParameters( minParameters );
+			WriteOutTransform< RigidTransformType >( inputs->InitMetricFilename().c_str() , rigidTransform, outFile );
+			
+			// perform overlap measures if desired
+			if( inputs->PerformOverlapMeasures() )
+			{
+				// resample moving mask image
+				lmresampler->SetInput( movingMask );
+				lmresampler->SetTransform( rigidTransform );
+
+				// compare results with fixed image mask
+				// open file to place results into
+				std::ofstream file;
+				file.open( inputs->InitMetricOverlapMeasuresFilename().c_str() );
+				outFile << inputs->InitMetricOverlapMeasuresFilename() << " has been created." << std::endl;
+				file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
+				file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
+				LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file, outFile );
+				file << std::endl;
+				file.close();
 			}
-			std::cout << metric->GetValue(parameters) << " " << parameters << std::endl;
-		}*/
-
-		// insert the new initialization parameters into the transform and print out
-		rigidTransform->SetParameters( minParameters );
-		WriteOutTransform< RigidTransformType >( inputs->InitMetricFilename().c_str() , rigidTransform );
-		
-		// perform overlap measures if desired
-		if( inputs->PerformOverlapMeasures() )
-		{
-			// resample moving mask image
-			lmresampler->SetInput( movingMask );
-			lmresampler->SetTransform( rigidTransform );
-
-			// compare results with fixed image mask
-			// open file to place results into
-			std::ofstream file;
-			file.open( inputs->InitMetricOverlapMeasuresFilename().c_str() );
-			std::cout << inputs->InitMetricOverlapMeasuresFilename() << " has been created." << std::endl;
-			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
-			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
-			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
-			file << std::endl;
-			file.close();
+			outFile << "Metric Initialization complete." << std::endl;
 		}
-		std::cout << "Metric Initialization complete." << std::endl;
+		else
+		{
+			outFile << "Metric Initialization failed. Range was zero." << std::endl;
+		}
 	}
 
 	memorymeter.Stop( "Initialization" );
@@ -788,7 +797,7 @@ int main(int argc, char * argv[])
 	// register the optimizer with the command class
 	RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();
 	rigidOptimizer->AddObserver( itk::IterationEvent(), rigidObserver );
-	std::cout << "Optimizer set up." << std::endl;
+	outFile << "Optimizer set up." << std::endl;
 
 	// ********************** REGISTRATION METHOD ***************************
 	typedef itk::ImageRegistrationMethod< FloatImageType, FloatImageType >		RegistrationType;
@@ -804,16 +813,16 @@ int main(int argc, char * argv[])
 	registration->SetMovingImage( movingImage );
 	registration->SetFixedImageRegion( fixedImage->GetBufferedRegion() );
 	// perform registration
-	std::cout << std::endl;
-	std::cout << "Beginning Registration" << std::endl;
-	std::cout << "Itr# StepSize MetricValue TransformParameters" << std::endl;
+	outFile << std::endl;
+	outFile << "Beginning Registration" << std::endl;
+	outFile << "Itr# StepSize MetricValue TransformParameters" << std::endl;
 	try
 	{
 		memorymeter.Start( "Rigid registration" );
 		chronometer.Start( "Rigid registration" );
 
 		registration->Update();
-		std::cout << "OptimizerStopCondition: " << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+		outFile << "OptimizerStopCondition: " << registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
 
 		memorymeter.Stop( "Rigid registration" );
 		chronometer.Stop( "Rigid registration" );
@@ -831,26 +840,26 @@ int main(int argc, char * argv[])
 
 	// print results to the screen
 	/*
-	std::cout << std::endl;
-	std::cout << "\n***** OPTIMIZER PARAMETERS *****" << std::endl;
-	std::cout << " Iterations      : " << rigidOptimizer->GetCurrentIteration() << std::endl;
-	std::cout << " Metric value    : " << rigidOptimizer->GetValue() << std::endl;
-	std::cout << " #histogram bins : " << metric->GetNumberOfHistogramBins() << std::endl;
-	std::cout << " #spatial samples: " << registration->GetMetric()->GetNumberOfSpatialSamples() << std::endl;
-	std::cout << " #fixed samples  : " << registration->GetMetric()->GetNumberOfFixedImageSamples() << std::endl;
-	std::cout << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
+	outFile << std::endl;
+	outFile << "\n***** OPTIMIZER PARAMETERS *****" << std::endl;
+	outFile << " Iterations      : " << rigidOptimizer->GetCurrentIteration() << std::endl;
+	outFile << " Metric value    : " << rigidOptimizer->GetValue() << std::endl;
+	outFile << " #histogram bins : " << metric->GetNumberOfHistogramBins() << std::endl;
+	outFile << " #spatial samples: " << registration->GetMetric()->GetNumberOfSpatialSamples() << std::endl;
+	outFile << " #fixed samples  : " << registration->GetMetric()->GetNumberOfFixedImageSamples() << std::endl;
+	outFile << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
 	*/
 
-	std::cout << std::endl;
+	outFile << std::endl;
 
 	// write final rigid transform out to file
 	// instantiate new transform and insert parameters
 	RigidTransformType::Pointer finalRigidTransform = RigidTransformType::New();
 	finalRigidTransform->SetParameters( registration->GetLastTransformParameters() );
 	finalRigidTransform->SetFixedParameters( rigidTransform->GetFixedParameters() );
-	WriteOutTransform< RigidTransformType >( inputs->RigidTransformFilename().c_str(), finalRigidTransform );
+	WriteOutTransform< RigidTransformType >( inputs->RigidTransformFilename().c_str(), finalRigidTransform, outFile );
 
-	std::cout << finalRigidTransform << std::endl;
+	outFile << finalRigidTransform << std::endl;
 
 	// obtain joint histogram
 	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
@@ -861,16 +870,16 @@ int main(int argc, char * argv[])
 	rescaler->SetOutputMaximum( 255 );
 	
 	// write out joint histogram
-	WriteOutImage< CharImageType, CharImageType >( inputs->JointHistogramFilename().c_str(), rescaler->GetOutput() );
+	WriteOutImage< CharImageType, CharImageType >( inputs->JointHistogramFilename().c_str(), rescaler->GetOutput(), outFile );
 
-	std::cout << "\n***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
-	std::cout << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
-	std::cout << " Rotation: " << rigidTransform->GetVersor() << std::endl;
-	std::cout << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
-	std::cout << " Translation: " << rigidTransform->GetTranslation() << std::endl;
+	outFile << "\n***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
+	outFile << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
+	outFile << " Rotation: " << rigidTransform->GetVersor() << std::endl;
+	outFile << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
+	outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 
-	std::cout << std::endl;
-	std::cout << rigidOptimizer << std::endl;
+	outFile << std::endl;
+	outFile << rigidOptimizer << std::endl;
 
 	// ********************** APPLY TRANSFORM ***************************
 	if( inputs->WriteImage() || inputs->PerformOverlapMeasures() )
@@ -890,7 +899,7 @@ int main(int argc, char * argv[])
 		// write out image
 		if( inputs->WriteImage() )
 		{
-			WriteOutImage< FloatImageType, FloatImageType >( inputs->TransformedImageFilename().c_str(), resampler->GetOutput() );
+			WriteOutImage< FloatImageType, FloatImageType >( inputs->TransformedImageFilename().c_str(), resampler->GetOutput(), outFile );
 		}
 			
 		// perform overlap measures if desired
@@ -904,10 +913,10 @@ int main(int argc, char * argv[])
 			// open file to place results into
 			std::ofstream file;
 			file.open( inputs->FinalOverlapMeasuresFilename().c_str() );
-			std::cout << inputs->FinalOverlapMeasuresFilename() << " has been created." << std::endl;
+			outFile << inputs->FinalOverlapMeasuresFilename() << " has been created." << std::endl;
 			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
 			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
-			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
+			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file, outFile );
 			file << std::endl;
 			file.close();
 		}
@@ -919,9 +928,11 @@ int main(int argc, char * argv[])
 	memorymeter.Stop( "Full program" );
 	chronometer.Stop( "Full program" );
 
-	std::cout << "\n***** TIME/MEMORY MONITORING *****" << std::endl;
-	chronometer.Report( std::cout );
-	memorymeter.Report( std::cout );
+	outFile << "\n***** TIME/MEMORY MONITORING *****" << std::endl;
+	chronometer.Report( outFile );
+	memorymeter.Report( outFile );
+
+	outFile.close();
 
 	return EXIT_SUCCESS;
 }

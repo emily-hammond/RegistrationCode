@@ -41,6 +41,7 @@ public:
 
 	void SetFilename( std::string filename );
 	void Print();
+	void PrintToFile( std::ofstream & file );
 
 	// error
 	bool IsOpen() const { return this->m_IsOpen; };
@@ -56,6 +57,7 @@ public:
 	std::string InitGeomOverlapMeasuresFilename() const { return this->m_InitGeomOverlapMeasuresFilename; };
 	std::string InitMetricOverlapMeasuresFilename() const { return this->m_InitMetricOverlapMeasuresFilename; };
 	std::string FinalOverlapMeasuresFilename() const { return this->m_FinalOverlapMeasuresFilename; };
+	std::string LogFilename() const { return this->m_LogFilename; };
 	// get input variables
 	std::string FixedImageFilename() const { return this->m_FixedImageFilename; };
 	std::string MovingImageFilename() const { return this->m_MovingImageFilename; };
@@ -135,6 +137,7 @@ private:
 	std::string m_InitGeomOverlapMeasuresFilename;
 	std::string m_InitMetricOverlapMeasuresFilename;
 	std::string m_FinalOverlapMeasuresFilename;
+	std::string m_LogFilename;
 
 	// private member functions
 	void ReadInFile( std::string filename );

@@ -229,6 +229,7 @@ namespace itk
 		this->m_InitGeomOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_InitGeomOverlapMeasures.csv";
 		this->m_InitMetricOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_InitMetricOverlapMeasures.csv";
 		this->m_FinalOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_FinalOverlapMeasures.csv";
+		this->m_LogFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_Log.txt";
 
 		return;
 	}
@@ -300,9 +301,53 @@ namespace itk
 		std::cout << "RigidTransformFilename " << m_RigidTransformFilename << std::endl;
 		std::cout << "JointHistogramFilename " << m_JointHistogramFilename << std::endl;
 		std::cout << "TransformedImageFilename " << m_TransformedImageFilename << std::endl;
-		std::cout << "InitGeomOverlapMeasuresFilename" << m_InitGeomOverlapMeasuresFilename << std::endl;
-		std::cout << "InitMetricOverlapMeasuresFilename" << m_InitMetricOverlapMeasuresFilename << std::endl;
-		std::cout << "FinalOverlapMeasuresFilename" << m_FinalOverlapMeasuresFilename << std::endl;
+		std::cout << "InitGeomOverlapMeasuresFilename " << m_InitGeomOverlapMeasuresFilename << std::endl;
+		std::cout << "InitMetricOverlapMeasuresFilename " << m_InitMetricOverlapMeasuresFilename << std::endl;
+		std::cout << "FinalOverlapMeasuresFilename " << m_FinalOverlapMeasuresFilename << std::endl;
+		std::cout << "LogFilename " << m_LogFilename << std::endl;
+		std::cout << std::endl;
+	}
+
+	void ParseInputFile::PrintToFile( std::ofstream & file )
+	{
+		// print out all the member variables in the class to a specified file
+		file << std::endl;
+		file << "***** INPUTS *****" << std::endl;
+		file << "FixedImageFilename " << m_FixedImageFilename << std::endl;
+		file << "MovingImageFilename " << m_MovingImageFilename << std::endl;
+		file << "FixedImageMaskFilename " << m_FixedImageMaskFilename << std::endl;
+		file << "MovingImageMaskFilename " << m_MovingImageMaskFilename << std::endl;
+		file << "FixedFiducialList " << m_FixedFiducialList << std::endl;
+		file << "MovingFiducialList " << m_MovingFiducialList << std::endl;
+		file << "InitTransformFilename " << m_InitTransformFilename << std::endl;
+		file << "OutputDirectory " << m_OutputDirectory << std::endl;
+		file << "NumberOfHistogramBins " << m_NumberOfHistogramBins << std::endl;
+		file << "PercentageOfSamples " << m_PercentageOfSamples << std::endl;
+		file << "MaximumStepLength " << m_MaximumStepLength << std::endl;
+		file << "NumberOfIterations " << m_NumberOfIterations << std::endl;
+		file << "RelaxationFactor " << m_RelaxationFactor << std::endl;
+		file << "GradientMagnitudeTolerance " << m_GradientMagnitudeTolerance << std::endl;
+		file << "RotationScale " << m_RotationScale << std::endl;
+		file << "TranslationScale " << m_TranslationScale << std::endl;
+		file << "ScalingScale " << m_ScalingScale << std::endl;
+		file << "DefaultPixelValue " << m_DefaultPixelValue << std::endl;
+		file << "WriteImage " << m_WriteImage << std::endl;
+		file << "MetricInitialization " << m_MetricInitialization << std::endl;
+		file << "PerformOverlapMeasures " << m_PerformOverlapMeasures << std::endl;
+		file << "GenerateHistograms " << m_GenerateHistograms << std::endl;
+		file << "***** OUTPUTS *****" << std::endl;
+		file << "MovingHistogramFilename " << m_MovingHistogramFilename << std::endl;
+		file << "FixedHistogramFilename " << m_FixedHistogramFilename << std::endl;
+		file << "InitialGeomTransform " << m_InitGeomFilename << std::endl;
+		file << "InitialMetricTransform " << m_InitMetricFilename << std::endl;
+		file << "RigidTransformFilename " << m_RigidTransformFilename << std::endl;
+		file << "JointHistogramFilename " << m_JointHistogramFilename << std::endl;
+		file << "TransformedImageFilename " << m_TransformedImageFilename << std::endl;
+		file << "InitGeomOverlapMeasuresFilename " << m_InitGeomOverlapMeasuresFilename << std::endl;
+		file << "InitMetricOverlapMeasuresFilename " << m_InitMetricOverlapMeasuresFilename << std::endl;
+		file << "FinalOverlapMeasuresFilename " << m_FinalOverlapMeasuresFilename << std::endl;
+		file << "LogFilename " << m_LogFilename << std::endl;
+		file << std::endl;
 	}
 
 } // end namespace
