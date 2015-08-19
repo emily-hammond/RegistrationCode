@@ -354,7 +354,7 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 	file << std::endl;
 
 	file << " ** Individual Labels ** " << std::endl;
-	file << "Label,Target,Union (jaccard),Mean (dice),Volume sim.,False negative,False positive\n";
+	file << "Label,Target,Union (jaccard),Mean (dice),Volume sim.,False negative,False positive,Hausdorff distance,Average distance\n";
 
 	// for each individual labels
 	FilterType::MapType labelMap = filter->GetLabelSetMeasures();
@@ -403,6 +403,12 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		typename DistanceType::Pointer distance = DistanceType::New();
 		distance->SetInput1( disSource->GetOutput() );
 		distance->SetInput2( disTarget->GetOutput() );
+		distance->Update();
+		//distance->Print( std::cout );
+
+		file << "," << distance->GetHausdorffDistance();
+		file << "," << distance->GetAverageHausdorffDistance();
+		file << std::endl;
 
 		file << "," << distance->GetHausdorffDistance();
 		file << "," << distance->GetAverageHausdorffDistance();
