@@ -450,6 +450,7 @@ int main(int argc, char * argv[])
 		return EXIT_FAILURE;
 	}*/
 	inputs->Print();
+	std::cout << std::endl;
 
 	// create output directory
 	if( !CreateDirectory( inputs->OutputDirectory().c_str(), NULL ) )
@@ -587,6 +588,7 @@ int main(int argc, char * argv[])
 			// open file to place results into
 			std::ofstream file;
 			file.open( inputs->InitGeomOverlapMeasuresFilename().c_str() );
+			std::cout << inputs->InitGeomOverlapMeasuresFilename() << " has been created." << std::endl;
 			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
 			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
 			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
@@ -724,6 +726,7 @@ int main(int argc, char * argv[])
 			// open file to place results into
 			std::ofstream file;
 			file.open( inputs->InitMetricOverlapMeasuresFilename().c_str() );
+			std::cout << inputs->InitMetricOverlapMeasuresFilename() << " has been created." << std::endl;
 			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
 			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
 			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
@@ -900,7 +903,8 @@ int main(int argc, char * argv[])
 			// compare results with fixed image mask
 			// open file to place results into
 			std::ofstream file;
-			file.open( inputs->InitGeomOverlapMeasuresFilename().c_str() );
+			file.open( inputs->FinalOverlapMeasuresFilename().c_str() );
+			std::cout << inputs->FinalOverlapMeasuresFilename() << " has been created." << std::endl;
 			file << "Source: " << inputs->FixedImageMaskFilename() << std::endl;
 			file << "Target: " << inputs->MovingImageMaskFilename() << std::endl;
 			LabelOverlapMeasures< LabelMapImageType >( fixedMask, lmresampler->GetOutput(), file );
