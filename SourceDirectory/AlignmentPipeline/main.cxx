@@ -62,6 +62,10 @@
 #include "itkImageFileReader.h"
 #include "itkLabelOverlapMeasuresImageFilter.h"
 
+// distance measure
+#include "itkBinaryThresholdImageFilter.h"
+#include "itkHausdorffDistanceImageFilter.h"
+
 // parsing inputs
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\SupplementaryCode\parseInputFile\itkParseInputFile.h"
 // creating the output directory (NOT CROSS PLATFORM!!!!)
@@ -374,15 +378,43 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		file << "," << filter->GetVolumeSimilarity( label );
 		file << "," << filter->GetFalseNegativeError( label );
 		file << "," << filter->GetFalsePositiveError( label );
+
+		// isolate label in source image
+		typedef itk::BinaryThresholdImageFilter< ImageType, ImageType > ThresholdType;
+		typename ThresholdType::Pointer disSource = ThresholdType::New();
+		disSource->SetInput( filter->GetSourceImage() );
+		disSource->SetLowerThreshold( label );
+		disSource->SetUpperThreshold( label );
+		disSource->SetInsideValue( static_cast< ImageType::PixelType >( 1 ) );
+		disSource->SetOutsideValue( static_cast< ImageType::PixelType >( 0 ) );
+		disSource->Update();
+
+		// isolate label in target image
+		typename ThresholdType::Pointer disTarget = ThresholdType::New();
+		disTarget->SetInput( filter->GetTargetImage() );
+		disTarget->SetLowerThreshold( label );
+		disTarget->SetUpperThreshold( label );
+		disTarget->SetInsideValue( static_cast< ImageType::PixelType >( 1 ) );
+		disTarget->SetOutsideValue( static_cast< ImageType::PixelType >( 0 ) );
+		disTarget->Update();
+
+		// calculate Hausdorff distance
+		typedef itk::HausdorffDistanceImageFilter< ImageType, ImageType >	DistanceType;
+		typename DistanceType::Pointer distance = DistanceType::New();
+		distance->SetInput1( disSource->GetOutput() );
+		distance->SetInput2( disTarget->GetOutput() );
+
+		file << "," << distance->GetHausdorffDistance();
+		file << "," << distance->GetAverageHausdorffDistance();
 		file << std::endl;
-    }
+	}
 	outFile << "Overlap Measures acquired." << std::endl;
 
 	return EXIT_SUCCESS;
 }
 
 /*************************************************************************
- * Write functions to monitor the registration process!
+ * Write class to monitor the registration process!
  *************************************************************************/
 class RigidCommandIterationUpdate: public itk::Command
 {
