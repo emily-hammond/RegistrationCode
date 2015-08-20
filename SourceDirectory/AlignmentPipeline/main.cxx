@@ -483,18 +483,18 @@ int main(int argc, char * argv[])
 		return EXIT_FAILURE;
 	}*/
 
-	// open log file
-	std::ofstream outFile;
-	outFile.open( inputs->LogFilename().c_str() );
-	std::cout << "Log file created." << std::endl;
-	inputs->PrintToFile( outFile );
-	outFile << std::endl;
-
 	// create output directory
 	if( !CreateDirectory( inputs->OutputDirectory().c_str(), NULL ) )
 	{
-		outFile << "Output Directory already exists." << std::endl;
+		std::cout << "Output Directory already exists." << std::endl;
 	}
+
+	// open log file
+	std::ofstream outFile;
+	outFile.open( inputs->LogFilename().c_str() );
+	std::cout << "Log file created: " << inputs->LogFilename() << std::endl;
+	inputs->PrintToFile( outFile );
+	outFile << std::endl;
 
 	// ******************* DEFINE/READ IN IMAGES *************************
 	// define image types
@@ -634,6 +634,8 @@ int main(int argc, char * argv[])
 			file.close();
 		}
 		outFile << "Geometric initialization complete." << std::endl;
+		outFile << "****** Initial Transform Translation ******" << std::endl;
+		outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 	}
 
 	// *********************** INTERPOLATOR ******************************
@@ -774,6 +776,8 @@ int main(int argc, char * argv[])
 				file.close();
 			}
 			outFile << "Metric Initialization complete." << std::endl;
+			outFile << "****** Initial Transform Translation ******" << std::endl;
+			outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 		}
 		else
 		{
