@@ -549,7 +549,7 @@ int main(int argc, char * argv[])
 	// ************************* TRANSFORM *******************************
 	// set up rigid transform types
 	//typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
-	typedef itk::VersorRigid3DTransform< double >	RigidTransformType;
+	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
 
 	// instantiate transforms
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
@@ -785,8 +785,8 @@ int main(int argc, char * argv[])
 	chronometer.Stop( "Initialization" );
 
 	// ************************ OPTIMIZER ********************************
-	//typedef itk::RegularStepGradientDescentOptimizer	RigidOptimizerType;
-	typedef itk::VersorRigid3DTransformOptimizer		RigidOptimizerType;
+	typedef itk::RegularStepGradientDescentOptimizer	RigidOptimizerType;
+	//typedef itk::VersorRigid3DTransformOptimizer		RigidOptimizerType;
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
 	// set parameters
 	rigidOptimizer->SetMinimumStepLength( 0.001 );
@@ -822,9 +822,9 @@ int main(int argc, char * argv[])
 		rigidOptScales[4] = 1.0/inputs->TranslationScale();
 		rigidOptScales[5] = 1.0/inputs->TranslationScale();
 		// scaling
-		//rigidOptScales[6] = 1.0/inputs->ScalingScale();
-		//rigidOptScales[7] = 1.0/inputs->ScalingScale();
-		//rigidOptScales[8] = 1.0/inputs->ScalingScale();
+		rigidOptScales[6] = 1.0/inputs->ScalingScale();
+		rigidOptScales[7] = 1.0/inputs->ScalingScale();
+		rigidOptScales[8] = 1.0/inputs->ScalingScale();
 
 		// set the scales
 		rigidOptimizer->SetScales( rigidOptScales );
@@ -913,6 +913,7 @@ int main(int argc, char * argv[])
 	outFile << " Rotation: " << rigidTransform->GetVersor() << std::endl;
 	outFile << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
 	outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
+	outFile << " Scaling: " << rigidTransform->GetScale() << std::endl;
 
 	outFile << std::endl;
 	outFile << rigidOptimizer << std::endl;
