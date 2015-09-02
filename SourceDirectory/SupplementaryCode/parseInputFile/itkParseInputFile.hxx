@@ -229,7 +229,7 @@ namespace itk
 		this->m_InitGeomOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_InitGeomOverlapMeasures.csv";
 		this->m_InitMetricOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_InitMetricOverlapMeasures.csv";
 		this->m_FinalOverlapMeasuresFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_FinalOverlapMeasures.csv";
-		this->m_LogFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_Log.txt";
+		this->m_LogFilename = this->m_OutputDirectory + "\\" + baseMovingFilename + "_Log.csv";
 
 		return;
 	}

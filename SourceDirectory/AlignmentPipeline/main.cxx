@@ -31,12 +31,13 @@
 #include "itkMattesMutualInformationImageToImageMetric.h" // v4 does not yet support local-deforming transforms
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkImageRegistrationMethod.h"
-#include "itkRegularStepGradientDescentOptimizer.h"
+//#include "itkRegularStepGradientDescentOptimizer.h"
+#include "itkVersorTransformOptimizer.h"
 
 // different transforms
 #include "itkScaleVersor3DTransform.h"
-#include "itkVersorRigid3DTransform.h"
-#include "itkVersorRigid3DTransformOptimizer.h"
+//#include "itkVersorRigid3DTransform.h"
+//#include "itkVersorRigid3DTransformOptimizer.h"
 
 // monitoring
 #include "itkCommand.h"
@@ -163,7 +164,7 @@ int WriteOutTransform( const char * transformFilename, typename TransformType::P
 
 // Write function to output the histogram
 template<typename ImageType>
-int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer image, const int bins, std::ofstream & file )
+double CreateHistogram( const char * histogramFilename, typename ImageType::Pointer image, const int bins, std::ofstream & file )
 {
 	// check to make sure bins in >0
 	if (bins < 1)
@@ -218,6 +219,10 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 	// define the frequency type (and initialize the max frequency value)
 	typedef HistogramType::AbsoluteFrequencyType	AbsoluteFrequencyType;
 	AbsoluteFrequencyType maxFrequency = 0;
+
+	// initialize the entropy value
+	double Sum = histogram->GetTotalFrequency();
+	double Entropy = 0.0;
 	
 	while( histItr != histEnd )
 	{
@@ -231,14 +236,22 @@ int CreateHistogram( const char * histogramFilename, typename ImageType::Pointer
 			maxFrequency = frequency;
 		}
 
+		// calculate the entropy
+		const double probability = frequency/Sum;
+		if( probability > 0.99/Sum )
+		{
+			Entropy += -probability*std::log( probability )/std::log( 2.0 );
+		}
+
 		++histItr;
 	}
 
 	histogramTextFile.close();
 
 	file << histogramFilename << " has been successfully created and written to file." << std::endl;
+	file << "Entropy of image," << Entropy << std::endl;
 
-	return EXIT_SUCCESS;
+	return Entropy;
 }
 
 // Write function to help output things to the out-stream
@@ -430,7 +443,8 @@ protected:
 	RigidCommandIterationUpdate() {};
 public:
 	//typedef itk::RegularStepGradientDescentOptimizer	OptimizerType;
-	typedef itk::VersorRigid3DTransformOptimizer		OptimizerType;
+	//typedef itk::VersorRigid3DTransformOptimizer		OptimizerType;
+	typedef itk::VersorTransformOptimizer				OptimizerType;
 	typedef const OptimizerType *						OptimizerPointer;
 	void Execute( itk::Object *caller, const itk::EventObject &event )
 	{
@@ -444,8 +458,8 @@ public:
 			return;
 		}
 		
-		//std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
-		//std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
+		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
+		std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
 	}
 };
 
@@ -493,8 +507,6 @@ int main(int argc, char * argv[])
 	std::ofstream outFile;
 	outFile.open( inputs->LogFilename().c_str() );
 	std::cout << "Log file created: " << inputs->LogFilename() << std::endl;
-	inputs->PrintToFile( outFile );
-	outFile << std::endl;
 
 	// ******************* DEFINE/READ IN IMAGES *************************
 	// define image types
@@ -533,15 +545,18 @@ int main(int argc, char * argv[])
 	memorymeter.Stop( "Inputs complete" );
 	chronometer.Stop( "Inputs complete" );
 	// ************************ HISTOGRAMS *******************************
+	double movingEntropy = 0.0;
+	double fixedEntropy = 0.0;
+
 	if( inputs->GenerateHistograms() )
 	{
 		memorymeter.Start( "Generating histograms" );
 		chronometer.Start( "Generating histograms" );
 
 		// write out histograms for the moving image
-		CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins(), outFile );
+		movingEntropy = CreateHistogram< FloatImageType >( inputs->MovingHistogramFilename().c_str(), movingImage, inputs->NumberOfHistogramBins(), outFile );
 		// fixed image
-		CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins(), outFile );
+		fixedEntropy = CreateHistogram< FloatImageType >( inputs->FixedHistogramFilename().c_str(), fixedImage, inputs->NumberOfHistogramBins(), outFile );
 
 		memorymeter.Stop( "Generating histograms" );
 		chronometer.Stop( "Generating histograms" );
@@ -553,7 +568,6 @@ int main(int argc, char * argv[])
 
 	// instantiate transforms
 	RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
-	outFile << std::endl;
 	outFile << "Transform set up." << std::endl;
 
 	// *************** PREDEFINED FILE INITIALIZATION ********************
@@ -634,9 +648,10 @@ int main(int argc, char * argv[])
 			file.close();
 		}
 		outFile << "Geometric initialization complete." << std::endl;
-		outFile << "****** Initial Transform Translation ******" << std::endl;
-		outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
+		//outFile << "****** Initial Transform Translation ******" << std::endl;
+		//outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 	}
+	RigidTransformType::TranslationType initialTranslation = rigidTransform->GetTranslation();
 
 	// *********************** INTERPOLATOR ******************************
 	typedef itk::LinearInterpolateImageFunction< FloatImageType, double >	InterpolatorType;
@@ -651,7 +666,6 @@ int main(int argc, char * argv[])
 	// determine number of samples to use
 	FloatImageType::SizeType size = fixedImage->GetLargestPossibleRegion().GetSize();
 	int numOfPixels = size[0]*size[1]*size[2];
-	outFile << std::endl;
 	outFile << "Number of pixels in fixed image: " << numOfPixels << std::endl;
 	// use 1% of the fixed image samples
 	if( inputs->PercentageOfSamples() > 0 )
@@ -675,6 +689,7 @@ int main(int argc, char * argv[])
 	
 	// initialize
 	metric->Initialize();
+	RigidTransformType::TranslationType metricInitialTranslation = 0.0;
 
 	if( inputs->MetricInitialization() && inputs->InitTransformFilename().empty() )
 	{
@@ -728,7 +743,8 @@ int main(int argc, char * argv[])
 					minMetric = metric->GetValue(parameters);
 					minParameters = parameters;
 				}
-				outFile << metric->GetValue( parameters ) << " " << parameters << std::endl;
+				outFile << metric->GetValue( parameters ) << "," << parameters[0] << "," << parameters[1] << "," << parameters[2] << "," << parameters[3]
+				    << "," << parameters[4] << "," << parameters[5] << "," << parameters[6] << "," << parameters[7] << "," << parameters[8] << std::endl;
 			}
 
 			/*
@@ -776,8 +792,9 @@ int main(int argc, char * argv[])
 				file.close();
 			}
 			outFile << "Metric Initialization complete." << std::endl;
-			outFile << "****** Initial Transform Translation ******" << std::endl;
-			outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
+			//outFile << "****** Initial Transform Translation ******" << std::endl;
+			RigidTransformType::TranslationType metricInitialTranslation = rigidTransform->GetTranslation();
+			//outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 		}
 		else
 		{
@@ -789,8 +806,9 @@ int main(int argc, char * argv[])
 	chronometer.Stop( "Initialization" );
 
 	// ************************ OPTIMIZER ********************************
-	typedef itk::RegularStepGradientDescentOptimizer	RigidOptimizerType;
+	//typedef itk::RegularStepGradientDescentOptimizer	RigidOptimizerType;
 	//typedef itk::VersorRigid3DTransformOptimizer		RigidOptimizerType;
+	typedef itk::VersorTransformOptimizer				RigidOptimizerType;
 	RigidOptimizerType::Pointer rigidOptimizer = RigidOptimizerType::New();
 	// set parameters
 	rigidOptimizer->SetMinimumStepLength( 0.001 );
@@ -853,9 +871,8 @@ int main(int argc, char * argv[])
 	registration->SetMovingImage( movingImage );
 	registration->SetFixedImageRegion( fixedImage->GetBufferedRegion() );
 	// perform registration
-	outFile << std::endl;
-	outFile << "Beginning Registration" << std::endl;
-	outFile << "Itr# StepSize MetricValue TransformParameters" << std::endl;
+	outFile << "Begin Registration" << std::endl;
+	//outFile << "Itr# StepSize MetricValue TransformParameters" << std::endl;
 	try
 	{
 		memorymeter.Start( "Rigid registration" );
@@ -873,6 +890,7 @@ int main(int argc, char * argv[])
 		std::cerr << err << std::endl;
 		return EXIT_FAILURE;
 	}
+	outFile << "End Registration" << std::endl;
 
 	// ********************** OUTPUTS ***************************
 	memorymeter.Start( "Outputs" );
@@ -890,8 +908,6 @@ int main(int argc, char * argv[])
 	outFile << " #moving samples : " << registration->GetMetric()->GetNumberOfMovingImageSamples() << std::endl;
 	*/
 
-	outFile << std::endl;
-
 	// write final rigid transform out to file
 	// instantiate new transform and insert parameters
 	RigidTransformType::Pointer finalRigidTransform = RigidTransformType::New();
@@ -899,7 +915,7 @@ int main(int argc, char * argv[])
 	finalRigidTransform->SetFixedParameters( rigidTransform->GetFixedParameters() );
 	WriteOutTransform< RigidTransformType >( inputs->RigidTransformFilename().c_str(), finalRigidTransform, outFile );
 
-	outFile << finalRigidTransform << std::endl;
+	//outFile << finalRigidTransform << std::endl;
 
 	// obtain joint histogram
 	typedef itk::Image< MetricType::PDFValueType, 2 >	JPDFImageType;
@@ -911,16 +927,18 @@ int main(int argc, char * argv[])
 	
 	// write out joint histogram
 	WriteOutImage< CharImageType, CharImageType >( inputs->JointHistogramFilename().c_str(), rescaler->GetOutput(), outFile );
-
+	RigidTransformType::ParametersType finalParameters = finalRigidTransform->GetParameters();
+	/*
 	outFile << "\n***** RIGID TRANSFORM PARAMETERS *****" << std::endl;
 	outFile << " Raw Parameters: " << rigidTransform->GetParameters() << std::endl;
 	outFile << " Rotation: " << rigidTransform->GetVersor() << std::endl;
 	outFile << " Angle: " << rigidTransform->GetVersor().GetAngle() << std::endl;
 	outFile << " Translation: " << rigidTransform->GetTranslation() << std::endl;
 	outFile << " Scaling: " << rigidTransform->GetScale() << std::endl;
+	*/
 
-	outFile << std::endl;
-	outFile << rigidOptimizer << std::endl;
+	//outFile << std::endl;
+	//outFile << rigidOptimizer << std::endl;
 
 	// ********************** APPLY TRANSFORM ***************************
 	if( inputs->WriteImage() || inputs->PerformOverlapMeasures() )
@@ -963,6 +981,36 @@ int main(int argc, char * argv[])
 		}
 	}
 
+	// Print out results
+	outFile << std::endl;
+	outFile << "HistogramStatistics" << std::endl;
+	outFile << "#Bins,Entropy(fixed),Entropy(moving)" << std::endl;
+	outFile << inputs->NumberOfHistogramBins() << "," << fixedEntropy << "," << movingEntropy << "," << std::endl;
+	outFile << std::endl;
+	outFile << "VersorTransformOptimizer" << std::endl;
+	outFile << "MaximumStepLength,GradientMagnitudeTolerance,OptimizerStopCondition,CurrentIteration,MetricValue" << std::endl;
+	outFile << rigidOptimizer->GetMaximumStepLength() << "," << rigidOptimizer->GetGradientMagnitudeTolerance() << "," << 
+		rigidOptimizer->GetStopCondition() << "," << rigidOptimizer->GetCurrentIteration() << "," << rigidOptimizer->GetValue() << "," << std::endl;
+	outFile << std::endl;
+	outFile << "InitialTransformTranslation" << std::endl;
+	outFile << "x,y,z" << std::endl;
+	outFile << initialTranslation[0] << "," << initialTranslation[1] << "," << initialTranslation[2] << std::endl;
+	outFile << std::endl;
+	if( inputs->MetricInitialization() )
+	{
+		outFile << "InitialMetricTransformTranslation" << std::endl;
+		outFile << "x,y,z" << std::endl;
+		outFile << metricInitialTranslation[0] << "," << metricInitialTranslation[1] << "," << metricInitialTranslation[2] << std::endl;
+		outFile << std::endl;
+	}
+	outFile << "FinalTransformParameters" << std::endl;
+	outFile << "Angle,xTrans,yTrans,zTrans,xScaling,yScaling,zScaling" << std::endl;
+	outFile << rigidTransform->GetVersor().GetAngle() << "," << 
+		finalParameters[3] << "," << finalParameters[4] << "," << finalParameters[5] << "," <<
+		finalParameters[6] << "," << finalParameters[7] << "," << finalParameters[8] << std::endl;
+	outFile << std::endl;
+	outFile << std::endl;
+
 	memorymeter.Stop( "Outputs" );
 	chronometer.Stop( "Outputs" );
 
@@ -972,6 +1020,9 @@ int main(int argc, char * argv[])
 	outFile << "\n***** TIME/MEMORY MONITORING *****" << std::endl;
 	chronometer.Report( outFile );
 	memorymeter.Report( outFile );
+
+	// print out parameter file
+	inputs->PrintToFile( outFile );
 
 	outFile.close();
 
