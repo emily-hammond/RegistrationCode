@@ -18,6 +18,7 @@
 #include "itkScaleVersor3DTransform.h"
 #include "itkResampleImageFilter.h"
 #include "itkExtractImageFilter.h"
+#include "itkBinaryThresholdImageFilter.h"
 
 // extract ROI image
 #include "itkPoint.h"
@@ -379,12 +380,20 @@ int main( int argc, char * argv[] )
 				ResampleLMFilterType::Pointer resampleLabelMap = ResampleLMFilterType::New();
 
 				// define image with respect to reference image
-				resampleLabelMap->SetSize( referenceLabelMap->GetLargestPossibleRegion().GetSize() );
-				resampleLabelMap->SetOutputOrigin( referenceLabelMap->GetOrigin() );
-				resampleLabelMap->SetOutputSpacing( referenceLabelMap->GetSpacing() );
-				resampleLabelMap->SetOutputDirection( referenceLabelMap->GetDirection() );
+				resampleLabelMap->SetSize( referenceImage->GetLargestPossibleRegion().GetSize() );
+				resampleLabelMap->SetOutputOrigin( referenceImage->GetOrigin() );
+				resampleLabelMap->SetOutputSpacing( referenceImage->GetSpacing() );
+				resampleLabelMap->SetOutputDirection( referenceImage->GetDirection() );
 				resampleLabelMap->SetInput( movingLabelMap );
 				resampleLabelMap->SetTransform( transform );
+
+				// threshold label map to just get one label
+				typedef itk::BinaryThresholdImageFilter< LabelMapType, LabelMapType >	ThresholdLabelMapType;
+				ThresholdLabelMapType::Pointer thresholdLabelMap = ThresholdLabelMapType::New();
+				thresholdLabelMap->SetLowerThreshold( 1 );
+				thresholdLabelMap->SetOutsideValue( 0 );
+				thresholdLabelMap->SetInsideValue( 1 );
+				thresholdLabelMap->SetInput( resampleLabelMap->GetOutput() );
 
 				// extract the image
 				typedef itk::ExtractImageFilter< LabelMapType, LabelMapType > ExtractLMFilterType;
@@ -393,7 +402,7 @@ int main( int argc, char * argv[] )
 
 				if( cropFlag )
 				{
-					extractLabelMap->SetInput( resampleLabelMap->GetOutput() );
+					extractLabelMap->SetInput( thresholdLabelMap->GetOutput() );
 					extractLabelMap->SetDirectionCollapseToIdentity();
 					extractLabelMap->InPlaceOn();
 					
@@ -415,7 +424,7 @@ int main( int argc, char * argv[] )
 				else
 				{
 					std::string outputImageFilename = resultsDir + "\\" + movingImageID + "_resampled-label.mhd";
-					WriteOutImage< ImageType, ImageType >( outputImageFilename.c_str(), resampleImage->GetOutput() );
+					WriteOutImage< LabelMapType, LabelMapType >( outputImageFilename.c_str(), resampleLabelMap->GetOutput() );
 				}
 
 				// set flags to false
