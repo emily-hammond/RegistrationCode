@@ -80,6 +80,8 @@ int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer 
 		std::cerr << std::endl;
 	}
 
+	std::cout << ImageFilename << " written to file." << std::endl;
+
 	// return output
 	return EXIT_SUCCESS;
 }
@@ -159,6 +161,7 @@ int main( int argc, char * argv[] )
 	LabelMapType::Pointer movingLabelMap = LabelMapType::New();
 	std::string movingImageID;
 	std::string referenceImageID;
+	std::string organID;
 
 	// transform and ROI
 	TransformType::Pointer transform = TransformType::New();
@@ -172,6 +175,7 @@ int main( int argc, char * argv[] )
 	bool ROIflag = false;
 	bool cropFlag = false;
 	bool DIRflag = false;
+	bool ORflag = false;
 
 	// read in line from file
 	std::string line;
@@ -190,13 +194,20 @@ int main( int argc, char * argv[] )
 			{
 				resultsDir = path;
 				DIRflag = true;
-				std::cout << "RESULTS DIRECTORY: " << path << std::endl;
+				//std::cout << "RESULTS DIRECTORY: " << path << std::endl;
 			}
 
 			// know to crop the images
 			if( id.compare( "Crop" ) == 0 )
 			{
 				cropFlag = atoi(path.c_str());
+			}
+
+			// organ identifier
+			if( id.compare( "Organ" ) == 0 )
+			{
+				organID = path;
+				ORflag = true;
 			}
 
 			// gather all the reference information
@@ -207,12 +218,12 @@ int main( int argc, char * argv[] )
 				std::size_t pos1 = path.find_last_of("/\\");
 				std::size_t pos2 = path.rfind(".");
 				referenceImageID = path.substr(pos1+1,(pos2-pos1-1));
-				std::cout << "REFERENCE IMAGE: " << path << std::endl;
+				//std::cout << "REFERENCE IMAGE: " << path << std::endl;
 
 				// read in label map
 				std::string labelMapFilename = path.substr(0,pos2) + "-label.mhd";
 				referenceLabelMap = ReadInImage< LabelMapType >( labelMapFilename.c_str() );
-				std::cout << "REFERENCE LABEL MAP: " << labelMapFilename << std::endl;
+				//std::cout << "REFERENCE LABEL MAP: " << labelMapFilename << std::endl;
 				// set reference flag
 				RFflag = true;
 				
@@ -232,12 +243,12 @@ int main( int argc, char * argv[] )
 				std::size_t pos1 = path.find_last_of("/\\");
 				std::size_t pos2 = path.rfind(".");
 				movingImageID = path.substr(pos1+1,(pos2-pos1-1));
-				std::cout << "MOVING IMAGE: " << path << std::endl;
+				//std::cout << "MOVING IMAGE: " << path << std::endl;
 
 				// read in label map
 				std::string labelMapFilename = path.substr(0,pos2) + "-label.mhd";
 				movingLabelMap = ReadInImage< LabelMapType >( labelMapFilename.c_str() );
-				std::cout << "MOVING LABEL MAP: " << labelMapFilename << std::endl;
+				//std::cout << "MOVING LABEL MAP: " << labelMapFilename << std::endl;
 				// set IM flag
 				IMflag = true;
 			}
@@ -271,7 +282,7 @@ int main( int argc, char * argv[] )
 				// store initial transform into transform
 				TransformReaderType::TransformListType::const_iterator it = transforms->begin();
 				transform = static_cast< TransformType * >( (*it).GetPointer() );
-				std::cout << "TRANSFORM: " << path << std::endl;
+				//std::cout << "TRANSFORM: " << path << std::endl;
 				// set transform flag
 				TRflag = true;
 			}
@@ -286,7 +297,7 @@ int main( int argc, char * argv[] )
 			std::cout << "Results dir flag: " << DIRflag << std::endl;
 */
 			// apply transform and extract image from ROI
-			if( RFflag && IMflag && TRflag && ROIflag && DIRflag )
+			if( RFflag && IMflag && TRflag && ROIflag && DIRflag && ORflag )
 			{
 				// resample image with respect to reference image
 				typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
@@ -366,7 +377,7 @@ int main( int argc, char * argv[] )
 					}
 
 					// write result to file
-					std::string outputImageFilename = resultsDir + "\\" + movingImageID + "_cropped.mhd";
+					std::string outputImageFilename = resultsDir + "\\" + movingImageID + "_" + organID + ".mhd";
 					WriteOutImage< ImageType, ImageType >( outputImageFilename.c_str(), extractImage->GetOutput() );
 				}
 				else
@@ -418,7 +429,7 @@ int main( int argc, char * argv[] )
 						std::cerr << std::endl;
 					}
 
-					std::string outputLabelMapFilename = resultsDir + "\\" + movingImageID + "_cropped-label.mhd";
+					std::string outputLabelMapFilename = resultsDir + "\\" + movingImageID + "_" + organID + ".mhd";
 					WriteOutImage< LabelMapType, LabelMapType >( outputLabelMapFilename.c_str(), extractLabelMap->GetOutput() );
 				}
 				else
@@ -434,6 +445,7 @@ int main( int argc, char * argv[] )
 				ROIflag = false;
 				cropFlag = false;
 				DIRflag = false;
+				ORflag = false;
 			}
 		}
 	}
