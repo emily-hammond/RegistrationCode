@@ -429,7 +429,7 @@ int main( int argc, char * argv[] )
 						std::cerr << std::endl;
 					}
 
-					std::string outputLabelMapFilename = resultsDir + "\\" + movingImageID + "_" + organID + ".mhd";
+					std::string outputLabelMapFilename = resultsDir + "\\" + movingImageID + "_" + organID + "-label.mhd";
 					WriteOutImage< LabelMapType, LabelMapType >( outputLabelMapFilename.c_str(), extractLabelMap->GetOutput() );
 				}
 				else
