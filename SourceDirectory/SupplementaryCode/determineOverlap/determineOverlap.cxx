@@ -53,6 +53,36 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 	return reader->GetOutput();
 }
 
+// Write a function to write out images templated over input and output pixel type
+template<typename inputImageType, typename outputImageType>
+int WriteOutImage( const char * ImageFilename, typename inputImageType::Pointer image)
+{
+	typedef itk::CastImageFilter<inputImageType, outputImageType> CastFilterType;
+	typename CastFilterType::Pointer caster = CastFilterType::New();
+	caster->SetInput( image );
+
+	typedef itk::ImageFileWriter<outputImageType> WriterType;
+	typename WriterType::Pointer writer = WriterType::New();
+	writer->SetFileName( ImageFilename );
+	writer->SetInput( caster->GetOutput() );
+
+	// update the writer
+	try
+	{
+		writer->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	// return output
+	return EXIT_SUCCESS;
+}
+
 // Write function to perform overlap statistics
 template< typename ImageType >
 int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType::Pointer target, std::ofstream & file )
@@ -94,7 +124,7 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 	FilterType::MapType labelMap = filter->GetLabelSetMeasures();
 	FilterType::MapType::const_iterator it;
 	for( it = labelMap.begin(); it != labelMap.end(); ++it )
-    {
+    {		
 		// ignore label 0 (background)
 		if( (*it).first == 0 )
 		{
@@ -103,6 +133,7 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 
 		// identify label
 		int label = (*it).first;
+		std::cout << "LABEL: " << label << std::endl;
 
 		// write out to file
 		file << label;
@@ -122,6 +153,12 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		disSource->SetInsideValue( static_cast< ImageType::PixelType >( 1 ) );
 		disSource->SetOutsideValue( static_cast< ImageType::PixelType >( 0 ) );
 		disSource->Update();
+		std::cout << "Source image thresholded" << std::endl;
+		if(label == 1)
+		{
+			std::string filename = "SourceFile.mhd";
+			WriteOutImage< ImageType, ImageType >( filename.c_str(), disSource->GetOutput() );
+		}
 
 		// isolate label in target image
 		typename ThresholdType::Pointer disTarget = ThresholdType::New();
@@ -131,17 +168,27 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		disTarget->SetInsideValue( static_cast< ImageType::PixelType >( 1 ) );
 		disTarget->SetOutsideValue( static_cast< ImageType::PixelType >( 0 ) );
 		disTarget->Update();
+		std::cout << "Target image thresholded" << std::endl;
+		if(label == 1)
+		{
+			std::string filename = "TargetFile.mhd";
+			WriteOutImage< ImageType, ImageType >( filename.c_str(), disSource->GetOutput() );
+		}
 
 		// calculate Hausdorff distance
 		typedef itk::HausdorffDistanceImageFilter< ImageType, ImageType >	DistanceType;
 		typename DistanceType::Pointer distance = DistanceType::New();
 		distance->SetInput1( disSource->GetOutput() );
 		distance->SetInput2( disTarget->GetOutput() );
-		distance->Update();
-		//distance->Print( std::cout );
-
-		file << "," << distance->GetHausdorffDistance();
-		file << "," << distance->GetAverageHausdorffDistance();
+		if( filter->GetVolumeSimilarity( label ) > -2 )
+		{
+			std::cout << "Calculating distances." << std::endl;
+			distance->Update();
+		
+			//distance->Print( std::cout );
+			file << "," << distance->GetHausdorffDistance();
+			file << "," << distance->GetAverageHausdorffDistance();
+		}
 		file << std::endl;
 	}
 
