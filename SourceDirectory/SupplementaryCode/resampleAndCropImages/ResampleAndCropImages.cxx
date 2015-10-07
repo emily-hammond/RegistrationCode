@@ -397,6 +397,8 @@ int main( int argc, char * argv[] )
 				resampleLabelMap->SetOutputDirection( referenceImage->GetDirection() );
 				resampleLabelMap->SetInput( movingLabelMap );
 				resampleLabelMap->SetTransform( transform );
+				std::string resampleImageFilename = resultsDir + "\\" + movingImageID + "_ResampledImage_" + organID + "-label.mhd";
+				WriteOutImage< LabelMapType, LabelMapType >( resampleImageFilename.c_str(), resampleLabelMap->GetOutput() );
 
 				// threshold label map to just get one label
 				typedef itk::BinaryThresholdImageFilter< LabelMapType, LabelMapType >	ThresholdLabelMapType;
@@ -405,6 +407,8 @@ int main( int argc, char * argv[] )
 				thresholdLabelMap->SetOutsideValue( 0 );
 				thresholdLabelMap->SetInsideValue( 1 );
 				thresholdLabelMap->SetInput( resampleLabelMap->GetOutput() );
+				std::string thresholdImageFilename = resultsDir + "\\" + movingImageID + "_ThresholdedImage_" + organID + "-label.mhd";
+				WriteOutImage< LabelMapType, LabelMapType >( thresholdImageFilename.c_str(), thresholdLabelMap->GetOutput() );
 
 				// extract the image
 				typedef itk::ExtractImageFilter< LabelMapType, LabelMapType > ExtractLMFilterType;

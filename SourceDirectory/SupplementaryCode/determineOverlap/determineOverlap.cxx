@@ -20,6 +20,7 @@
 #include "itkResampleImageFilter.h"
 #include "itkScaleVersor3DTransform.h"
 #include <fstream>
+#include <iostream>
  
 // overlap analysis
 #include "itkImage.h"
@@ -154,7 +155,7 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		disSource->SetOutsideValue( static_cast< ImageType::PixelType >( 0 ) );
 		disSource->Update();
 		std::cout << "Source image thresholded" << std::endl;
-		if(label == 1)
+		if(label == 2)
 		{
 			std::string filename = "SourceFile.mhd";
 			WriteOutImage< ImageType, ImageType >( filename.c_str(), disSource->GetOutput() );
@@ -169,7 +170,7 @@ int LabelOverlapMeasures( typename ImageType::Pointer source, typename ImageType
 		disTarget->SetOutsideValue( static_cast< ImageType::PixelType >( 0 ) );
 		disTarget->Update();
 		std::cout << "Target image thresholded" << std::endl;
-		if(label == 1)
+		if(label == 2)
 		{
 			std::string filename = "TargetFile.mhd";
 			WriteOutImage< ImageType, ImageType >( filename.c_str(), disSource->GetOutput() );
@@ -207,7 +208,9 @@ int main(int argc, char * argv[])
 	const char * FixedLabelMapFilename = argv[1];
 	const char * MovingLabelMapFilename = argv[2];
 	const char * TransformFilename = argv[3];
-	std::string LabelMapMeasuresFilename = "LabelMapMeasures.csv";
+	std::string OutputDirectory = argv[4];
+	std::string category = argv[5];
+	std::string LabelMapMeasuresFilename = OutputDirectory + "\\" + category + "_OverlapMeasures.csv";
 	
 	// read in label maps and transform
 	typedef unsigned int							LabelMapPixelType;
@@ -265,9 +268,11 @@ int main(int argc, char * argv[])
 	
 	// obtain overlap measures
 	std::ofstream file;
-	file.open( LabelMapMeasuresFilename.c_str() );
+	file.open( LabelMapMeasuresFilename.c_str(), std::ios::app );
+	file << std::endl;
 	file << "Source: " << FixedLabelMapFilename << std::endl;
 	file << "Target: " << MovingLabelMapFilename << std::endl;
+	file << "Transform: " << TransformFilename << std::endl;
 	LabelOverlapMeasures< LabelMapImageType >( fixedLM, lmresampler->GetOutput(), file );
 	file << std::endl;
 	file.close();
