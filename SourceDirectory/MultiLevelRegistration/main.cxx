@@ -3,7 +3,8 @@ INSERT COMMENTS HERE
 */
 
 // include files
-#include ReadWriteFunction.h
+#include "ReadWriteFunctions.hxx"
+#include "itkMetaImageIO.h"
 
 
 int main( int argc, char * argv[] )
@@ -15,8 +16,9 @@ int main( int argc, char * argv[] )
 	// test functionality of ReadWriteFunctions.h file
 	typedef itk::Image<unsigned short, 3>	ImageType;
 	ImageType::Pointer inputImage = ReadInImage< ImageType >( imageFilename );
-	std::string outputFilename  = outputDirectory + "\image.mhd";
-	WriteOutImage< ImageType, ImageType >( outputDirectory.c_str() );
+	std::string outputFilename  = outputDirectory + "image.mhd";
+	std::cout << outputFilename << std::endl;
+	WriteOutImage< ImageType, ImageType >( outputFilename.c_str(), inputImage );
 	
 	return EXIT_SUCCESS;
 }
