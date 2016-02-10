@@ -36,18 +36,18 @@ typename ImageType::Pointer ReadInImage( const char * ImageFilename )
 	reader->SetFileName( ImageFilename );
 	
 	// update reader
-	try
-	{
+	//try
+	//{
 		reader->Update();
 		//std::cout << std::endl;
 		//std::cout << ImageFilename << " has been read in." << std::endl;
-	}
-	catch(itk::ExceptionObject & err)
-	{
-		std::cerr << "Exception Object Caught!" << std::endl;
-		std::cerr << err << std::endl;
-		std::cerr << std::endl;
-	}
+	//}
+	//catch(itk::ExceptionObject & err)
+	//{
+	//	std::cerr << "Exception Object Caught!" << std::endl;
+	//	std::cerr << err << std::endl;
+	//	std::cerr << std::endl;
+	//}
 	
 	// return output
 	return reader->GetOutput();
@@ -144,7 +144,7 @@ int main( int argc, char * argv[] )
 	std::string resultsDir;
 
 	// instantiate variables to be used
-	typedef itk::Image< float, 3 >					ImageType;
+	typedef itk::Image< unsigned short, 3 >					ImageType;
 	typedef itk::Image< unsigned int, 3 >			LabelMapType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
@@ -218,12 +218,39 @@ int main( int argc, char * argv[] )
 				std::size_t pos1 = path.find_last_of("/\\");
 				std::size_t pos2 = path.rfind(".");
 				referenceImageID = path.substr(pos1+1,(pos2-pos1-1));
-				//std::cout << "REFERENCE IMAGE: " << path << std::endl;
+				std::cout << "REFERENCE IMAGE: " << path << std::endl;
 
 				// read in label map
-				std::string labelMapFilename = path.substr(0,pos2) + "-label.mhd";
-				referenceLabelMap = ReadInImage< LabelMapType >( labelMapFilename.c_str() );
-				//std::cout << "REFERENCE LABEL MAP: " << labelMapFilename << std::endl;
+				//std::cout << organID << std::endl;
+				std::string::reverse_iterator it = organID.rbegin();
+				//std::cout << *it << std::endl;
+				std::string labelMapFilename = path.substr(0,pos2) + "-" + *it + "-label.mhd";
+				bool success = false;
+				int count = 0;
+				while( !success )
+				{
+					try
+					{
+						/*std::cout << std::endl;
+						std::cout << "COUNT: " << count << std::endl;
+						std::cout << "SUCCESS: " << success << std::endl;
+						std::cout << "FILENAME: " << labelMapFilename << std::endl;
+						std::cout << std::endl;*/
+						count++;
+						referenceLabelMap = ReadInImage< LabelMapType >( labelMapFilename.c_str() );
+						success = true;
+					}
+					catch(...)
+					{
+						labelMapFilename = path.substr(0,pos2) + "-label.mhd";
+						if( count > 2 )
+						{
+							std::cout << "File does not exist: " << labelMapFilename << std::endl;
+							return EXIT_FAILURE;
+						}
+					}
+				}
+				std::cout << "REFERENCE LABEL MAP: " << labelMapFilename << std::endl;
 				// set reference flag
 				RFflag = true;
 				
@@ -243,12 +270,31 @@ int main( int argc, char * argv[] )
 				std::size_t pos1 = path.find_last_of("/\\");
 				std::size_t pos2 = path.rfind(".");
 				movingImageID = path.substr(pos1+1,(pos2-pos1-1));
-				//std::cout << "MOVING IMAGE: " << path << std::endl;
+				std::cout << "MOVING IMAGE: " << path << std::endl;
 
 				// read in label map
-				std::string labelMapFilename = path.substr(0,pos2) + "-label.mhd";
-				movingLabelMap = ReadInImage< LabelMapType >( labelMapFilename.c_str() );
-				//std::cout << "MOVING LABEL MAP: " << labelMapFilename << std::endl;
+				std::string::reverse_iterator it = organID.rbegin();
+				std::string labelMapFilename = path.substr(0,pos2) + "-" + *it + "-label.mhd";
+				bool success = false;
+				int count = 0;
+				while( !success )
+				{
+					try
+					{
+						count++;
+						movingLabelMap = ReadInImage< LabelMapType >( labelMapFilename.c_str() );
+						success = true;
+					}
+					catch(...)
+					{
+						labelMapFilename = path.substr(0,pos2) + "-label.mhd";
+						if( count > 2 )
+						{
+							return EXIT_FAILURE;
+						}
+					}
+				}
+				std::cout << "MOVING LABEL MAP: " << labelMapFilename << std::endl;
 				// set IM flag
 				IMflag = true;
 			}
@@ -282,7 +328,7 @@ int main( int argc, char * argv[] )
 				// store initial transform into transform
 				TransformReaderType::TransformListType::const_iterator it = transforms->begin();
 				transform = static_cast< TransformType * >( (*it).GetPointer() );
-				//std::cout << "TRANSFORM: " << path << std::endl;
+				std::cout << "TRANSFORM: " << path << std::endl;
 				// set transform flag
 				TRflag = true;
 			}
@@ -397,8 +443,8 @@ int main( int argc, char * argv[] )
 				resampleLabelMap->SetOutputDirection( referenceImage->GetDirection() );
 				resampleLabelMap->SetInput( movingLabelMap );
 				resampleLabelMap->SetTransform( transform );
-				std::string resampleImageFilename = resultsDir + "\\" + movingImageID + "_ResampledImage_" + organID + "-label.mhd";
-				WriteOutImage< LabelMapType, LabelMapType >( resampleImageFilename.c_str(), resampleLabelMap->GetOutput() );
+				//std::string resampleImageFilename = resultsDir + "\\" + movingImageID + "_ResampledImage_" + organID + "-label.mhd";
+				//WriteOutImage< LabelMapType, LabelMapType >( resampleImageFilename.c_str(), resampleLabelMap->GetOutput() );
 
 				// threshold label map to just get one label
 				typedef itk::BinaryThresholdImageFilter< LabelMapType, LabelMapType >	ThresholdLabelMapType;
@@ -407,8 +453,8 @@ int main( int argc, char * argv[] )
 				thresholdLabelMap->SetOutsideValue( 0 );
 				thresholdLabelMap->SetInsideValue( 1 );
 				thresholdLabelMap->SetInput( resampleLabelMap->GetOutput() );
-				std::string thresholdImageFilename = resultsDir + "\\" + movingImageID + "_ThresholdedImage_" + organID + "-label.mhd";
-				WriteOutImage< LabelMapType, LabelMapType >( thresholdImageFilename.c_str(), thresholdLabelMap->GetOutput() );
+				//std::string thresholdImageFilename = resultsDir + "\\" + movingImageID + "_ThresholdedImage_" + organID + "-label.mhd";
+				//WriteOutImage< LabelMapType, LabelMapType >( thresholdImageFilename.c_str(), thresholdLabelMap->GetOutput() );
 
 				// extract the image
 				typedef itk::ExtractImageFilter< LabelMapType, LabelMapType > ExtractLMFilterType;

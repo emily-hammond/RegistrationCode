@@ -109,6 +109,11 @@ int main(int argc, char * argv[])
 	std::string inputFilename = basePath + animalTag + "\\Results\\TP" + TP + "result.mhd";		// for registered files
 	*/
 
+	if( argc < 1 )
+	{
+		std::cout << "IsolateSkeleton.exe inputFilename outputDirectory" << std::endl;
+	}
+
 	std::string inputFilename = argv[1];
 	std::string outputDirectory = argv[2];
 
@@ -120,10 +125,10 @@ int main(int argc, char * argv[])
 
 	unsigned int radius = 1;
 
-	/*
-	std::string thresholdImageFilename = outputDirectory + "\\" + TP + "thresholdedImage.mhd";
-	std::string dilatedImageFilename = outputDirectory + "\\" + TP + "dilatedImage.mhd";
-	std::string connectedImageFilename = outputDirectory + "\\" + TP + "connectedImage.mhd";
+	
+	std::string thresholdImageFilename = outputDirectory + "\\" + "thresholdedImage.mhd";
+	std::string dilatedImageFilename = outputDirectory + "\\" + "dilatedImage.mhd";
+	/*std::string connectedImageFilename = outputDirectory + "\\" + TP + "connectedImage.mhd";
 	std::string relabeledImageFilename = outputDirectory + "\\" + TP + "relabeledImage.mhd";
 	std::string combinedImageFilename = outputDirectory + "\\" + TP + "combinedImage.mhd";
 	std::string labelMapImageFilename = outputDirectory + "\\" + TP + "labelMap.mhd";
@@ -132,7 +137,7 @@ int main(int argc, char * argv[])
 
 	// determine which images are going to be needed
 	const unsigned int Dimension = 3;
-	typedef float	FloatPixelType;
+	typedef short	FloatPixelType;
 	typedef unsigned char	CharPixelType;
 
 	typedef itk::Image< FloatPixelType, Dimension >		FloatImageType;
@@ -140,6 +145,7 @@ int main(int argc, char * argv[])
 
 	// read in image
 	FloatImageType::Pointer image = ReadInImage< FloatImageType >( inputFilename.c_str() );
+	//CharImageType::Pointer image = ReadInImage< CharImageType >( inputFilename.c_str() );
 
 	// determine min/max of image
 	typedef itk::MinimumMaximumImageCalculator< FloatImageType >	MinMaxCalculatorType;
@@ -181,6 +187,7 @@ int main(int argc, char * argv[])
 	thresholdFilter->Update();
 
 	std::cout << "Threshold filter complete" << std::endl;
+	WriteOutImage< CharImageType, CharImageType >( thresholdImageFilename.c_str(), thresholdFilter->GetOutput() );
 
 	// define the structuring element
 	typedef itk::BinaryBallStructuringElement< CharImageType::PixelType, 3 >	StructuringElementType;
@@ -199,13 +206,19 @@ int main(int argc, char * argv[])
 	dilateFilter->SetDilateValue( dilateValue );
 	dilateFilter->Update();
 
+	std::cout << "Dilate filter complete" << std::endl;
+	WriteOutImage< CharImageType, CharImageType >( dilatedImageFilename.c_str(), dilateFilter->GetOutput() );
+
 	// isolate labels
 	typedef itk::ConnectedComponentImageFilter< CharImageType, CharImageType >	ConnectedComponentType;
 	ConnectedComponentType::Pointer connectedFilter = ConnectedComponentType::New();
 
 	connectedFilter->SetInput( dilateFilter->GetOutput() );
+	//connectedFilter->SetInput( image );
 	connectedFilter->FullyConnectedOff();
 	connectedFilter->Update();
+	
+	std::cout << "Connected filter complete" << std::endl;
 
 	// output number of objects identified
 	std::cout << std::endl;
