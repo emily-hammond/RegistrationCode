@@ -27,8 +27,9 @@ int main( int argc, char * argv[] )
 	Registration::Pointer registration = Registration::New();
 	registration->SetImages( fixedImage, movingImage );
 	registration->SetInitialTransform( initialTransform );
+	registration->PerformRegistration();
 	
-	std::cout << "\n\nFinished\n\n" << std::endl;
+	std::cout << "\nFinished\n" << std::endl;
 
 	return EXIT_SUCCESS;
 }

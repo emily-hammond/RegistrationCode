@@ -13,8 +13,16 @@ namespace itk
 	{
 		 this->m_transforms = CompositeTransformType::New();
 		 this->m_interpolator = InterpolatorType::New();
+		 this->m_metric = MetricType::New();
+	}
 
-		 std::cout << m_interpolator << std::endl;
+	void RegistrationFramework::PerformRegistration()
+	{
+		this->SetDefaults();
+		this->SetUpMetric();
+
+		std::cout << "Registration performed." << std::endl;
+		return;
 	}
 
 	// member function implementations
@@ -22,24 +30,45 @@ namespace itk
 	{
 		this->m_fixedImage = fixedImage;
 		this->m_movingImage = movingImage;
-		//this->m_transforms = CompositeTransformType::New();
+		
 		std::cout << "Images set." << std::endl;
 		return;
 	}
 
 	void RegistrationFramework::SetInitialTransform( RigidTransformType::Pointer initialTransform )
 	{
-		std::cout << "Rigid transform" << std::endl;
 		this->m_transforms->AddTransform( initialTransform );
-		m_transforms->Print(std::cout);
+		
+		std::cout << "Initial rigid transform set." << std::endl;
 		return;
 	}
 
 	void RegistrationFramework::SetInitialTransform( CompositeTransformType::Pointer initialTransform )
 	{
-		std::cout << "Composite transform" << std::endl;
 		this->m_transforms->AddTransform( initialTransform );
-		m_transforms->Print(std::cout);
+		
+		std::cout << "Initial composite transform set." << std::endl;
+		return;
+	}
+
+	void RegistrationFramework::SetUpMetric()
+	{
+		// determine number of samples to use
+		ImageType::SizeType size = this->m_fixedImage->GetLargestPossibleRegion().GetSize();
+		int numOfPixels = size[0]*size[1]*size[2];
+		this->m_metric->SetNumberOfSpatialSamples( numOfPixels*(this->m_PercentageOfSamples) );
+		this->m_metric->SetNumberOfHistogramBins( this->m_HistogramBins );
+
+		std::cout << "Metric set." << std::endl;
+		return;
+	}
+
+	void RegistrationFramework::SetDefaults()
+	{
+		this->m_PercentageOfSamples = 0.01;
+		this->m_HistogramBins = 25;
+		
+		std::cout << "Defaults set." << std::endl;
 		return;
 	}
 

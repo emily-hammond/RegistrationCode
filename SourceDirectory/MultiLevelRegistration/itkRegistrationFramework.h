@@ -9,7 +9,9 @@ insert comments here
 #include "itkImage.h"
 #include "itkScaleVersor3DTransform.h"
 #include "itkCompositeTransform.h"
+
 #include "itkLinearInterpolateImageFunction.h"
+#include "itkMattesMutualInformationImageToImageMetric.h"
 
 namespace itk
 {
@@ -31,6 +33,7 @@ public:
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 
 	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
+	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -42,6 +45,8 @@ public:
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	void SetInitialTransform( RigidTransformType::Pointer initialTransform );
 	void SetInitialTransform( CompositeTransformType::Pointer initialTransform );
+
+	void PerformRegistration();
 
 protected:
 	// declare the constructor and define default parameters
@@ -59,6 +64,12 @@ private:
 	ImageType::Pointer m_movingImage;
 	CompositeTransformType::Pointer m_transforms;
 	InterpolatorType::Pointer m_interpolator;
+	MetricType::Pointer m_metric;
+	float m_PercentageOfSamples;
+	int m_HistogramBins;
+
+	void SetDefaults();
+	void SetUpMetric();
 	
 };
 } // end namespace
