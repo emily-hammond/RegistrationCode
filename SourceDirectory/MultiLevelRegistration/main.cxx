@@ -4,8 +4,6 @@ INSERT COMMENTS HERE
 
 // include files
 #include "ReadWriteFunctions.hxx"
-#include "itkMetaImageIO.h"
-
 
 int main( int argc, char * argv[] )
 {
