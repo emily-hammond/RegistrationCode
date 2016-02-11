@@ -31,10 +31,12 @@ public:
 	// run-time type information and related methods
 	itkTypeMacro(RegistrationFramework, Object);
 
+	// declare functions
+	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
+
 protected:
 	// declare the constructor and define default parameters
 	RegistrationFramework() {}
-	RegistrationFramework( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	
 	// destructor
 	virtual ~RegistrationFramework() {}

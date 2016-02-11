@@ -10,8 +10,8 @@ int main( int argc, char * argv[] )
 {
 	//desired inputs
 	char * fixedImageFilename = argv[1];
-	char * movingImageFilename = argv[2]
-	std::string outputDirectory = argv[3];
+	char * movingImageFilename = argv[2];
+	//std::string outputDirectory = argv[3];
 
 	// instantiate image type
 	typedef itk::Image<unsigned short, 3>	ImageType;
@@ -25,8 +25,10 @@ int main( int argc, char * argv[] )
 
 	// test functionality of itkRegistrationFramework.h
 	typedef itk::RegistrationFramework	Registration;
-	Registration( fixedImage, movingImage );
+	Registration::Pointer registration = Registration::New();
+	registration->SetImages( fixedImage, movingImage );
 	
-	
+	std::cout << "\n\nFinished\n\n" << std::endl;
+
 	return EXIT_SUCCESS;
 }
