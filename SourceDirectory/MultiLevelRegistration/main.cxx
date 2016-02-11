@@ -11,14 +11,16 @@ int main( int argc, char * argv[] )
 	//desired inputs
 	char * fixedImageFilename = argv[1];
 	char * movingImageFilename = argv[2];
-	//std::string outputDirectory = argv[3];
+	char * initialTransformFilename = argv[3];
 
 	// instantiate image type
 	typedef itk::Image<unsigned short, 3>	ImageType;
+	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	// read in fixed and moving images
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
+	TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	std::cout << fixedImage << std::endl;
 	std::cout << movingImage << std::endl;
@@ -27,6 +29,7 @@ int main( int argc, char * argv[] )
 	typedef itk::RegistrationFramework	Registration;
 	Registration::Pointer registration = Registration::New();
 	registration->SetImages( fixedImage, movingImage );
+	registration->SetInitialTransform( 
 	
 	std::cout << "\n\nFinished\n\n" << std::endl;
 

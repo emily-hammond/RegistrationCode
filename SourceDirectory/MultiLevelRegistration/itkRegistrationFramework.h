@@ -7,6 +7,7 @@ insert comments here
 
 // include files
 #include "itkImage.h"
+#include "itkScaleVersor3DTransform.h"
 
 namespace itk
 {
@@ -24,6 +25,7 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 	
 	typedef itk::Image< unsigned short, 3 >		ImageType;
+	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -33,6 +35,7 @@ public:
 
 	// declare functions
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
+	void SetInitialTransform( TransformType::Pointer initalTransform );
 
 protected:
 	// declare the constructor and define default parameters

@@ -137,6 +137,32 @@ int printFiducials( LandmarksType landmarks )
 	return EXIT_SUCCESS;
 }
 
+// Write a function to read in a transform
+template<typename TransformType>
+std::list< typename TransformType::Pointer > * ReadInTransform( const char * transformFilename)
+{
+	typedef itk::TransformFileReader	TransformReaderType;
+	TransformReaderType::Pointer transformReader = TransformReaderType::New();
+
+	// read in transform
+	transformReader->SetFileName( transformFilename );
+	try
+	{
+		transformReader->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
+
+	// read in transforms
+	TransformReaderType::TransformListType * transform = transformReader->GetTransformList();
+
+	return transform;
+}
+
 // Write a function to write out a transform
 template<typename TransformType>
 int WriteOutTransform( const char * transformFilename, typename TransformType::Pointer transform )
