@@ -22,8 +22,6 @@ int main( int argc, char * argv[] )
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
 	TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
-	std::cout << initialTransform << std::endl;
-
 	// test functionality of itkRegistrationFramework.h
 	typedef itk::RegistrationFramework	Registration;
 	Registration::Pointer registration = Registration::New();

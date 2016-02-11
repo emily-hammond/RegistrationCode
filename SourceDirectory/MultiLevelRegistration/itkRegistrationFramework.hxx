@@ -12,6 +12,9 @@ namespace itk
 	RegistrationFramework::RegistrationFramework()
 	{
 		 this->m_transforms = CompositeTransformType::New();
+		 this->m_interpolator = InterpolatorType::New();
+
+		 std::cout << m_interpolator << std::endl;
 	}
 
 	// member function implementations

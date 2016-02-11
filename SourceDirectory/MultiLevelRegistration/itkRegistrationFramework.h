@@ -9,6 +9,7 @@ insert comments here
 #include "itkImage.h"
 #include "itkScaleVersor3DTransform.h"
 #include "itkCompositeTransform.h"
+#include "itkLinearInterpolateImageFunction.h"
 
 namespace itk
 {
@@ -28,6 +29,8 @@ public:
 	typedef itk::Image< unsigned short, 3 >			ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
+
+	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -55,6 +58,7 @@ private:
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
 	CompositeTransformType::Pointer m_transforms;
+	InterpolatorType::Pointer m_interpolator;
 	
 };
 } // end namespace
