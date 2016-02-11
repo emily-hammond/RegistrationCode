@@ -4,19 +4,29 @@ INSERT COMMENTS HERE
 
 // include files
 #include "ReadWriteFunctions.hxx"
+#include "itkRegistrationFramework.h"
 
 int main( int argc, char * argv[] )
 {
 	//desired inputs
-	char * imageFilename = argv[1];
-	std::string outputDirectory = argv[2];
+	char * fixedImageFilename = argv[1];
+	char * movingImageFilename = argv[2]
+	std::string outputDirectory = argv[3];
 
-	// test functionality of ReadWriteFunctions.h file
+	// instantiate image type
 	typedef itk::Image<unsigned short, 3>	ImageType;
-	ImageType::Pointer inputImage = ReadInImage< ImageType >( imageFilename );
-	std::string outputFilename  = outputDirectory + "image.mhd";
-	std::cout << outputFilename << std::endl;
-	WriteOutImage< ImageType, ImageType >( outputFilename.c_str(), inputImage );
+
+	// read in fixed and moving images
+	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
+	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
+
+	std::cout << fixedImage << std::endl;
+	std::cout << movingImage << std::endl;
+
+	// test functionality of itkRegistrationFramework.h
+	typedef itk::RegistrationFramework	Registration;
+	Registration( fixedImage, movingImage );
+	
 	
 	return EXIT_SUCCESS;
 }

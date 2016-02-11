@@ -6,6 +6,7 @@ insert comments here
 #define __itkRegistrationFramework_h
 
 // include files
+#include "itkImage.h"
 
 namespace itk
 {
@@ -17,10 +18,12 @@ namespace itk
 class RegistrationFramework: public Object
 {
 public:
-	typedef ParseInputFile				Self;
+	typedef RegistrationFramework		Self;
 	typedef Object						Superclass;
 	typedef SmartPointer< Self >		Pointer;
 	typedef SmartPointer< const Self >	ConstPointer;
+	
+	typedef itk::Image< unsigned short, 3 >		ImageType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -31,6 +34,7 @@ public:
 protected:
 	// declare the constructor and define default parameters
 	RegistrationFramework() {}
+	RegistrationFramework( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	
 	// destructor
 	virtual ~RegistrationFramework() {}
@@ -40,6 +44,8 @@ protected:
 	
 private:
 	// declare variables
+	ImageType::Pointer m_fixedImage;
+	ImageType::Pointer m_movingImage;
 	
 };
 } // end namespace

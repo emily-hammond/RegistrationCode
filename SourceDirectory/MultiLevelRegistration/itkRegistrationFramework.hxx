@@ -10,6 +10,11 @@ insert comments here
 namespace itk
 {
 	// member function implementations
+	void RegistrationFramework::RegistrationFramework( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
+	{
+		this->m_fixedImage = fixedImage;
+		this->m_movingImage = movingImage;
+	}
 
 } // end namespace
 
