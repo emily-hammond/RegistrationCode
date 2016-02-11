@@ -26,7 +26,7 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 	
 	typedef itk::Image< unsigned short, 3 >			ImageType;
-	typedef itk::ScaleVersor3DTransform< double >	TransformType;
+	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 
 	// method for creation
@@ -37,11 +37,12 @@ public:
 
 	// declare functions
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	//void SetInitialTransform( std::list< TransformType::Pointer > * initalTransform );
+	void SetInitialTransform( RigidTransformType::Pointer initialTransform );
+	void SetInitialTransform( CompositeTransformType::Pointer initialTransform );
 
 protected:
 	// declare the constructor and define default parameters
-	RegistrationFramework() {}
+	RegistrationFramework();
 	
 	// destructor
 	virtual ~RegistrationFramework() {}
