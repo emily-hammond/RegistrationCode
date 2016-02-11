@@ -17,6 +17,19 @@ namespace itk
 
 		return;
 	}
+/*
+	void RegistrationFramework::SetInitialTransform( std::list< TransformType::Pointer > * initialTransform )
+	{
+		this->m_transforms = CompositeTransformType::New();
+
+		std::list< TransformType::Pointer >::const_iterator it = initialTransform->begin();
+		while( it !=initialTransform->end() )
+		{
+			this->m_transforms->AddTransform( (*it).GetPointer() );
+		}
+
+		return;
+	}*/
 
 } // end namespace
 

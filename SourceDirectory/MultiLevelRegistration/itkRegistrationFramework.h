@@ -8,6 +8,7 @@ insert comments here
 // include files
 #include "itkImage.h"
 #include "itkScaleVersor3DTransform.h"
+#include "itkCompositeTransform.h"
 
 namespace itk
 {
@@ -24,8 +25,9 @@ public:
 	typedef SmartPointer< Self >		Pointer;
 	typedef SmartPointer< const Self >	ConstPointer;
 	
-	typedef itk::Image< unsigned short, 3 >		ImageType;
-	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
+	typedef itk::Image< unsigned short, 3 >			ImageType;
+	typedef itk::ScaleVersor3DTransform< double >	TransformType;
+	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -35,7 +37,7 @@ public:
 
 	// declare functions
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	void SetInitialTransform( TransformType::Pointer initalTransform );
+	//void SetInitialTransform( std::list< TransformType::Pointer > * initalTransform );
 
 protected:
 	// declare the constructor and define default parameters
@@ -51,6 +53,7 @@ private:
 	// declare variables
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
+	CompositeTransformType::Pointer m_transforms;
 	
 };
 } // end namespace

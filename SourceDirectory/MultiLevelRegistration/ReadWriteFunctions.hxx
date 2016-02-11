@@ -139,7 +139,7 @@ int printFiducials( LandmarksType landmarks )
 
 // Write a function to read in a transform
 template<typename TransformType>
-std::list< typename TransformType::Pointer > * ReadInTransform( const char * transformFilename)
+int ReadInTransform( const char * transformFilename)
 {
 	typedef itk::TransformFileReader	TransformReaderType;
 	TransformReaderType::Pointer transformReader = TransformReaderType::New();
@@ -157,10 +157,17 @@ std::list< typename TransformType::Pointer > * ReadInTransform( const char * tra
 		std::cerr << std::endl;
 	}
 
-	// read in transforms
-	TransformReaderType::TransformListType * transform = transformReader->GetTransformList();
+	TransformReaderType::TransformListType * transforms = transformReader->GetTransformList();
+	std::cout << "Number of transforms: " << transforms->size() << std::endl;
 
-	return transform;
+	// put into composite transform
+	TransformReaderType::TransformListType::const_iterator it = transforms->begin();
+	for( it = transforms->begin(); it != transforms->end(); ++it )
+	{
+		std::cout << *it << std::endl;
+	}
+
+	return EXIT_SUCCESS;
 }
 
 // Write a function to write out a transform

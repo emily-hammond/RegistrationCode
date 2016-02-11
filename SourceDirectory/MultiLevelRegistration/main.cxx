@@ -20,7 +20,7 @@ int main( int argc, char * argv[] )
 	// read in fixed and moving images
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
+	ReadInTransform< TransformType >( initialTransformFilename );
 
 	std::cout << fixedImage << std::endl;
 	std::cout << movingImage << std::endl;
@@ -29,7 +29,7 @@ int main( int argc, char * argv[] )
 	typedef itk::RegistrationFramework	Registration;
 	Registration::Pointer registration = Registration::New();
 	registration->SetImages( fixedImage, movingImage );
-	registration->SetInitialTransform( 
+	//registration->SetInitialTransform( initialTransform );
 	
 	std::cout << "\n\nFinished\n\n" << std::endl;
 
