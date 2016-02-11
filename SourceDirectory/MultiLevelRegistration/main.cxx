@@ -20,10 +20,7 @@ int main( int argc, char * argv[] )
 	// read in fixed and moving images
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	ReadInTransform< TransformType >( initialTransformFilename );
-
-	std::cout << fixedImage << std::endl;
-	std::cout << movingImage << std::endl;
+	TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	// test functionality of itkRegistrationFramework.h
 	typedef itk::RegistrationFramework	Registration;

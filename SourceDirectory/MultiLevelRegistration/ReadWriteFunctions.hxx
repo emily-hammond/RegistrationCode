@@ -139,7 +139,7 @@ int printFiducials( LandmarksType landmarks )
 
 // Write a function to read in a transform
 template<typename TransformType>
-int ReadInTransform( const char * transformFilename)
+typename TransformType::Pointer ReadInTransform( const char * transformFilename)
 {
 	typedef itk::TransformFileReader	TransformReaderType;
 	TransformReaderType::Pointer transformReader = TransformReaderType::New();
@@ -158,16 +158,28 @@ int ReadInTransform( const char * transformFilename)
 	}
 
 	TransformReaderType::TransformListType * transforms = transformReader->GetTransformList();
+	TransformType::Pointer transform = TransformType::New();
 	std::cout << "Number of transforms: " << transforms->size() << std::endl;
 
 	// put into composite transform
 	TransformReaderType::TransformListType::const_iterator it = transforms->begin();
 	for( it = transforms->begin(); it != transforms->end(); ++it )
 	{
-		std::cout << *it << std::endl;
+		if( !strcmp( (*it)->GetNameOfClass(), "CompositeTransform" ) )
+		{
+			transform = static_cast< TransformType * >( (*it).GetPointer() );
+		}
+		else if( !strcmp( (*it)->GetNameOfClass(), "ScaleVersor3DTransform" ) )
+		{
+			transform = static_cast< TransformType * >( (*it).GetPointer() );
+		}
+		else
+		{
+			std::cout << "Transform is not compatible." << std::endl;
+		}
 	}
 
-	return EXIT_SUCCESS;
+	return transform;
 }
 
 // Write a function to write out a transform
