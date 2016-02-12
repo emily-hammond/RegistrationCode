@@ -34,8 +34,8 @@ public:
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 
 	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
-	typedef itk::MattesMutualInformationImageToImageMetricv4< ImageType, ImageType >	MetricType;
-	typedef itk::VersorTransform					OptimizerType;
+	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
+	typedef itk::VersorTransformOptimizer			OptimizerType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -76,7 +76,7 @@ private:
 	int m_numberOfIterations;
 	float m_relaxationFactor;
 	float m_gradientMagnitudeTolerance;
-	RigidOptimizerType::ScalesType m_scales;
+	OptimizerType::ScalesType m_scales;
 	float m_rotationScale;
 	float m_translationScale;
 	float m_scalingScale;
@@ -84,12 +84,11 @@ private:
 	// metric
 	MetricType::Pointer m_metric;
 	float m_percentageOfSamples;
-	int m_pistogramBins;
+	int m_histogramBins;
 
 	void SetDefaults();
 	void SetUpMetric();
 	void SetUpOptimizer();
-	
 };
 } // end namespace
 

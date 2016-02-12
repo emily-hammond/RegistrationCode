@@ -12,10 +12,10 @@ namespace itk
 	RegistrationFramework::RegistrationFramework()
 	{
 		 this->m_transforms = CompositeTransformType::New();
+		 this->m_transform = RigidTransformType::New();
 		 this->m_interpolator = InterpolatorType::New();
 		 this->m_metric = MetricType::New();
 		 this->m_optimizer = OptimizerType::New();
-		 this->m_transforms = RigidTransformType::New();
 	}
 
 	void RegistrationFramework::PerformRegistration()
@@ -59,7 +59,7 @@ namespace itk
 	{
 		// metric
 		this->m_percentageOfSamples = 0.01;
-		this->m_pistogramBins = 35;
+		this->m_histogramBins = 35;
 
 		// optimizer
 		this->m_minimumStepLength = 0.001;
@@ -97,23 +97,28 @@ namespace itk
 		this->m_optimizer->SetGradientMagnitudeTolerance( this->m_gradientMagnitudeTolerance );
 
 		// automatically estimate optimizer scales
-		this->m_scales( this->m_transform->GetNumberOfParameters() );
-
+		this->m_scales( 9 );
+		std::cout << m_scales[0] << std::endl;
+	
+		/*std::cout << this->m_scales << std::endl;
 		// rotation
 		this->m_scales[0] = 1.0/this->m_rotationScale;
 		this->m_scales[1] = 1.0/this->m_rotationScale;
 		this->m_scales[2] = 1.0/this->m_rotationScale;
+		std::cout << this->m_scales << std::endl;
 		// translation
 		this->m_scales[3] = 1.0/this->m_translationScale;
 		this->m_scales[4] = 1.0/this->m_translationScale;
 		this->m_scales[5] = 1.0/this->m_translationScale;
+		std::cout << this->m_scales << std::endl;
 		// scaling
 		this->m_scales[6] = 1.0/this->m_scalingScale;
 		this->m_scales[7] = 1.0/this->m_scalingScale;
 		this->m_scales[8] = 1.0/this->m_scalingScale;
+		std::cout << this->m_scales << std::endl;*/
 
 		// set the scales
-		this->m_optimizer->SetScales( this->m_scales );
+		//this->m_optimizer->SetScales( this->m_scales );
 
 		std::cout << "Optimizer set." << std::endl;
 
