@@ -12,6 +12,7 @@ insert comments here
 
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkMattesMutualInformationImageToImageMetric.h"
+#include "itkVersorTransformOptimizer.h"
 
 namespace itk
 {
@@ -33,7 +34,8 @@ public:
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 
 	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
-	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
+	typedef itk::MattesMutualInformationImageToImageMetricv4< ImageType, ImageType >	MetricType;
+	typedef itk::VersorTransform					OptimizerType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -62,14 +64,31 @@ private:
 	// declare variables
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
+	
 	CompositeTransformType::Pointer m_transforms;
+	RigidTransformType::Pointer m_transform;
 	InterpolatorType::Pointer m_interpolator;
+
+	// optimizer
+	OptimizerType::Pointer m_optimizer;
+	float m_minimumStepLength;
+	float m_maximumStepLength;
+	int m_numberOfIterations;
+	float m_relaxationFactor;
+	float m_gradientMagnitudeTolerance;
+	RigidOptimizerType::ScalesType m_scales;
+	float m_rotationScale;
+	float m_translationScale;
+	float m_scalingScale;
+
+	// metric
 	MetricType::Pointer m_metric;
-	float m_PercentageOfSamples;
-	int m_HistogramBins;
+	float m_percentageOfSamples;
+	int m_pistogramBins;
 
 	void SetDefaults();
 	void SetUpMetric();
+	void SetUpOptimizer();
 	
 };
 } // end namespace

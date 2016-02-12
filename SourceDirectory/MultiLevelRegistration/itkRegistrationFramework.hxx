@@ -14,12 +14,15 @@ namespace itk
 		 this->m_transforms = CompositeTransformType::New();
 		 this->m_interpolator = InterpolatorType::New();
 		 this->m_metric = MetricType::New();
+		 this->m_optimizer = OptimizerType::New();
+		 this->m_transforms = RigidTransformType::New();
 	}
 
 	void RegistrationFramework::PerformRegistration()
 	{
 		this->SetDefaults();
 		this->SetUpMetric();
+		this->SetUpOptimizer();
 
 		std::cout << "Registration performed." << std::endl;
 		return;
@@ -51,26 +54,72 @@ namespace itk
 		return;
 	}
 
+
+	void RegistrationFramework::SetDefaults()
+	{
+		// metric
+		this->m_percentageOfSamples = 0.01;
+		this->m_pistogramBins = 35;
+
+		// optimizer
+		this->m_minimumStepLength = 0.001;
+		this->m_maximumStepLength = 1.5;
+		this->m_numberOfIterations = 1000;
+		this->m_relaxationFactor = 0.5;
+		this->m_gradientMagnitudeTolerance = 0.01;
+		this->m_rotationScale = 0.01;
+		this->m_translationScale = 10;
+		this->m_scalingScale = 0.001;
+		
+		std::cout << "Defaults set." << std::endl;
+		return;
+	}
+
 	void RegistrationFramework::SetUpMetric()
 	{
 		// determine number of samples to use
 		ImageType::SizeType size = this->m_fixedImage->GetLargestPossibleRegion().GetSize();
 		int numOfPixels = size[0]*size[1]*size[2];
-		this->m_metric->SetNumberOfSpatialSamples( numOfPixels*(this->m_PercentageOfSamples) );
-		this->m_metric->SetNumberOfHistogramBins( this->m_HistogramBins );
+		this->m_metric->SetNumberOfSpatialSamples( numOfPixels*(this->m_percentageOfSamples) );
+		this->m_metric->SetNumberOfHistogramBins( this->m_histogramBins );
 
 		std::cout << "Metric set." << std::endl;
 		return;
 	}
 
-	void RegistrationFramework::SetDefaults()
+	void RegistrationFramework::SetUpOptimizer()
 	{
-		this->m_PercentageOfSamples = 0.01;
-		this->m_HistogramBins = 25;
-		
-		std::cout << "Defaults set." << std::endl;
+		// set defaults
+		this->m_optimizer->SetMinimumStepLength( this->m_minimumStepLength );
+		this->m_optimizer->SetMaximumStepLength( this->m_maximumStepLength );
+		this->m_optimizer->SetNumberOfIterations( this->m_numberOfIterations );
+		this->m_optimizer->SetRelaxationFactor( this->m_relaxationFactor );
+		this->m_optimizer->SetGradientMagnitudeTolerance( this->m_gradientMagnitudeTolerance );
+
+		// automatically estimate optimizer scales
+		this->m_scales( this->m_transform->GetNumberOfParameters() );
+
+		// rotation
+		this->m_scales[0] = 1.0/this->m_rotationScale;
+		this->m_scales[1] = 1.0/this->m_rotationScale;
+		this->m_scales[2] = 1.0/this->m_rotationScale;
+		// translation
+		this->m_scales[3] = 1.0/this->m_translationScale;
+		this->m_scales[4] = 1.0/this->m_translationScale;
+		this->m_scales[5] = 1.0/this->m_translationScale;
+		// scaling
+		this->m_scales[6] = 1.0/this->m_scalingScale;
+		this->m_scales[7] = 1.0/this->m_scalingScale;
+		this->m_scales[8] = 1.0/this->m_scalingScale;
+
+		// set the scales
+		this->m_optimizer->SetScales( this->m_scales );
+
+		std::cout << "Optimizer set." << std::endl;
+
 		return;
 	}
+
 
 } // end namespace
 
