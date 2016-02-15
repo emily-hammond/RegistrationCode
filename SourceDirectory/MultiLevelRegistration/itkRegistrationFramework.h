@@ -73,24 +73,25 @@ private:
 
 	// optimizer
 	OptimizerType::Pointer m_optimizer;
-	float m_minimumStepLength;
+	double m_minimumStepLength;
 	int m_numberOfIterations;
-	float m_relaxationFactor;
-	float m_gradientMagnitudeTolerance;
+	double m_relaxationFactor;
+	double m_gradientMagnitudeTolerance;
 	//OptimizerType::ScalesType m_scales;
-	float m_rotationScale;
-	float m_translationScale;
-	float m_scalingScale;
-	float m_learningRate;
+	double m_rotationScale;
+	double m_translationScale;
+	double m_scalingScale;
+	double m_learningRate;
 
 	// metric
 	MetricType::Pointer m_metric;
-	float m_percentageOfSamples;
+	double m_percentageOfSamples;
 	int m_histogramBins;
 
 	void SetDefaults();
 	void SetUpMetric();
 	void SetUpOptimizer();
+	void PrintOutParameters();
 };
 } // end namespace
 

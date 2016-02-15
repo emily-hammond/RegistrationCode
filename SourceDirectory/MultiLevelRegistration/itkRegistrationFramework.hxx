@@ -36,7 +36,7 @@ namespace itk
 		this->m_registration->SetMovingImage( this->m_movingImage );
 		this->m_registration->SetInitialTransform( this->m_initialTransform );
 
-		std::cout << this->m_initialTransform << std::endl;
+		//std::cout << this->m_initialTransform << std::endl;
 
 		// step up one level of registration
 		RegistrationType::ShrinkFactorsArrayType shrinkFactorsPerLevel;
@@ -50,6 +50,8 @@ namespace itk
 		this->m_registration->SetNumberOfLevels( 1 );
 		this->m_registration->SetSmoothingSigmasPerLevel( smoothingSigmasPerLevel );
 		this->m_registration->SetShrinkFactorsPerLevel( shrinkFactorsPerLevel );
+
+		this->PrintOutParameters();
 		
 		std::cout << "Components set up. Beginning registration." << std::endl;
 		// update registration process
@@ -90,7 +92,7 @@ namespace itk
 	void RegistrationFramework::SetDefaults()
 	{
 		// metric
-		this->m_percentageOfSamples = 0.01;
+		this->m_percentageOfSamples = 0.2;
 		this->m_histogramBins = 35;
 
 		// optimizer
@@ -115,6 +117,8 @@ namespace itk
 		this->m_registration->SetMetricSamplingStrategy( samplingStrategy );
 		this->m_metric->SetNumberOfHistogramBins( this->m_histogramBins );
 
+		std::cout << this->m_registration->GetMetricSamplingPercentagePerLevel() << std::endl;
+
 		//std::cout << "Metric set." << std::endl;
 		return;
 	}
@@ -125,7 +129,7 @@ namespace itk
 		this->m_optimizer->SetMinimumStepLength( this->m_minimumStepLength );
 		this->m_optimizer->SetNumberOfIterations( this->m_numberOfIterations );
 		this->m_optimizer->SetRelaxationFactor( this->m_relaxationFactor );
-		this->m_optimizer->SetLearningRate( this->m_learningRate );
+		//this->m_optimizer->SetLearningRate( this->m_learningRate );
 		this->m_optimizer->SetGradientMagnitudeTolerance( this->m_gradientMagnitudeTolerance );
 		this->m_optimizer->SetReturnBestParametersAndValue( true );
 
@@ -157,7 +161,6 @@ namespace itk
 
 		return;
 	}
-
 
 } // end namespace
 
