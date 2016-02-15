@@ -10,9 +10,9 @@ insert comments here
 #include "itkScaleVersor3DTransform.h"
 #include "itkCompositeTransform.h"
 
-#include "itkLinearInterpolateImageFunction.h"
-#include "itkMattesMutualInformationImageToImageMetric.h"
-#include "itkVersorTransformOptimizer.h"
+#include "itkMattesMutualInformationImageToImageMetricv4.h"
+#include "itkRegularStepGradientDescentOptimizerv4.h"
+#include "itkImageRegistrationMethodv4.h"
 
 namespace itk
 {
@@ -29,13 +29,12 @@ public:
 	typedef SmartPointer< Self >		Pointer;
 	typedef SmartPointer< const Self >	ConstPointer;
 	
-	typedef itk::Image< unsigned short, 3 >			ImageType;
+	typedef itk::Image< float, 3 >			ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
-	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 
-	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
-	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
-	typedef itk::VersorTransformOptimizer			OptimizerType;
+	typedef itk::MattesMutualInformationImageToImageMetricv4< ImageType, ImageType >	MetricType;
+	typedef itk::RegularStepGradientDescentOptimizerv4< double >		OptimizerType;
+	typedef itk::ImageRegistrationMethodv4< ImageType, ImageType >		RegistrationType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -46,8 +45,6 @@ public:
 	// declare functions
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	void SetInitialTransform( RigidTransformType::Pointer initialTransform );
-	void SetInitialTransform( CompositeTransformType::Pointer initialTransform );
-
 	void PerformRegistration();
 
 protected:
@@ -65,21 +62,24 @@ private:
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
 	
-	CompositeTransformType::Pointer m_transforms;
+	// transforms
 	RigidTransformType::Pointer m_transform;
-	InterpolatorType::Pointer m_interpolator;
+	RigidTransformType::Pointer m_initialTransform;
+	
+	// other components
+	RegistrationType::Pointer m_registration;
 
 	// optimizer
 	OptimizerType::Pointer m_optimizer;
 	float m_minimumStepLength;
-	float m_maximumStepLength;
 	int m_numberOfIterations;
 	float m_relaxationFactor;
 	float m_gradientMagnitudeTolerance;
-	OptimizerType::ScalesType m_scales;
+	//OptimizerType::ScalesType m_scales;
 	float m_rotationScale;
 	float m_translationScale;
 	float m_scalingScale;
+	float m_learningRate;
 
 	// metric
 	MetricType::Pointer m_metric;

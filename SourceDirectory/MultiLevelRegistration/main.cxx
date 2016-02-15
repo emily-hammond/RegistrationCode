@@ -8,13 +8,18 @@ INSERT COMMENTS HERE
 
 int main( int argc, char * argv[] )
 {
+	if( argc < 1 )
+	{
+		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage initialTransform" << std::endl;
+	}
+
 	//desired inputs
 	char * fixedImageFilename = argv[1];
 	char * movingImageFilename = argv[2];
 	char * initialTransformFilename = argv[3];
 
 	// instantiate image type
-	typedef itk::Image<unsigned short, 3>	ImageType;
+	typedef itk::Image<float, 3>	ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	// read in fixed and moving images

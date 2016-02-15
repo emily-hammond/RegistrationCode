@@ -11,20 +11,59 @@ namespace itk
 {
 	RegistrationFramework::RegistrationFramework()
 	{
-		 this->m_transforms = CompositeTransformType::New();
 		 this->m_transform = RigidTransformType::New();
-		 this->m_interpolator = InterpolatorType::New();
+		 this->m_initialTransform = RigidTransformType::New();
+
 		 this->m_metric = MetricType::New();
 		 this->m_optimizer = OptimizerType::New();
+		 this->m_registration = RegistrationType::New();
 	}
 
 	void RegistrationFramework::PerformRegistration()
 	{
+		// set up components
 		this->SetDefaults();
 		this->SetUpMetric();
 		this->SetUpOptimizer();
 
-		std::cout << "Registration performed." << std::endl;
+		// plug into registration method
+		this->m_registration->SetMetric( this->m_metric );
+		this->m_registration->SetOptimizer( this->m_optimizer );
+
+		// set up images
+		this->m_registration->SetFixedImage( this->m_fixedImage );
+		this->m_registration->SetMovingImage( this->m_movingImage );
+		this->m_registration->SetInitialTransform( this->m_initialTransform );
+
+		std::cout << this->m_initialTransform << std::endl;
+
+		// step up one level of registration
+		RegistrationType::ShrinkFactorsArrayType shrinkFactorsPerLevel;
+		shrinkFactorsPerLevel.SetSize( 1 );
+		shrinkFactorsPerLevel[0] = 1;
+
+		RegistrationType::SmoothingSigmasArrayType smoothingSigmasPerLevel;
+		smoothingSigmasPerLevel.SetSize( 1 );
+		smoothingSigmasPerLevel[0] = 0;
+
+		this->m_registration->SetNumberOfLevels( 1 );
+		this->m_registration->SetSmoothingSigmasPerLevel( smoothingSigmasPerLevel );
+		this->m_registration->SetShrinkFactorsPerLevel( shrinkFactorsPerLevel );
+
+		// update registration process
+		try
+		{
+			this->m_registration->Update();
+			std::cout << "Optimizer stop condition: " << this->m_registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+		}
+		catch( itk::ExceptionObject & err )
+		{
+			std::cout << "ExceptionObject caught!" << std::endl;
+			std::cout << err << std::endl;
+			return;
+		}
+
+		//std::cout << "Registration performed." << std::endl;
 		return;
 	}
 
@@ -34,26 +73,17 @@ namespace itk
 		this->m_fixedImage = fixedImage;
 		this->m_movingImage = movingImage;
 		
-		std::cout << "Images set." << std::endl;
+		//std::cout << "Images set." << std::endl;
 		return;
 	}
 
 	void RegistrationFramework::SetInitialTransform( RigidTransformType::Pointer initialTransform )
 	{
-		this->m_transforms->AddTransform( initialTransform );
+		this->m_initialTransform = initialTransform;
 		
-		std::cout << "Initial rigid transform set." << std::endl;
+		//std::cout << "Initial rigid transform set." << std::endl;
 		return;
 	}
-
-	void RegistrationFramework::SetInitialTransform( CompositeTransformType::Pointer initialTransform )
-	{
-		this->m_transforms->AddTransform( initialTransform );
-		
-		std::cout << "Initial composite transform set." << std::endl;
-		return;
-	}
-
 
 	void RegistrationFramework::SetDefaults()
 	{
@@ -63,27 +93,27 @@ namespace itk
 
 		// optimizer
 		this->m_minimumStepLength = 0.001;
-		this->m_maximumStepLength = 1.5;
-		this->m_numberOfIterations = 1000;
+		this->m_numberOfIterations = 200;
 		this->m_relaxationFactor = 0.5;
+		this->m_learningRate = 0.2;
 		this->m_gradientMagnitudeTolerance = 0.01;
 		this->m_rotationScale = 0.01;
 		this->m_translationScale = 10;
 		this->m_scalingScale = 0.001;
 		
-		std::cout << "Defaults set." << std::endl;
+		//std::cout << "Defaults set." << std::endl;
 		return;
 	}
 
 	void RegistrationFramework::SetUpMetric()
 	{
 		// determine number of samples to use
-		ImageType::SizeType size = this->m_fixedImage->GetLargestPossibleRegion().GetSize();
-		int numOfPixels = size[0]*size[1]*size[2];
-		this->m_metric->SetNumberOfSpatialSamples( numOfPixels*(this->m_percentageOfSamples) );
+		this->m_registration->SetMetricSamplingPercentage( this->m_percentageOfSamples );
+		RegistrationType::MetricSamplingStrategyType samplingStrategy = RegistrationType::RANDOM;
+		this->m_registration->SetMetricSamplingStrategy( samplingStrategy );
 		this->m_metric->SetNumberOfHistogramBins( this->m_histogramBins );
 
-		std::cout << "Metric set." << std::endl;
+		//std::cout << "Metric set." << std::endl;
 		return;
 	}
 
@@ -91,36 +121,33 @@ namespace itk
 	{
 		// set defaults
 		this->m_optimizer->SetMinimumStepLength( this->m_minimumStepLength );
-		this->m_optimizer->SetMaximumStepLength( this->m_maximumStepLength );
 		this->m_optimizer->SetNumberOfIterations( this->m_numberOfIterations );
 		this->m_optimizer->SetRelaxationFactor( this->m_relaxationFactor );
+		this->m_optimizer->SetLearningRate( this->m_learningRate );
 		this->m_optimizer->SetGradientMagnitudeTolerance( this->m_gradientMagnitudeTolerance );
+		this->m_optimizer->SetReturnBestParametersAndValue( true );
 
 		// automatically estimate optimizer scales
-		this->m_scales( 9 );
-		std::cout << m_scales[0] << std::endl;
+		OptimizerType::ScalesType optimizerScales( this->m_initialTransform->GetNumberOfParameters() );
 	
-		/*std::cout << this->m_scales << std::endl;
 		// rotation
-		this->m_scales[0] = 1.0/this->m_rotationScale;
-		this->m_scales[1] = 1.0/this->m_rotationScale;
-		this->m_scales[2] = 1.0/this->m_rotationScale;
-		std::cout << this->m_scales << std::endl;
+		optimizerScales[0] = 1.0/this->m_rotationScale;
+		optimizerScales[1] = 1.0/this->m_rotationScale;
+		optimizerScales[2] = 1.0/this->m_rotationScale;
 		// translation
-		this->m_scales[3] = 1.0/this->m_translationScale;
-		this->m_scales[4] = 1.0/this->m_translationScale;
-		this->m_scales[5] = 1.0/this->m_translationScale;
-		std::cout << this->m_scales << std::endl;
+		optimizerScales[3] = 1.0/this->m_translationScale;
+		optimizerScales[4] = 1.0/this->m_translationScale;
+		optimizerScales[5] = 1.0/this->m_translationScale;
 		// scaling
-		this->m_scales[6] = 1.0/this->m_scalingScale;
-		this->m_scales[7] = 1.0/this->m_scalingScale;
-		this->m_scales[8] = 1.0/this->m_scalingScale;
-		std::cout << this->m_scales << std::endl;*/
+		optimizerScales[6] = 1.0/this->m_scalingScale;
+		optimizerScales[7] = 1.0/this->m_scalingScale;
+		optimizerScales[8] = 1.0/this->m_scalingScale;
+		//std::cout << optimizerScales << std::endl;
 
 		// set the scales
-		//this->m_optimizer->SetScales( this->m_scales );
+		this->m_optimizer->SetScales( optimizerScales );
 
-		std::cout << "Optimizer set." << std::endl;
+		//std::cout << "Optimizer set." << std::endl;
 
 		return;
 	}
