@@ -25,6 +25,7 @@ namespace itk
 		this->SetDefaults();
 		this->SetUpMetric();
 		this->SetUpOptimizer();
+		
 
 		// plug into registration method
 		this->m_registration->SetMetric( this->m_metric );
@@ -49,7 +50,8 @@ namespace itk
 		this->m_registration->SetNumberOfLevels( 1 );
 		this->m_registration->SetSmoothingSigmasPerLevel( smoothingSigmasPerLevel );
 		this->m_registration->SetShrinkFactorsPerLevel( shrinkFactorsPerLevel );
-
+		
+		std::cout << "Components set up. Beginning registration." << std::endl;
 		// update registration process
 		try
 		{
@@ -146,6 +148,10 @@ namespace itk
 
 		// set the scales
 		this->m_optimizer->SetScales( optimizerScales );
+
+		// register with command class to monitor process
+		RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();
+		this->m_optimizer->AddObserver( itk::IterationEvent(), rigidObserver );
 
 		//std::cout << "Optimizer set." << std::endl;
 

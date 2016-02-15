@@ -11,8 +11,10 @@ insert comments here
 #include "itkCompositeTransform.h"
 
 #include "itkMattesMutualInformationImageToImageMetricv4.h"
-#include "itkRegularStepGradientDescentOptimizerv4.h"
+//#include "itkRegularStepGradientDescentOptimizerv4.h"
 #include "itkImageRegistrationMethodv4.h"
+
+#include "RigidCommandIterationUpdate.h"
 
 namespace itk
 {
