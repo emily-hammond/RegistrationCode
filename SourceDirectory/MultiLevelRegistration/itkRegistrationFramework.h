@@ -12,6 +12,7 @@ insert comments here
 
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkMattesMutualInformationImageToImageMetric.h"
+#include "itkImageRegistrationMethod.h"
 #include "RigidCommandIterationUpdate.h"
 
 namespace itk
@@ -34,7 +35,8 @@ public:
 
 	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
 	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
-	typedef itk::VersorTransformOptimizer			OptimizerType;
+	typedef itk::VersorTransformOptimizer								OptimizerType;
+	typedef itk::ImageRegistrationMethod< ImageType, ImageType >		RegistrationType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -66,6 +68,7 @@ private:
 	RigidTransformType::Pointer m_initialTransform;
 	RigidTransformType::Pointer m_transform;
 	InterpolatorType::Pointer m_interpolator;
+	RegistrationType::Pointer m_registration;
 	RigidCommandIterationUpdate::Pointer m_observer;
 
 	// optimizer

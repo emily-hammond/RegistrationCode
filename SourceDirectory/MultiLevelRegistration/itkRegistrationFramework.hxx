@@ -16,6 +16,7 @@ namespace itk
 		this->m_interpolator = InterpolatorType::New();
 		this->m_metric = MetricType::New();
 		this->m_optimizer = OptimizerType::New();
+		this->m_registration = RegistrationType::New();
 		this->m_observer = RigidCommandIterationUpdate::New();
 	}
 
@@ -28,7 +29,30 @@ namespace itk
 		//std::cout << this->m_metric << std::endl;
 		//std::cout << this->m_optimizer << std::endl;
 
+		// input components
+		this->m_registration->SetMetric( this->m_metric );
+		this->m_registration->SetOptimizer( this->m_optimizer );
+		this->m_registration->SetTransform( this->m_transform );
+		this->m_registration->SetInterpolator( this->m_interpolator );
 
+		// input images and transform
+		this->m_registration->SetFixedImage( this->m_fixedImage );
+		this->m_registration->SetMovingImage( this->m_movingImage );
+		this->m_registration->SetInitialTransformParameters( this->m_initialTransform->GetParameters() );
+		this->m_registration->SetFixedImageRegion( this->m_fixedImage->GetBufferedRegion() );
+
+		std::cout << "Begin registration." << std::endl;
+		try
+		{
+			this->m_registration->Update();
+			std::cout << "OptimizerStopCondition: " << this->m_registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+		}
+		catch( itk::ExceptionObject & err )
+		{
+			std::cerr << "ExceptionObjectCaught!" << std::endl;
+			std::cerr << err << std::endl;
+			return;
+		}
 
 		std::cout << "Registration performed." << std::endl;
 		return;
