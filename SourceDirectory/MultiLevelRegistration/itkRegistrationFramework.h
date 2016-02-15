@@ -31,7 +31,7 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 	
 	typedef itk::Image< unsigned short, 3 >			ImageType;
-	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
+	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
 	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
@@ -46,9 +46,10 @@ public:
 
 	// declare functions
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	void SetInitialTransform( RigidTransformType::Pointer initialTransform );
+	void SetInitialTransform( TransformType::Pointer initialTransform );
 
 	void PerformRegistration();
+	TransformType::Pointer PrintOutResults();
 
 protected:
 	// declare the constructor and define default parameters
@@ -65,8 +66,8 @@ private:
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
 	
-	RigidTransformType::Pointer m_initialTransform;
-	RigidTransformType::Pointer m_transform;
+	TransformType::Pointer m_initialTransform;
+	TransformType::Pointer m_transform;
 	InterpolatorType::Pointer m_interpolator;
 	RegistrationType::Pointer m_registration;
 	RigidCommandIterationUpdate::Pointer m_observer;

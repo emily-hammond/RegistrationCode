@@ -11,8 +11,8 @@ namespace itk
 {
 	RegistrationFramework::RegistrationFramework()
 	{
-		this->m_initialTransform = RigidTransformType::New();
-		this->m_transform = RigidTransformType::New();
+		this->m_initialTransform = TransformType::New();
+		this->m_transform = TransformType::New();
 		this->m_interpolator = InterpolatorType::New();
 		this->m_metric = MetricType::New();
 		this->m_optimizer = OptimizerType::New();
@@ -68,7 +68,7 @@ namespace itk
 		return;
 	}
 
-	void RegistrationFramework::SetInitialTransform( RigidTransformType::Pointer initialTransform )
+	void RegistrationFramework::SetInitialTransform( TransformType::Pointer initialTransform )
 	{
 		this->m_initialTransform = initialTransform ;
 		
@@ -143,6 +143,21 @@ namespace itk
 		return;
 	}
 
+	RegistrationFramework::TransformType::Pointer RegistrationFramework::PrintOutResults()
+	{
+		// print out final optimizer parameters
+		std::cout << "==== Final Optimizer Parameters ====" << std::endl;
+		std::cout << "Iterations: " << this->m_optimizer->GetCurrentIteration() << std::endl;
+		std::cout << "Metric: " << this->m_optimizer->GetValue() << std::endl;
+		std::cout << "Stop Condition: " << this->m_registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+
+		// get final transform
+		TransformType::Pointer finalTransform = TransformType::New();
+		finalTransform->SetParameters( this->m_registration->GetLastTransformParameters() );
+		finalTransform->SetFixedParameters( this->m_transform->GetFixedParameters() );
+
+		return finalTransform;
+	}
 
 } // end namespace
 

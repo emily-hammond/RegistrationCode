@@ -23,11 +23,12 @@ int main( int argc, char * argv[] )
 	TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	// test functionality of itkRegistrationFramework.h
-	typedef itk::RegistrationFramework	Registration;
-	Registration::Pointer registration = Registration::New();
+	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	registration->SetImages( fixedImage, movingImage );
 	registration->SetInitialTransform( initialTransform );
 	registration->PerformRegistration();
+	TransformType::Pointer finalTransform = registration->PrintOutResults();
+	std::cout << finalTransform << std::endl;
 	
 	std::cout << "\nFinished\n" << std::endl;
 
