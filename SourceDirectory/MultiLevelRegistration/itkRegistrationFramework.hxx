@@ -11,33 +11,51 @@ namespace itk
 {
 	RegistrationFramework::RegistrationFramework()
 	{
-		 this->m_transform = RigidTransformType::New();
-		 this->m_initialTransform = RigidTransformType::New();
+		this->m_transform = RigidTransformType::New();
+		this->m_initialTransform = RigidTransformType::New();
 
-		 this->m_metric = MetricType::New();
-		 this->m_optimizer = OptimizerType::New();
-		 this->m_registration = RegistrationType::New();
-	}
+		// initialize metric
+		this->m_metric = MetricType::New();
+		this->m_metric->SetNumberOfHistogramBins( 20 );
+				
+		// set up optimizer
+		this->m_optimizer = OptimizerType::New();
+		// set defaults
+		this->m_optimizer->SetMinimumStepLength( 0.001 );
+		this->m_optimizer->SetNumberOfIterations( 100 );
+		this->m_optimizer->SetRelaxationFactor( 0.8 );
+		this->m_optimizer->SetLearningRate( 1.0 );
+		this->m_optimizer->SetGradientMagnitudeTolerance( 0.01 );
+		this->m_optimizer->SetReturnBestParametersAndValue( true );
+		// automatically estimate optimizer scales
+		OptimizerType::ScalesType optimizerScales( this->m_initialTransform->GetNumberOfParameters() );
+		// rotation
+		optimizerScales[0] = 1.0/0.1;
+		optimizerScales[1] = 1.0/0.1;
+		optimizerScales[2] = 1.0/0.1;
+		// translation
+		optimizerScales[3] = 1.0/10.0;
+		optimizerScales[4] = 1.0/10.0;
+		optimizerScales[5] = 1.0/10.0;
+		// scaling
+		optimizerScales[6] = 1.0/0.01;
+		optimizerScales[7] = 1.0/0.01;
+		optimizerScales[8] = 1.0/0.01;
+		// set the scales
+		this->m_optimizer->SetScales( optimizerScales );
 
-	void RegistrationFramework::PerformRegistration()
-	{
-		// set up components
-		this->SetDefaults();
-		this->SetUpMetric();
-		this->SetUpOptimizer();
-		
+		// register with command class to monitor process
+		RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();
+		this->m_optimizer->AddObserver( itk::IterationEvent(), rigidObserver );
 
+		this->m_registration = RegistrationType::New();
 		// plug into registration method
 		this->m_registration->SetMetric( this->m_metric );
+		// start with 1% of all samples sampled randomly
+		this->m_registration->SetMetricSamplingPercentage( 0.01 ); 
+		RegistrationType::MetricSamplingStrategyType samplingStrategy = RegistrationType::RANDOM;
+		this->m_registration->SetMetricSamplingStrategy( samplingStrategy );
 		this->m_registration->SetOptimizer( this->m_optimizer );
-
-		// set up images
-		this->m_registration->SetFixedImage( this->m_fixedImage );
-		this->m_registration->SetMovingImage( this->m_movingImage );
-		this->m_registration->SetInitialTransform( this->m_initialTransform );
-
-		//std::cout << this->m_initialTransform << std::endl;
-
 		// step up one level of registration
 		RegistrationType::ShrinkFactorsArrayType shrinkFactorsPerLevel;
 		shrinkFactorsPerLevel.SetSize( 1 );
@@ -50,8 +68,14 @@ namespace itk
 		this->m_registration->SetNumberOfLevels( 1 );
 		this->m_registration->SetSmoothingSigmasPerLevel( smoothingSigmasPerLevel );
 		this->m_registration->SetShrinkFactorsPerLevel( shrinkFactorsPerLevel );
+	}
 
-		this->PrintOutParameters();
+	void RegistrationFramework::PerformRegistration()
+	{
+		// set up images
+		this->m_registration->SetFixedImage( this->m_fixedImage );
+		this->m_registration->SetMovingImage( this->m_movingImage );
+		this->m_registration->SetInitialTransform( this->m_initialTransform );
 		
 		std::cout << "Components set up. Beginning registration." << std::endl;
 		// update registration process
@@ -67,7 +91,6 @@ namespace itk
 			return;
 		}
 
-		//std::cout << "Registration performed." << std::endl;
 		return;
 	}
 
@@ -86,79 +109,6 @@ namespace itk
 		this->m_initialTransform = initialTransform;
 		
 		//std::cout << "Initial rigid transform set." << std::endl;
-		return;
-	}
-
-	void RegistrationFramework::SetDefaults()
-	{
-		// metric
-		this->m_percentageOfSamples = 0.2;
-		this->m_histogramBins = 35;
-
-		// optimizer
-		this->m_minimumStepLength = 0.001;
-		this->m_numberOfIterations = 200;
-		this->m_relaxationFactor = 0.5;
-		this->m_learningRate = 0.2;
-		this->m_gradientMagnitudeTolerance = 0.01;
-		this->m_rotationScale = 0.01;
-		this->m_translationScale = 10;
-		this->m_scalingScale = 0.001;
-		
-		//std::cout << "Defaults set." << std::endl;
-		return;
-	}
-
-	void RegistrationFramework::SetUpMetric()
-	{
-		// determine number of samples to use
-		this->m_registration->SetMetricSamplingPercentage( this->m_percentageOfSamples );
-		RegistrationType::MetricSamplingStrategyType samplingStrategy = RegistrationType::RANDOM;
-		this->m_registration->SetMetricSamplingStrategy( samplingStrategy );
-		this->m_metric->SetNumberOfHistogramBins( this->m_histogramBins );
-
-		std::cout << this->m_registration->GetMetricSamplingPercentagePerLevel() << std::endl;
-
-		//std::cout << "Metric set." << std::endl;
-		return;
-	}
-
-	void RegistrationFramework::SetUpOptimizer()
-	{
-		// set defaults
-		this->m_optimizer->SetMinimumStepLength( this->m_minimumStepLength );
-		this->m_optimizer->SetNumberOfIterations( this->m_numberOfIterations );
-		this->m_optimizer->SetRelaxationFactor( this->m_relaxationFactor );
-		//this->m_optimizer->SetLearningRate( this->m_learningRate );
-		this->m_optimizer->SetGradientMagnitudeTolerance( this->m_gradientMagnitudeTolerance );
-		this->m_optimizer->SetReturnBestParametersAndValue( true );
-
-		// automatically estimate optimizer scales
-		OptimizerType::ScalesType optimizerScales( this->m_initialTransform->GetNumberOfParameters() );
-	
-		// rotation
-		optimizerScales[0] = 1.0/this->m_rotationScale;
-		optimizerScales[1] = 1.0/this->m_rotationScale;
-		optimizerScales[2] = 1.0/this->m_rotationScale;
-		// translation
-		optimizerScales[3] = 1.0/this->m_translationScale;
-		optimizerScales[4] = 1.0/this->m_translationScale;
-		optimizerScales[5] = 1.0/this->m_translationScale;
-		// scaling
-		optimizerScales[6] = 1.0/this->m_scalingScale;
-		optimizerScales[7] = 1.0/this->m_scalingScale;
-		optimizerScales[8] = 1.0/this->m_scalingScale;
-		//std::cout << optimizerScales << std::endl;
-
-		// set the scales
-		this->m_optimizer->SetScales( optimizerScales );
-
-		// register with command class to monitor process
-		RigidCommandIterationUpdate::Pointer rigidObserver = RigidCommandIterationUpdate::New();
-		this->m_optimizer->AddObserver( itk::IterationEvent(), rigidObserver );
-
-		//std::cout << "Optimizer set." << std::endl;
-
 		return;
 	}
 

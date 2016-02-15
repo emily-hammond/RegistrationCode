@@ -68,30 +68,14 @@ private:
 	RigidTransformType::Pointer m_transform;
 	RigidTransformType::Pointer m_initialTransform;
 	
-	// other components
+	// registrater
 	RegistrationType::Pointer m_registration;
 
 	// optimizer
 	OptimizerType::Pointer m_optimizer;
-	double m_minimumStepLength;
-	int m_numberOfIterations;
-	double m_relaxationFactor;
-	double m_gradientMagnitudeTolerance;
-	//OptimizerType::ScalesType m_scales;
-	double m_rotationScale;
-	double m_translationScale;
-	double m_scalingScale;
-	double m_learningRate;
 
 	// metric
 	MetricType::Pointer m_metric;
-	double m_percentageOfSamples;
-	int m_histogramBins;
-
-	void SetDefaults();
-	void SetUpMetric();
-	void SetUpOptimizer();
-	void PrintOutParameters();
 };
 } // end namespace
 
