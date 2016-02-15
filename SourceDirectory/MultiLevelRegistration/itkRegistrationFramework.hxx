@@ -24,7 +24,7 @@ namespace itk
 		this->m_optimizer->SetMinimumStepLength( 0.001 );
 		this->m_optimizer->SetNumberOfIterations( 100 );
 		this->m_optimizer->SetRelaxationFactor( 0.8 );
-		this->m_optimizer->SetLearningRate( 1.0 );
+		this->m_optimizer->SetLearningRate( 0.5 );
 		this->m_optimizer->SetGradientMagnitudeTolerance( 0.01 );
 		this->m_optimizer->SetReturnBestParametersAndValue( true );
 		// automatically estimate optimizer scales
@@ -76,6 +76,8 @@ namespace itk
 		this->m_registration->SetFixedImage( this->m_fixedImage );
 		this->m_registration->SetMovingImage( this->m_movingImage );
 		this->m_registration->SetInitialTransform( this->m_initialTransform );
+
+		std::cout << this->m_optimizer << std::endl;
 		
 		std::cout << "Components set up. Beginning registration." << std::endl;
 		// update registration process
