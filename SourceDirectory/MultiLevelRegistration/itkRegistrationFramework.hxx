@@ -11,11 +11,12 @@ namespace itk
 {
 	RegistrationFramework::RegistrationFramework()
 	{
-		 this->m_transforms = CompositeTransformType::New();
-		 this->m_transform = RigidTransformType::New();
-		 this->m_interpolator = InterpolatorType::New();
-		 this->m_metric = MetricType::New();
-		 this->m_optimizer = OptimizerType::New();
+		this->m_initialTransform = RigidTransformType::New();
+		this->m_transform = RigidTransformType::New();
+		this->m_interpolator = InterpolatorType::New();
+		this->m_metric = MetricType::New();
+		this->m_optimizer = OptimizerType::New();
+		this->m_observer = RigidCommandIterationUpdate::New();
 	}
 
 	void RegistrationFramework::PerformRegistration()
@@ -23,6 +24,11 @@ namespace itk
 		this->SetDefaults();
 		this->SetUpMetric();
 		this->SetUpOptimizer();
+
+		//std::cout << this->m_metric << std::endl;
+		//std::cout << this->m_optimizer << std::endl;
+
+
 
 		std::cout << "Registration performed." << std::endl;
 		return;
@@ -40,20 +46,11 @@ namespace itk
 
 	void RegistrationFramework::SetInitialTransform( RigidTransformType::Pointer initialTransform )
 	{
-		this->m_transforms->AddTransform( initialTransform );
+		this->m_initialTransform = initialTransform ;
 		
 		std::cout << "Initial rigid transform set." << std::endl;
 		return;
 	}
-
-	void RegistrationFramework::SetInitialTransform( CompositeTransformType::Pointer initialTransform )
-	{
-		this->m_transforms->AddTransform( initialTransform );
-		
-		std::cout << "Initial composite transform set." << std::endl;
-		return;
-	}
-
 
 	void RegistrationFramework::SetDefaults()
 	{
@@ -97,28 +94,25 @@ namespace itk
 		this->m_optimizer->SetGradientMagnitudeTolerance( this->m_gradientMagnitudeTolerance );
 
 		// automatically estimate optimizer scales
-		this->m_scales( 9 );
-		std::cout << m_scales[0] << std::endl;
-	
-		/*std::cout << this->m_scales << std::endl;
+		OptimizerType::ScalesType optimizerScales( this->m_transform->GetNumberOfParameters() );
 		// rotation
-		this->m_scales[0] = 1.0/this->m_rotationScale;
-		this->m_scales[1] = 1.0/this->m_rotationScale;
-		this->m_scales[2] = 1.0/this->m_rotationScale;
-		std::cout << this->m_scales << std::endl;
+		optimizerScales[0] = 1.0/this->m_rotationScale;
+		optimizerScales[1] = 1.0/this->m_rotationScale;
+		optimizerScales[2] = 1.0/this->m_rotationScale;
 		// translation
-		this->m_scales[3] = 1.0/this->m_translationScale;
-		this->m_scales[4] = 1.0/this->m_translationScale;
-		this->m_scales[5] = 1.0/this->m_translationScale;
-		std::cout << this->m_scales << std::endl;
+		optimizerScales[3] = 1.0/this->m_translationScale;
+		optimizerScales[4] = 1.0/this->m_translationScale;
+		optimizerScales[5] = 1.0/this->m_translationScale;
 		// scaling
-		this->m_scales[6] = 1.0/this->m_scalingScale;
-		this->m_scales[7] = 1.0/this->m_scalingScale;
-		this->m_scales[8] = 1.0/this->m_scalingScale;
-		std::cout << this->m_scales << std::endl;*/
+		optimizerScales[6] = 1.0/this->m_scalingScale;
+		optimizerScales[7] = 1.0/this->m_scalingScale;
+		optimizerScales[8] = 1.0/this->m_scalingScale;
 
 		// set the scales
-		//this->m_optimizer->SetScales( this->m_scales );
+		this->m_optimizer->SetScales( optimizerScales );
+
+		// insert into observer
+		this->m_optimizer->AddObserver( itk::IterationEvent(), this->m_observer );
 
 		std::cout << "Optimizer set." << std::endl;
 

@@ -159,7 +159,7 @@ typename TransformType::Pointer ReadInTransform( const char * transformFilename)
 
 	TransformReaderType::TransformListType * transforms = transformReader->GetTransformList();
 	TransformType::Pointer transform = TransformType::New();
-	std::cout << "Number of transforms: " << transforms->size() << std::endl;
+	//std::cout << "Number of transforms: " << transforms->size() << std::endl;
 
 	// put into composite transform
 	TransformReaderType::TransformListType::const_iterator it = transforms->begin();

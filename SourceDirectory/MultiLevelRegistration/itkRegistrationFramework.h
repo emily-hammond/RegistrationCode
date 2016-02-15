@@ -12,7 +12,7 @@ insert comments here
 
 #include "itkLinearInterpolateImageFunction.h"
 #include "itkMattesMutualInformationImageToImageMetric.h"
-#include "itkVersorTransformOptimizer.h"
+#include "RigidCommandIterationUpdate.h"
 
 namespace itk
 {
@@ -31,7 +31,6 @@ public:
 	
 	typedef itk::Image< unsigned short, 3 >			ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	RigidTransformType;
-	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 
 	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
 	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
@@ -46,7 +45,6 @@ public:
 	// declare functions
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	void SetInitialTransform( RigidTransformType::Pointer initialTransform );
-	void SetInitialTransform( CompositeTransformType::Pointer initialTransform );
 
 	void PerformRegistration();
 
@@ -65,9 +63,10 @@ private:
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
 	
-	CompositeTransformType::Pointer m_transforms;
+	RigidTransformType::Pointer m_initialTransform;
 	RigidTransformType::Pointer m_transform;
 	InterpolatorType::Pointer m_interpolator;
+	RigidCommandIterationUpdate::Pointer m_observer;
 
 	// optimizer
 	OptimizerType::Pointer m_optimizer;
@@ -76,7 +75,6 @@ private:
 	int m_numberOfIterations;
 	float m_relaxationFactor;
 	float m_gradientMagnitudeTolerance;
-	OptimizerType::ScalesType m_scales;
 	float m_rotationScale;
 	float m_translationScale;
 	float m_scalingScale;
