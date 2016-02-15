@@ -80,17 +80,17 @@ namespace itk
 	{
 		// metric
 		this->m_percentageOfSamples = 0.01;
-		this->m_histogramBins = 35;
+		this->m_histogramBins = 50;
 
 		// optimizer
 		this->m_minimumStepLength = 0.001;
-		this->m_maximumStepLength = 1.5;
+		this->m_maximumStepLength = 1.0;
 		this->m_numberOfIterations = 1000;
 		this->m_relaxationFactor = 0.5;
-		this->m_gradientMagnitudeTolerance = 0.01;
+		this->m_gradientMagnitudeTolerance = 0.001;
 		this->m_rotationScale = 0.01;
 		this->m_translationScale = 10;
-		this->m_scalingScale = 0.001;
+		this->m_scalingScale = 0;
 		
 		std::cout << "Defaults set." << std::endl;
 		return;
