@@ -23,14 +23,22 @@ int main( int argc, char * argv[] )
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
 	TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
+	// initialization
+	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
+	initialize->SetImages( fixedImage, movingImage );
+	initialize->CenteredOnGeometry();
+	initialize->PerformInitialization();
+
+	std::cout << initialize->GetOutput() << std::endl;
+
 	// test functionality of itkRegistrationFramework.h
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	registration->SetImages( fixedImage, movingImage );
-	registration->SetInitialTransform( initialTransform );
+	registration->SetInitialTransform( initialize->GetOutput() );
 	registration->ObserveOn();
 	registration->PerformRegistration();
-	TransformType::Pointer finalTransform = registration->GetOutput();
-	std::cout << finalTransform << std::endl;
+
+	std::cout << registration->GetOutput() << std::endl;
 	
 	std::cout << "\nFinished\n" << std::endl;
 

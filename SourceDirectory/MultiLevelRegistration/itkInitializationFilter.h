@@ -34,13 +34,22 @@ public:
 
 	// declare functions
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	void CenteredOnGeometry();
-	void MetricAlignment( int axis );
+
+	// set flags
+	void CenteredOnGeometry() { this->m_centeredOnGeometryFlag = true; }
+	void MetricAlignment( int axis ) 
+	{ 
+		this->m_metricAlignmentFlag = true;
+		this->m_metricAxis = axis;
+	}
+
+	// get initialization
+	void PerformInitialization();
 	TransformType::Pointer GetOutput();
 
 protected:
 	// declare the constructor and define default parameters
-	InitializationFilter() {}
+	InitializationFilter();
 	
 	// destructor
 	virtual ~InitializationFilter() {}
@@ -52,6 +61,14 @@ private:
 	// declare variables
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
+	TransformType::Pointer m_transform;
+
+	// centered initialization
+	bool m_centeredOnGeometryFlag;
+	
+	// metric initialization
+	bool m_metricAlignmentFlag;
+	int m_metricAxis;
 	
 };
 } // end namespace
