@@ -50,7 +50,11 @@ public:
 
 	void PerformRegistration();
 	TransformType::Pointer GetOutput();
-	void ObserveOn() { this->m_observeFlag = true; }
+	void ObserveOn()
+	{ 
+		this->m_observeFlag = true;
+		return;
+	}
 
 protected:
 	// declare the constructor and define default parameters

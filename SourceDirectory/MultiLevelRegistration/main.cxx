@@ -12,7 +12,7 @@ int main( int argc, char * argv[] )
 	//desired inputs
 	char * fixedImageFilename = argv[1];
 	char * movingImageFilename = argv[2];
-	char * initialTransformFilename = argv[3];
+	//char * initialTransformFilename = argv[3];
 
 	// instantiate image type
 	typedef itk::Image<unsigned short, 3>	ImageType;
@@ -21,15 +21,13 @@ int main( int argc, char * argv[] )
 	// read in fixed and moving images
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
+	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	// initialization
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
 	initialize->SetImages( fixedImage, movingImage );
 	initialize->CenteredOnGeometry();
 	initialize->PerformInitialization();
-
-	std::cout << initialize->GetOutput() << std::endl;
 
 	// test functionality of itkRegistrationFramework.h
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();

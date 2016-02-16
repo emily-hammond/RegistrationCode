@@ -11,6 +11,7 @@ namespace itk
 {
 	RegistrationFramework::RegistrationFramework()
 	{
+		// initialize components
 		this->m_initialTransform = TransformType::New();
 		this->m_transform = TransformType::New();
 		this->m_interpolator = InterpolatorType::New();
@@ -18,11 +19,13 @@ namespace itk
 		this->m_optimizer = OptimizerType::New();
 		this->m_registration = RegistrationType::New();
 		this->m_observer = RigidCommandIterationUpdate::New();
+
+		// set defaults
+		this->SetDefaults();
 	}
 
 	void RegistrationFramework::PerformRegistration()
 	{
-		this->SetDefaults();
 		this->SetUpMetric();
 		this->SetUpOptimizer();
 
@@ -85,7 +88,7 @@ namespace itk
 		// optimizer
 		this->m_minimumStepLength = 0.001;
 		this->m_maximumStepLength = 1.0;
-		this->m_numberOfIterations = 1000;
+		this->m_numberOfIterations = 500;
 		this->m_relaxationFactor = 0.5;
 		this->m_gradientMagnitudeTolerance = 0.001;
 		this->m_rotationScale = 0.01;
@@ -139,9 +142,11 @@ namespace itk
 		this->m_optimizer->SetScales( optimizerScales );
 
 		// insert into observer
+		std::cout << "Observe flag: " << this->m_observeFlag << std::endl;
 		if( this->m_observeFlag )
 		{
 			this->m_optimizer->AddObserver( itk::IterationEvent(), this->m_observer );
+			std::cout << "Set to observe registration process." << std::endl;
 		}
 
 		std::cout << "Optimizer set." << std::endl;
