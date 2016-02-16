@@ -36,11 +36,24 @@ public:
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 
 	// set flags
-	void CenteredOnGeometry() { this->m_centeredOnGeometryFlag = true; }
-	void MetricAlignment( int axis ) 
+	void CenteredOnGeometryOn() 
+	{ 
+		this->m_centeredOnGeometryFlag = true;
+		return;
+	}
+
+	void MetricAlignmentOn( int axis ) 
 	{ 
 		this->m_metricAlignmentFlag = true;
-		this->m_metricAxis = axis;
+		if( axis > -1 && axis < 4 )
+		{
+			this->m_metricAxis = axis;
+		}
+		else
+		{
+			std::cout << "Axis number invalid. 0 = x, 1 = y, 2 = z" << std::endl;
+		}
+		return;
 	}
 
 	// get initialization

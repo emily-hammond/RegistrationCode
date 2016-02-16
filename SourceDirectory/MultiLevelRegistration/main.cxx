@@ -26,7 +26,8 @@ int main( int argc, char * argv[] )
 	// initialization
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
 	initialize->SetImages( fixedImage, movingImage );
-	initialize->CenteredOnGeometry();
+	initialize->CenteredOnGeometryOn();
+	initialize->MetricAlignmentOn();
 	initialize->PerformInitialization();
 
 	// test functionality of itkRegistrationFramework.h

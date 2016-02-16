@@ -13,6 +13,8 @@ namespace itk
 	InitializationFilter::InitializationFilter()
 	{
 		this->m_centeredOnGeometryFlag = false;
+		this->m_metricAlignmentFlag = false;
+		this->m_metricAxis = 0;
 		this->m_transform = TransformType::New();
 	}
 
@@ -42,11 +44,36 @@ namespace itk
 			
 			// perform initialization
 			initializer->InitializeTransform();
+			std::cout << this->m_transform << std::endl;
 
 			std::cout << "Centered on geometry initialization complete." << std::endl;
-			std::cout << this->m_transform << std::endl;
 		}
 
+		if( this->m_metricAlignmentFlag > 0 )
+		{
+			// instantiate metric to use
+			typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;
+			MetricType::Pointer mmi = MetricType::New();
+
+			// connect interpolator
+			typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
+			InterpolatorType::Pointer interpolator = InterpolatorType::New();
+
+			// set parameters
+			mmi->SetFixedImage( this->m_fixedImage );
+			mmi->SetMovingImage( this->m_movingImage );
+			mmi->SetFixedImageRegion( this->m_fixedImage->GetLargestPossibleRegion() );
+			mmi->SetTransform( this->m_transform );
+			mmi->SetInterpolator( interpolator );
+
+			// initialize metric
+			mmi->Initialize();
+
+			// obtain transform parameters
+			TransformType::ParametersType parameters = this->m_transform->GetParameters();
+
+		}
+		
 		std::cout << "Initialization complete." << std::endl;
 		return;
 	}
