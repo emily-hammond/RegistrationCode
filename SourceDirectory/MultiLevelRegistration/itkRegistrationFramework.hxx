@@ -91,6 +91,9 @@ namespace itk
 		this->m_rotationScale = 0.01;
 		this->m_translationScale = 10;
 		this->m_scalingScale = 0;
+
+		// observer
+		this->m_observeFlag = false;
 		
 		std::cout << "Defaults set." << std::endl;
 		return;
@@ -136,14 +139,17 @@ namespace itk
 		this->m_optimizer->SetScales( optimizerScales );
 
 		// insert into observer
-		this->m_optimizer->AddObserver( itk::IterationEvent(), this->m_observer );
+		if( this->m_observeFlag )
+		{
+			this->m_optimizer->AddObserver( itk::IterationEvent(), this->m_observer );
+		}
 
 		std::cout << "Optimizer set." << std::endl;
 
 		return;
 	}
 
-	RegistrationFramework::TransformType::Pointer RegistrationFramework::PrintOutResults()
+	RegistrationFramework::TransformType::Pointer RegistrationFramework::GetOutput()
 	{
 		// print out final optimizer parameters
 		std::cout << "==== Final Optimizer Parameters ====" << std::endl;

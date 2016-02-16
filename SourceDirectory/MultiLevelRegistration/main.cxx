@@ -5,6 +5,7 @@ INSERT COMMENTS HERE
 // include files
 #include "ReadWriteFunctions.hxx"
 #include "itkRegistrationFramework.h"
+#include "itkInitializationFilter.h"
 
 int main( int argc, char * argv[] )
 {
@@ -26,8 +27,9 @@ int main( int argc, char * argv[] )
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	registration->SetImages( fixedImage, movingImage );
 	registration->SetInitialTransform( initialTransform );
+	registration->ObserveOn();
 	registration->PerformRegistration();
-	TransformType::Pointer finalTransform = registration->PrintOutResults();
+	TransformType::Pointer finalTransform = registration->GetOutput();
 	std::cout << finalTransform << std::endl;
 	
 	std::cout << "\nFinished\n" << std::endl;

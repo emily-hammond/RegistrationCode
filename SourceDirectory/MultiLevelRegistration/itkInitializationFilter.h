@@ -6,6 +6,7 @@ insert comments here
 #define __itkInitializationFilter_h
 
 // include files
+#include "itkCenteredTransformInitializer.h"
 
 namespace itk
 {
@@ -21,6 +22,9 @@ public:
 	typedef Object						Superclass;
 	typedef SmartPointer< Self >		Pointer;
 	typedef SmartPointer< const Self >	ConstPointer;
+
+	typedef itk::Image< unsigned short, 3 >			ImageType;
+	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	
 	// method for creation
 	itkNewMacro(Self);
@@ -29,10 +33,14 @@ public:
 	itkTypeMacro(InitializationFilter, Object);
 
 	// declare functions
+	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
+	void CenteredOnGeometry();
+	void MetricAlignment( int axis );
+	TransformType::Pointer GetOutput();
 
 protected:
 	// declare the constructor and define default parameters
-	InitializationFilter();
+	InitializationFilter() {}
 	
 	// destructor
 	virtual ~InitializationFilter() {}
@@ -42,6 +50,8 @@ protected:
 	
 private:
 	// declare variables
+	ImageType::Pointer m_fixedImage;
+	ImageType::Pointer m_movingImage;
 	
 };
 } // end namespace

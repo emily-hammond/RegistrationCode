@@ -49,7 +49,8 @@ public:
 	void SetInitialTransform( TransformType::Pointer initialTransform );
 
 	void PerformRegistration();
-	TransformType::Pointer PrintOutResults();
+	TransformType::Pointer GetOutput();
+	void ObserveOn() { this->m_observeFlag = true; }
 
 protected:
 	// declare the constructor and define default parameters
@@ -70,7 +71,10 @@ private:
 	TransformType::Pointer m_transform;
 	InterpolatorType::Pointer m_interpolator;
 	RegistrationType::Pointer m_registration;
+	
+	// observer
 	RigidCommandIterationUpdate::Pointer m_observer;
+	bool m_observeFlag;
 
 	// optimizer
 	OptimizerType::Pointer m_optimizer;
