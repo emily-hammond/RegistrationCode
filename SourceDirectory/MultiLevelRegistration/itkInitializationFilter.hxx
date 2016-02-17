@@ -9,7 +9,7 @@ insert comments here
 
 namespace itk
 {
-	// contructor
+	// contructor to set up initializations and transform
 	InitializationFilter::InitializationFilter()
 	{
 		this->m_centeredOnGeometryFlag = false;
@@ -17,9 +17,10 @@ namespace itk
 		this->m_metricAlignment1Flag = false;
 		this->m_metricAlignment2Flag = false;
 		this->m_transform = TransformType::New();
+		this->m_observeFlag = false;
 	}
 
-	// member function implementations
+	// read in fixed and moving image
 	void InitializationFilter::SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
 	{
 		this->m_fixedImage = fixedImage;
@@ -29,20 +30,25 @@ namespace itk
 		return;
 	}
 
+	// set the flags for metric alignment by axis
 	void InitializationFilter::MetricAlignmentOn( int axis )
 	{
+		// x-axis
 		if( axis == 0 )
 		{
 			this->m_metricAlignment0Flag = true;
 		}
+		// y-axis
 		else if( axis == 1 )
 		{
 			this->m_metricAlignment1Flag = true;
 		}
+		// z-axis
 		else if( axis == 2 )
 		{
 			this->m_metricAlignment2Flag = true;
 		}
+		// error handling
 		else
 		{
 			std::cout << "Axis number invalid. 0 = x, 1 = y, 2 = z" << std::endl;
@@ -50,23 +56,25 @@ namespace itk
 		return;
 	}
 
+	// perform the initialization by going through the set flags
 	void InitializationFilter::PerformInitialization()
 	{
+		// center images based on geometry
 		if( this->m_centeredOnGeometryFlag )
 		{
 			CenterOnGeometry();
 		}
-
+		// x-axis
 		if( this->m_metricAlignment0Flag )
 		{
 			MetricAlignment( 0 );
 		}
-
+		// y-axis
 		if( this->m_metricAlignment1Flag )
 		{
 			MetricAlignment( 1 );
 		}
-
+		// z-axis
 		if( this->m_metricAlignment2Flag )
 		{
 			MetricAlignment( 2 );
@@ -75,11 +83,13 @@ namespace itk
 		return;
 	}
 
+	// read out the final transform 
 	InitializationFilter::TransformType::Pointer InitializationFilter::GetOutput()
 	{
 		return this->m_transform;
 	}
 
+	// obtain the proper range to translate the moving image for metric alignment depending on the given axis
 	void InitializationFilter::GetRange( int axis )
 	{
 		// moving image parameters
@@ -91,14 +101,14 @@ namespace itk
 		const ImageType::SpacingType & fixedSpacing = this->m_fixedImage->GetSpacing();
 
 		// determine range
-		this->m_translationRange = fixedSize[ axis ]*fixedSpacing[ axis ] - 
-			movingSize[ axis ]*movingSpacing[ axis ];
+		this->m_translationRange = fixedSize[ axis ]*fixedSpacing[ axis ] - movingSize[ axis ]*movingSpacing[ axis ];
 		
 		// print out to screen
-		std::cout << "Range: " << this->m_translationRange << std::endl;
+		//std::cout << "Range: " << this->m_translationRange << std::endl;
 		return;
 	}
 
+	// center the images based on geometry
 	void InitializationFilter::CenterOnGeometry()
 	{
 		// instantiate initialization filter
@@ -118,6 +128,7 @@ namespace itk
 		std::cout << "Centered on geometry initialization complete." << std::endl;
 	}
 
+	// metric alignment based on the desired axis
 	void InitializationFilter::MetricAlignment( int axis )
 	{
 		// instantiate metric to use
@@ -138,18 +149,25 @@ namespace itk
 		// initialize metric
 		mmi->Initialize();
 
-		// obtain transform parameters
+		// obtain current transform parameters
 		TransformType::ParametersType parameters = this->m_transform->GetParameters();
 
-		// initialize parameters
+		// initializations
 		this->m_minMetric = 100000.0;
 		this->m_minParameters = parameters;
+
+		// get desired translation range and calculate start and end parameters
 		this->GetRange( axis );
 		float start = parameters[ axis + 3 ] - this->m_translationRange/2.0;
 		float end = parameters[ axis + 3 ] + this->m_translationRange/2.0;
 
-		std::cout << "Start: " << start << "    End: " << end << std::endl;
+		// header for section
+		if( this->m_observeFlag )
+		{
+			std::cout << "\n\nMetric Initialization on " << axis << " axis:\n";
+		}
 
+		// parse through translation range and determine smallest metric value
 		for( float i = start; i < end; i = i - (start-end)/20.0)
 		{
 			// change parameters
@@ -161,13 +179,16 @@ namespace itk
 				this->m_minParameters = parameters;
 			}
 
-			// print out results
-			/*std::cout<< mmi->GetValue( parameters ) << ":";
-			for( int j = 0; j < 9; ++j )
+			// print out results if observing on
+			if( this->m_observeFlag )
 			{
-				std::cout << " " << parameters[j];
+				std::cout<< mmi->GetValue( parameters ) << ":";
+				for( int j = 0; j < 9; ++j )
+				{
+					std::cout << " " << parameters[j];
+				}
+				std::cout << std::endl;
 			}
-			std::cout << std::endl;*/
 		}
 
 		// save results into transform

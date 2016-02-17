@@ -1,5 +1,12 @@
 /*
-insert comments here
+Author: Emily Hammond
+Date: 2016 February 17
+
+Purpose: This class is incorporated in the multi-level registration framework and is used 
+for initialization of two images. It allows for initialization via center of geometry, or 
+metric initialization along a specified axis. Multiple initialization methods are allowed
+on the same two images.
+
 */
 
 #ifndef __itkInitializationFilter_h
@@ -10,19 +17,17 @@ insert comments here
 
 namespace itk
 {
-/* class InitializationFilter
- *
- * 
- 
-*/
+// class InitializationFilter
 class InitializationFilter: public Object
 {
 public:
+	// default ITK
 	typedef InitializationFilter		Self;
 	typedef Object						Superclass;
 	typedef SmartPointer< Self >		Pointer;
 	typedef SmartPointer< const Self >	ConstPointer;
 
+	// definitions
 	typedef itk::Image< unsigned short, 3 >			ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	
@@ -36,20 +41,20 @@ public:
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 
 	// set flags
+	void ObserveOn() { this->m_observeFlag = true; }
+	void MetricAlignmentOn( int axis );	
 	void CenteredOnGeometryOn() 
 	{ 
 		this->m_centeredOnGeometryFlag = true;
 		return;
 	}
 
-	void MetricAlignmentOn( int axis );
-
 	// get initialization
 	void PerformInitialization();
 	TransformType::Pointer GetOutput();
 
 protected:
-	// declare the constructor and define default parameters
+	// constructor
 	InitializationFilter();
 	
 	// destructor
@@ -63,6 +68,7 @@ private:
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
 	TransformType::Pointer m_transform;
+	bool m_observeFlag;
 
 	// centered initialization
 	bool m_centeredOnGeometryFlag;
@@ -75,10 +81,10 @@ private:
 	float m_minMetric;
 	TransformType::ParametersType m_minParameters;
 
+	// private functions
 	void GetRange( int axis );
 	void CenterOnGeometry();
 	void MetricAlignment( int axis );
-	
 };
 } // end namespace
 
