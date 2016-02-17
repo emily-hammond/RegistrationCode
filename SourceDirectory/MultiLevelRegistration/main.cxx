@@ -50,8 +50,6 @@ int main( int argc, char * argv[] )
 	registration->SetInitialTransform( initialize->GetOutput() );
 	//registration->ObserveOn();
 	registration->PerformRegistration();
-
-	std::cout << registration->GetOutput() << std::endl;
 	
 	std::cout << "\nFinished\n" << std::endl;
 
