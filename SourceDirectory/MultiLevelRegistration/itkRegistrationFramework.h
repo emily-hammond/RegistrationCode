@@ -8,6 +8,10 @@ two images. The registration is composed of an MMI metric and a ScaleVersor3DTra
 transform is optimized with a RSGD optimizer fit for versor optimization. It currently uses 
 the ITKv3 registration framework.
 
+Remaining to implement:
+1. unset flags
+2. define different defaults
+
 */
 
 #ifndef __itkRegistrationFramework_h

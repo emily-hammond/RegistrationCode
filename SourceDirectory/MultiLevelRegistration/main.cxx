@@ -6,6 +6,7 @@ INSERT COMMENTS HERE
 #include "ReadWriteFunctions.hxx"
 #include "itkRegistrationFramework.h"
 #include "itkInitializationFilter.h"
+#include "itkValidationFilter.h"
 
 int main( int argc, char * argv[] )
 {
