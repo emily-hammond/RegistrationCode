@@ -16,8 +16,7 @@ NOTE: This filter requires that the final transform for alignment has already be
 
 Remaining to implement:
 1. fiducial comparison
-2. checkerboard image creation
-3. overlap measures
+2. checkerboard image thresholding
 
 */
 
@@ -77,7 +76,7 @@ private:
 
 	// overlap measures
 	void LabelOverlapMeasuresByLabel( int label );
-	LabelMapType::Pointer IsolateImage( LabelMapType::Pointer image, int label );
+	LabelMapType::Pointer IsolateLabel( LabelMapType::Pointer image, int label );
 	LabelMapType::Pointer m_source;
 	LabelMapType::Pointer m_target;
 

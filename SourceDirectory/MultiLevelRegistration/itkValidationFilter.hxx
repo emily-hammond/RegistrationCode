@@ -18,7 +18,7 @@ namespace itk
 		this->m_target = LabelMapType::New();
 
 		// find range of values in images
-		typedef itk::MinimumMaximumImageCalculator< LabelImageType >	MinMaxCalculatorType;
+		typedef itk::MinimumMaximumImageCalculator< LabelMapType >	MinMaxCalculatorType;
 		MinMaxCalculatorType::Pointer mms = MinMaxCalculatorType::New();
 		mms->SetImage( source );
 		mms->Compute();
@@ -51,7 +51,7 @@ namespace itk
 			{
 				this->m_source = IsolateLabel( source, i );
 				this->m_target = IsolateLabel( target, i );
-				LabelOverlapMeasureByLabel( i );
+				LabelOverlapMeasuresByLabel( i );
 			}
 		}
 		// or if there is not
@@ -115,7 +115,7 @@ namespace itk
 		return;
 	}
 
-	ValidationFilter::LabelMapType::Pointer IsolateLabel( LabelMapType::Pointer image, int label )
+	ValidationFilter::LabelMapType::Pointer ValidationFilter::IsolateLabel( LabelMapType::Pointer image, int label )
 	{
 		// set up thresholding
 		typedef itk::BinaryThresholdImageFilter< LabelMapType, LabelMapType >	ThresholdType;
@@ -140,6 +140,24 @@ namespace itk
 
 		// get isolated label
 		return threshold->GetOutput();
+	}
+
+	ValidationFilter::ImageType::Pointer ValidationFilter::CheckerboardImage( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
+	{
+		//declare and insert inputs
+		typedef itk::CheckerBoardImageFilter< ImageType >	CheckerboardFilterType;
+		CheckerboardFilterType::Pointer checker = CheckerboardFilterType::New();
+		checker->SetInput1( movingImage );
+		checker->SetInput2( fixedImage );
+
+		// define pattern type
+		CheckerboardFilterType::PatternArrayType pattern;
+		pattern[0] = 4;
+		pattern[1] = 4;
+		pattern[2] = 4;
+		checker->SetCheckerPattern( pattern );
+
+		return checker->GetOutput();
 	}
 
 } // end namespace
