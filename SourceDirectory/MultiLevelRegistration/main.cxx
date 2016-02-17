@@ -27,8 +27,8 @@ int main( int argc, char * argv[] )
 	//ImageType::Pointer movingLabelMap = ReadInImage< LabelMapType >( movingLabelMapFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
-	//std::cout << fixedImage << std::endl;
-	//std::cout << movingImage << std::endl;
+	std::cout << "\nFixed image: " << fixedImageFilename << std::endl;
+	std::cout << "Moving image: " << movingImageFilename << std::endl;
 
 	// initialization
 	std::cout << "\n*********************************************" << std::endl;

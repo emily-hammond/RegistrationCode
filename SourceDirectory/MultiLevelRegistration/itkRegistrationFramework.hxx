@@ -162,7 +162,7 @@ namespace itk
 	RegistrationFramework::TransformType::Pointer RegistrationFramework::GetOutput()
 	{
 		// print out final optimizer parameters
-		std::cout << "==== Final Optimizer Parameters ====" << std::endl;
+		std::cout << "\n==== Final Parameters ====" << std::endl;
 		std::cout << "Iterations: " << this->m_optimizer->GetCurrentIteration() << std::endl;
 		std::cout << "Metric: " << this->m_optimizer->GetValue() << std::endl;
 		std::cout << "Stop Condition: " << this->m_registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
@@ -171,6 +171,10 @@ namespace itk
 		TransformType::Pointer finalTransform = TransformType::New();
 		finalTransform->SetParameters( this->m_registration->GetLastTransformParameters() );
 		finalTransform->SetFixedParameters( this->m_transform->GetFixedParameters() );
+
+		std::cout << "Angle: " << finalTransform->GetVersor().GetAngle() << std::endl;
+		std::cout << "Translation: " << finalTransform->GetTranslation() << std::endl;
+		std::cout << "Scaling: " << finalTransform->GetScale() << std::endl;
 
 		return finalTransform;
 	}
