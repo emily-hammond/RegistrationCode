@@ -1,5 +1,13 @@
 /*
-insert comments here
+Author: Emily Hammond
+Date: 2016 February 17
+
+Purpose: This class is to wrap the registration framework used in multi-level registration.
+It reads in a fixed and moving image and initial transform and performs registration on the
+two images. The registration is composed of an MMI metric and a ScaleVersor3DTransform. The
+transform is optimized with a RSGD optimizer fit for versor optimization. It currently uses 
+the ITKv3 registration framework.
+
 */
 
 #ifndef __itkRegistrationFramework_h
@@ -17,22 +25,21 @@ insert comments here
 
 namespace itk
 {
-/* class RegistrationFramework
- *
- * 
- 
-*/
+// class RegistrationFramework
 class RegistrationFramework: public Object
 {
 public:
+	// default ITK
 	typedef RegistrationFramework		Self;
 	typedef Object						Superclass;
 	typedef SmartPointer< Self >		Pointer;
 	typedef SmartPointer< const Self >	ConstPointer;
 	
+	// definitions
 	typedef itk::Image< unsigned short, 3 >			ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
+	// registration components
 	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
 	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
 	typedef itk::VersorTransformOptimizer								OptimizerType;
@@ -57,7 +64,7 @@ public:
 	}
 
 protected:
-	// declare the constructor and define default parameters
+	// constructor
 	RegistrationFramework();
 	
 	// destructor
@@ -71,6 +78,7 @@ private:
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
 	
+	// registration components
 	TransformType::Pointer m_initialTransform;
 	TransformType::Pointer m_transform;
 	InterpolatorType::Pointer m_interpolator;
@@ -96,6 +104,7 @@ private:
 	float m_percentageOfSamples;
 	int m_histogramBins;
 
+	// private functions
 	void SetDefaults();
 	void SetUpMetric();
 	void SetUpOptimizer();

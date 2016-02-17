@@ -48,7 +48,7 @@ int main( int argc, char * argv[] )
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	registration->SetImages( fixedImage, movingImage );
 	registration->SetInitialTransform( initialize->GetOutput() );
-	registration->ObserveOn();
+	//registration->ObserveOn();
 	registration->PerformRegistration();
 
 	std::cout << registration->GetOutput() << std::endl;

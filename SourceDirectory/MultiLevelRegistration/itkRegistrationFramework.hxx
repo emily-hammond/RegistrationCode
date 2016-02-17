@@ -9,6 +9,7 @@ insert comments here
 
 namespace itk
 {
+	// set up defaults in constructor
 	RegistrationFramework::RegistrationFramework()
 	{
 		// initialize components
@@ -24,26 +25,29 @@ namespace itk
 		this->SetDefaults();
 	}
 
+	// run through registration process
 	void RegistrationFramework::PerformRegistration()
 	{
+		//set up components
 		this->SetUpMetric();
 		this->SetUpOptimizer();
 
 		//std::cout << this->m_metric << std::endl;
 		//std::cout << this->m_optimizer << std::endl;
 
-		// input components
+		// input components to registration object
 		this->m_registration->SetMetric( this->m_metric );
 		this->m_registration->SetOptimizer( this->m_optimizer );
 		this->m_registration->SetTransform( this->m_transform );
 		this->m_registration->SetInterpolator( this->m_interpolator );
 
-		// input images and transform
+		// input images and transform to registration class
 		this->m_registration->SetFixedImage( this->m_fixedImage );
 		this->m_registration->SetMovingImage( this->m_movingImage );
 		this->m_registration->SetInitialTransformParameters( this->m_initialTransform->GetParameters() );
 		this->m_registration->SetFixedImageRegion( this->m_fixedImage->GetBufferedRegion() );
 
+		// begin registration
 		std::cout << "Begin registration." << std::endl;
 		try
 		{
@@ -61,7 +65,7 @@ namespace itk
 		return;
 	}
 
-	// member function implementations
+	// set fixed and moving images
 	void RegistrationFramework::SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
 	{
 		this->m_fixedImage = fixedImage;
@@ -71,6 +75,7 @@ namespace itk
 		return;
 	}
 
+	// set initial transform if desired
 	void RegistrationFramework::SetInitialTransform( TransformType::Pointer initialTransform )
 	{
 		this->m_initialTransform = initialTransform ;
@@ -79,6 +84,7 @@ namespace itk
 		return;
 	}
 
+	// define defaults
 	void RegistrationFramework::SetDefaults()
 	{
 		// metric
@@ -102,18 +108,21 @@ namespace itk
 		return;
 	}
 
+	// set up MMI metric for defaults
 	void RegistrationFramework::SetUpMetric()
 	{
 		// determine number of samples to use
 		ImageType::SizeType size = this->m_fixedImage->GetLargestPossibleRegion().GetSize();
 		int numOfPixels = size[0]*size[1]*size[2];
 		this->m_metric->SetNumberOfSpatialSamples( numOfPixels*(this->m_percentageOfSamples) );
+		// define number of histogram bins
 		this->m_metric->SetNumberOfHistogramBins( this->m_histogramBins );
 
 		std::cout << "Metric set." << std::endl;
 		return;
 	}
 
+	// set up RSGD optimizer
 	void RegistrationFramework::SetUpOptimizer()
 	{
 		// set defaults
@@ -123,7 +132,7 @@ namespace itk
 		this->m_optimizer->SetRelaxationFactor( this->m_relaxationFactor );
 		this->m_optimizer->SetGradientMagnitudeTolerance( this->m_gradientMagnitudeTolerance );
 
-		// automatically estimate optimizer scales
+		// insert optimizer scales
 		OptimizerType::ScalesType optimizerScales( this->m_transform->GetNumberOfParameters() );
 		// rotation
 		optimizerScales[0] = 1.0/this->m_rotationScale;
@@ -141,8 +150,7 @@ namespace itk
 		// set the scales
 		this->m_optimizer->SetScales( optimizerScales );
 
-		// insert into observer
-		std::cout << "Observe flag: " << this->m_observeFlag << std::endl;
+		// insert into observer if desired
 		if( this->m_observeFlag )
 		{
 			this->m_optimizer->AddObserver( itk::IterationEvent(), this->m_observer );
@@ -154,6 +162,7 @@ namespace itk
 		return;
 	}
 
+	// get final transform
 	RegistrationFramework::TransformType::Pointer RegistrationFramework::GetOutput()
 	{
 		// print out final optimizer parameters

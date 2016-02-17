@@ -12,7 +12,7 @@ on the same two images.
 #ifndef __itkInitializationFilter_h
 #define __itkInitializationFilter_h
 
-// include files
+// include files not defined in itkRegistrationFramework.h
 #include "itkCenteredTransformInitializer.h"
 
 namespace itk

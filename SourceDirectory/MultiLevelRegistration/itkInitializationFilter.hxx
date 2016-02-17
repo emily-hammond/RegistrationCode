@@ -195,7 +195,7 @@ namespace itk
 		this->m_transform->SetParameters( this->m_minParameters );
 		//std::cout << this->m_transform << std::endl;
 	
-		std::cout << "Initialization complete." << std::endl;
+		std::cout << "Metric initialization on " << axis << " complete." << std::endl;
 		return;
 	}
 
