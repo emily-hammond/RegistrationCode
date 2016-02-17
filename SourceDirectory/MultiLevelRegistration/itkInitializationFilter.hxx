@@ -1,7 +1,3 @@
-/*
-insert comments here
-*/
-
 #ifndef __itkInitializationFilter_hxx
 #define __itkInitializationFilter_hxx
 

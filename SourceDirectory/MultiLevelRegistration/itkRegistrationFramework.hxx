@@ -1,7 +1,3 @@
-/*
-insert comments here
-*/
-
 #ifndef __itkRegistrationFramework_hxx
 #define __itkRegistrationFramework_hxx
 

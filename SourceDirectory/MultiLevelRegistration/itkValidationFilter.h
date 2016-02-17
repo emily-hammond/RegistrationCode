@@ -12,6 +12,8 @@ Purpose: This class performs registration validation with three different types:
 	e. average hausdorff distance
 3. Checkerboard image creation given two registered images
 
+NOTE: This filter requires that the final transform for alignment has already been applied
+
 Remaining to implement:
 1. fiducial comparison
 2. checkerboard image creation
@@ -24,8 +26,11 @@ Remaining to implement:
 
 // include files
 #include "itkLabelOverlapMeasuresImageFilter.h"
-#include "itkCheckerBoardImageFilter.h"
+#include "itkMinimumMaximumImageCalculator.h"
 #include "itkHausdorffDistanceImageFilter.h"
+#include "itkBinaryThresholdImageFilter.h"
+
+#include "itkCheckerBoardImageFilter.h"
 
 namespace itk
 {
@@ -50,6 +55,7 @@ public:
 	itkTypeMacro(ValidationFilter, Object);
 
 	// declare functions
+	
 	void LabelOverlapMeasures( LabelMapType::Pointer source, LabelMapType::Pointer target );
 	ImageType::Pointer CheckerboardImage( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	void FiducialComparison( char * fixedFilename, char * movingFilename );
@@ -70,6 +76,10 @@ private:
 	// fiducial alignment
 
 	// overlap measures
+	void LabelOverlapMeasuresByLabel( int label );
+	LabelMapType::Pointer IsolateImage( LabelMapType::Pointer image, int label );
+	LabelMapType::Pointer m_source;
+	LabelMapType::Pointer m_target;
 
 	// checkerboard images
 	
