@@ -7,6 +7,7 @@ INSERT COMMENTS HERE
 #include "itkRegistrationFramework.h"
 #include "itkInitializationFilter.h"
 #include "itkValidationFilter.h"
+#include "itkManageTransformsFilter.h"
 
 int main( int argc, char * argv[] )
 {
@@ -20,7 +21,7 @@ int main( int argc, char * argv[] )
 	typedef itk::Image< unsigned int, 3 >	LabelMapType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
-	// read in fixed and moving images
+	// read in necessary images
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
 	//ImageType::Pointer fixedLabelMap = ReadInImage< LabelMapType >( fixedLabelMapFilename );
@@ -29,6 +30,9 @@ int main( int argc, char * argv[] )
 
 	std::cout << "\nFixed image: " << fixedImageFilename << std::endl;
 	std::cout << "Moving image: " << movingImageFilename << std::endl;
+
+	// start managing transforms
+	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
 
 	// initialization
 	std::cout << "\n*********************************************" << std::endl;
@@ -44,6 +48,9 @@ int main( int argc, char * argv[] )
 	initialize->MetricAlignmentOn( 2 );
 	initialize->PerformInitialization();
 
+	// put initial transform into transforms object
+	transforms->AddTransform( initialize->GetOutput() );
+
 	// test functionality of itkRegistrationFramework.h
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "               REGISTRATION                  " << std::endl;
@@ -54,6 +61,10 @@ int main( int argc, char * argv[] )
 	registration->SetInitialTransform( initialize->GetOutput() );
 	//registration->ObserveOn();
 	registration->PerformRegistration();
+
+	// put final registration transform into transforms object
+	transforms->AddTransform( registration->GetOutput() );
+	transforms->Print();
 
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "                VALIDATION                  " << std::endl;

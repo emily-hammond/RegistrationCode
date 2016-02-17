@@ -2,21 +2,9 @@
 Author: Emily Hammond
 Date: 2016 February 
 
-Purpose: This class performs registration validation with three different types:
-1. Fiducial alignment given two corresponding landmark lists
-2. Overlap measures given two corresponding mask files
-	a. target overlap
-	b. jaccard overlap
-	c. dice overlap
-	d. hausdorff distance
-	e. average hausdorff distance
-3. Checkerboard image creation given two registered images
-
-NOTE: This filter requires that the final transform for alignment has already been applied
-
-Remaining to implement:
-1. fiducial comparison
-2. checkerboard image thresholding
+Purpose: This class is to hold all the transforms throughout the multi-level registration process.
+It will store them in a composite transform and will account for all the application of each 
+transform prior to validation.
 
 */
 
@@ -24,6 +12,7 @@ Remaining to implement:
 #define __itkManageTransformsFilter_h
 
 // include files
+#include "itkCompositeTransform.h"
 
 namespace itk
 {
@@ -38,6 +27,8 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 
 	// definitions
+	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
+	typedef itk::ScaleVersor3DTransform< double > TransformType;
 	
 	// method for creation
 	itkNewMacro(Self);
@@ -46,7 +37,8 @@ public:
 	itkTypeMacro(ManageTransformsFilter, Object);
 
 	// declare functions
-
+	void AddTransform( TransformType::Pointer transform );
+	void Print();
 	
 protected:
 	// constructor
@@ -60,7 +52,7 @@ protected:
 	
 private:
 	// declare variables
-	
+	CompositeTransformType::Pointer m_compositeTransform;
 };
 } // end namespace
 
