@@ -82,7 +82,7 @@ private:
 	// metric initialization
 	bool m_metricAlignmentFlag;
 	int m_metricAxis;
-	int m_translationRange;
+	float m_translationRange;
 	float m_minMetric;
 	TransformType::ParametersType m_minParameters;
 

@@ -44,7 +44,7 @@ namespace itk
 			
 			// perform initialization
 			initializer->InitializeTransform();
-			std::cout << this->m_transform << std::endl;
+			//std::cout << this->m_transform << std::endl;
 
 			std::cout << "Centered on geometry initialization complete." << std::endl;
 		}
@@ -74,16 +74,17 @@ namespace itk
 
 			// initialize parameters
 			this->m_minMetric = 100000.0;
+			this->m_minParameters = parameters;
 			this->GetRange();
 			float start = parameters[ this->m_metricAxis + 3 ] - this->m_translationRange/2.0;
 			float end = parameters[ this->m_metricAxis + 3 ] + this->m_translationRange/2.0;
 
 			std::cout << "Start: " << start << "    End: " << end << std::endl;
 
-			for( float i = start; i < end; i = i + (start-end)/20.0)
+			for( float i = start; i < end; i = i - (start-end)/20.0)
 			{
 				// change parameters
-				parameters[ this->m_metricAxis ] = i;
+				parameters[ this->m_metricAxis + 3 ] = i;
 				// store parameters and corresponding metric into array
 				if( mmi->GetValue( parameters ) < this->m_minMetric )
 				{
@@ -100,14 +101,9 @@ namespace itk
 				std::cout << std::endl;
 			}
 
-			// print out final results
-			std::cout << std::endl;
-			std::cout << "Minimum metric: " << this->m_minMetric;
-			for( int j = 0; j < 9; ++j )
-			{
-				std::cout << " " << this->m_minParameters[j];
-			}
-			std::cout << std::endl;
+			// save results into transform
+			this->m_transform->SetParameters( this->m_minParameters );
+			std::cout << this->m_transform << std::endl;
 		}
 		
 		std::cout << "Initialization complete." << std::endl;
@@ -134,7 +130,7 @@ namespace itk
 			movingSize[ this->m_metricAxis ]*movingSpacing[ this->m_metricAxis ];
 		
 		// print out to screen
-		std::cout << this->m_translationRange << std::endl;
+		std::cout << "Range: " << this->m_translationRange << std::endl;
 		return;
 	}
 
