@@ -16,12 +16,15 @@ int main( int argc, char * argv[] )
 	//char * initialTransformFilename = argv[3];
 
 	// instantiate image type
-	typedef itk::Image<unsigned short, 3>	ImageType;
+	typedef itk::Image< unsigned short, 3 >	ImageType;
+	typedef itk::Image< unsigned int, 3 >	LabelMapType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	// read in fixed and moving images
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
+	//ImageType::Pointer fixedLabelMap = ReadInImage< LabelMapType >( fixedLabelMapFilename );
+	//ImageType::Pointer movingLabelMap = ReadInImage< LabelMapType >( movingLabelMapFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	//std::cout << fixedImage << std::endl;
@@ -51,6 +54,13 @@ int main( int argc, char * argv[] )
 	registration->SetInitialTransform( initialize->GetOutput() );
 	//registration->ObserveOn();
 	registration->PerformRegistration();
+
+	std::cout << "\n*********************************************" << std::endl;
+	std::cout << "                VALIDATION                  " << std::endl;
+	std::cout << "*********************************************\n" << std::endl;
+
+	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
+	//validation->LabelOverlapMeasures( fixedLabelMap, movingLabelMap )
 	
 	std::cout << "\nFinished\n" << std::endl;
 
