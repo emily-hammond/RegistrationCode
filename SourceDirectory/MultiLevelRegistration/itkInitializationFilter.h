@@ -42,19 +42,7 @@ public:
 		return;
 	}
 
-	void MetricAlignmentOn( int axis ) 
-	{ 
-		this->m_metricAlignmentFlag = true;
-		if( axis > -1 && axis < 4 )
-		{
-			this->m_metricAxis = axis;
-		}
-		else
-		{
-			std::cout << "Axis number invalid. 0 = x, 1 = y, 2 = z" << std::endl;
-		}
-		return;
-	}
+	void MetricAlignmentOn( int axis );
 
 	// get initialization
 	void PerformInitialization();
@@ -80,13 +68,16 @@ private:
 	bool m_centeredOnGeometryFlag;
 	
 	// metric initialization
-	bool m_metricAlignmentFlag;
-	int m_metricAxis;
+	bool m_metricAlignment0Flag;
+	bool m_metricAlignment1Flag;
+	bool m_metricAlignment2Flag;
 	float m_translationRange;
 	float m_minMetric;
 	TransformType::ParametersType m_minParameters;
 
-	void GetRange();
+	void GetRange( int axis );
+	void CenterOnGeometry();
+	void MetricAlignment( int axis );
 	
 };
 } // end namespace

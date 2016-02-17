@@ -30,6 +30,8 @@ int main( int argc, char * argv[] )
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
 	initialize->SetImages( fixedImage, movingImage );
 	initialize->CenteredOnGeometryOn();
+	initialize->MetricAlignmentOn( 0 );
+	initialize->MetricAlignmentOn( 1 );
 	initialize->MetricAlignmentOn( 2 );
 	initialize->PerformInitialization();
 
