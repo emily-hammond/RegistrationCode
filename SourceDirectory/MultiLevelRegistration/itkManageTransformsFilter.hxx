@@ -2,6 +2,7 @@
 #define __itkManageTransformsFilter_hxx_hxx
 
 #include "itkManageTransformsFilter.h"
+#include "itkImageRegionIterator.h"
 
 namespace itk
 {
@@ -63,14 +64,14 @@ namespace itk
 				// allocate position array and indices
 				int positionsOfBars[4] = {0};
 				int numberOfBars = 0;
-				int positionofBar = 0;
+				int positionOfBar = 0;
 				
 				// iterate through the line in the file to find the | (bar) locations
 				// example line: point|18.8396|305.532|-458.046|1|1
 				for( std::string::iterator it = line.begin(); it != line.end(); ++it )
 				{
 					// only note the first 4 locations
-					if( (*it == "|") && numberOfBars < 4 )
+					if( (*it == '|') && numberOfBars < 4 )
 					{
 						positionsOfBars[numberOfBars] = positionOfBar;
 						++numberOfBars;
@@ -98,13 +99,18 @@ namespace itk
 		return roi;
 	}
 
-	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask( double * roi )
+	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask()
 	{
 		MaskImageType::Pointer maskImage = MaskImageType::New();
-		MaskImageType::RegionType region = this->m_fixedImage->GetLargestPossibleRegion();
-		MaskImageType::OriginType origin = this->m_fixedImage->GetOrigin();
-		MaskImageType::SpacingType spacing = this->m_fixedImage->GetSpacing();
-		MaskImageType::SizeType size = this->m_fixedImage->GetLargestPossibleRegion().GetSize();
+		maskImage->SetRegions( this->m_fixedImage->GetLargestPossibleRegion() );
+		maskImage->SetOrigin( this->m_fixedImage->GetOrigin() );
+		maskImage->SetSpacing( this->m_fixedImage->GetSpacing() );
+		maskImage->SetDirection( this->m_fixedImage->GetDirection() );
+		maskImage->Allocate();
+
+		
+
+		std::cout << maskImage << std::endl;
 
 		return maskImage;
 	}
