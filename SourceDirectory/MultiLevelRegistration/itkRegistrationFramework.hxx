@@ -88,13 +88,13 @@ namespace itk
 		this->m_histogramBins = 50;
 
 		// optimizer
-		this->m_minimumStepLength = 0.001;
-		this->m_maximumStepLength = 1.0;
+		this->m_minimumStepLength = 0.0025;
+		this->m_maximumStepLength = 0.5;
 		this->m_numberOfIterations = 500;
-		this->m_relaxationFactor = 0.5;
+		this->m_relaxationFactor = 0.8;
 		this->m_gradientMagnitudeTolerance = 0.001;
 		this->m_rotationScale = 0.01;
-		this->m_translationScale = 10;
+		this->m_translationScale = 5;
 		this->m_scalingScale = 0;
 
 		// observer

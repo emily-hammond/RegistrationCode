@@ -33,6 +33,7 @@ int main( int argc, char * argv[] )
 
 	// start managing transforms
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+	transforms->SetImages( fixedImage, movingImage );
 
 	// initialization
 	std::cout << "\n*********************************************" << std::endl;
@@ -49,7 +50,7 @@ int main( int argc, char * argv[] )
 	initialize->PerformInitialization();
 
 	// put initial transform into transforms object
-	transforms->AddTransform( initialize->GetOutput() );
+	//transforms->AddTransform( initialize->GetOutput() );
 
 	// test functionality of itkRegistrationFramework.h
 	std::cout << "\n*********************************************" << std::endl;
@@ -64,7 +65,8 @@ int main( int argc, char * argv[] )
 
 	// put final registration transform into transforms object
 	transforms->AddTransform( registration->GetOutput() );
-	transforms->Print();
+	//transforms->Print();
+	transforms->SaveTransform();
 
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "                VALIDATION                  " << std::endl;

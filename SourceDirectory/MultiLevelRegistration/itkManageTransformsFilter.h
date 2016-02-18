@@ -13,6 +13,7 @@ transform prior to validation.
 
 // include files
 #include "itkCompositeTransform.h"
+#include "itkImageMaskSpatialObject.h"
 
 namespace itk
 {
@@ -28,7 +29,9 @@ public:
 
 	// definitions
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
-	typedef itk::ScaleVersor3DTransform< double > TransformType;
+	typedef itk::ScaleVersor3DTransform< double >	TransformType;
+	typedef itk::ImageMaskSpatialObject< 3 >		MaskType;
+	typedef itk::Image< unsigned char, 3 >			MaskImageType;
 	
 	// method for creation
 	itkNewMacro(Self);
@@ -39,6 +42,9 @@ public:
 	// declare functions
 	void AddTransform( TransformType::Pointer transform );
 	void Print();
+	void SaveTransform();
+	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
+	void GenerateMaskFromROI( const char * filename );
 	
 protected:
 	// constructor
@@ -53,6 +59,11 @@ protected:
 private:
 	// declare variables
 	CompositeTransformType::Pointer m_compositeTransform;
+	ImageType::Pointer m_fixedImage;
+	ImageType::Pointer m_movingImage;
+
+	double * ExtractROIPoints( const char * filename );
+	MaskImageType::Pointer CreateMask( double * roi );
 };
 } // end namespace
 
