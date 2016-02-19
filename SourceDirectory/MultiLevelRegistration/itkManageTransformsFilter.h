@@ -14,6 +14,7 @@ transform prior to validation.
 // include files
 #include "itkCompositeTransform.h"
 #include "itkImageMaskSpatialObject.h"
+#include "itkChangeInformationImageFilter.h"
 
 namespace itk
 {
@@ -45,7 +46,8 @@ public:
 	void Print();
 	void SaveTransform();
 	MaskImageType::Pointer GenerateMaskFromROI( const char * filename, ImageType::Pointer image );
-	ImageType::Pointer HardenTransform( ImageType::Pointer image );
+	ImageType::Pointer HardenTransform( ImageType::Pointer image, TransformType::Pointer transform );
+	ImageType::Pointer ResampleImage( ImageType::Pointer image, TransformType::Pointer transform );
 	
 protected:
 	// constructor

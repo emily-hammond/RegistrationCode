@@ -39,6 +39,8 @@ namespace itk
 		double * roi = ExtractROIPoints( filename );
 		MaskImageType::Pointer maskImage = CreateMask( roi, image );
 
+		std::cout << "Mask has been generated." << std::endl;
+
 		return maskImage;
 	}
 
@@ -91,6 +93,7 @@ namespace itk
 				}
 			}	
 		}
+
 		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
 		return roi;
 	}
@@ -149,9 +152,61 @@ namespace itk
 	}
 
 	// apply current transform on file to the header information of the input image
-	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::HardenTransform( ImageType::Pointer image )
+	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::HardenTransform( ImageType::Pointer image, TransformType::Pointer transform )
 	{
-		
+		// get image properties
+		ImageType::PointType origin = image->GetOrigin();
+		ImageType::SpacingType spacing = image->GetSpacing();
+		ImageType::DirectionType direction = image->GetDirection();
+
+		// print out old parameters
+/*		std::cout << "OLD PARAMETERS" << std::endl;
+		std::cout << "Origin: [" << origin[0] << ", " << origin[1] << ", " << origin[2] << "]" << std::endl;
+		std::cout << "Spacing: [" << spacing[0] << ", " << spacing[1] << ", " << spacing[2] << "]" << std::endl;
+		std::cout << "Direction: [" << *direction[0] << ", " << *direction[1] << ", " << *direction[2] << std::endl;
+		std::cout << "            " << *direction[3] << ", " << *direction[4] << ", " << *direction[5] << std::endl;
+		std::cout << "            " << *direction[6] << ", " << *direction[7] << ", " << *direction[8] << "]" << std::endl;
+*/
+		// get transform parameters
+		TransformType::TranslationType translation = transform->GetTranslation();
+		TransformType::ScaleVectorType scale = transform->GetScale();
+		TransformType::VersorType versor = transform->GetVersor();
+
+		// apply parameters to image
+		for( int i = 0; i < 3; i++ )
+		{
+			spacing[i] *= scale[i];
+			origin[i] += translation[i]*scale[i];
+		}
+
+		// apply rotation to image
+		ImageType::DirectionType newDirection = direction*versor.GetMatrix();
+	
+/*		std::cout << "\nNEW PARAMETERS" << std::endl;
+		std::cout << "Origin: [" << origin[0] << ", " << origin[1] << ", " << origin[2] << "]" << std::endl;
+		std::cout << "Spacing: [" << spacing[0] << ", " << spacing[1] << ", " << spacing[2] << "]" << std::endl;
+		std::cout << "Direction: [" << *direction[0] << ", " << *direction[1] << ", " << *direction[2] << std::endl;
+		std::cout << "            " << *direction[3] << ", " << *direction[4] << ", " << *direction[5] << std::endl;
+		std::cout << "            " << *direction[6] << ", " << *direction[7] << ", " << *direction[8] << "]" << std::endl;
+*/
+		// allocate hardening filter
+		typedef itk::ChangeInformationImageFilter< ImageType > HardenTransformFilter;
+		HardenTransformFilter::Pointer harden = HardenTransformFilter::New();
+		harden->SetInput( image );
+
+		// set new parameters
+		harden->SetOutputSpacing( spacing );
+		harden->SetOutputOrigin( origin );
+		harden->SetOutputDirection( newDirection );
+
+		// turn change flags on
+		harden->ChangeSpacingOn();
+		harden->ChangeOriginOn();
+		harden->ChangeDirectionOn();
+
+		harden->Update();
+
+		return harden->GetOutput();
 	}
 	
 } // end namespace

@@ -10,6 +10,7 @@ namespace itk
 	{
 		// initialize components
 		this->m_initialTransform = TransformType::New();
+		this->m_finalTransform = TransformType::New();
 		this->m_transform = TransformType::New();
 		this->m_interpolator = InterpolatorType::New();
 		this->m_metric = MetricType::New();
@@ -58,6 +59,11 @@ namespace itk
 		}
 
 		std::cout << "Registration performed." << std::endl;
+
+		// get final transform
+		this->m_finalTransform->SetParameters( this->m_registration->GetLastTransformParameters() );
+		this->m_finalTransform->SetFixedParameters( this->m_transform->GetFixedParameters() );
+
 		return;
 	}
 
@@ -95,7 +101,7 @@ namespace itk
 		this->m_gradientMagnitudeTolerance = 0.001;
 		this->m_rotationScale = 0.01;
 		this->m_translationScale = 5;
-		this->m_scalingScale = 0;
+		this->m_scalingScale = 0.01;
 
 		// observer
 		this->m_observeFlag = false;
@@ -159,24 +165,25 @@ namespace itk
 	}
 
 	// get final transform
-	RegistrationFramework::TransformType::Pointer RegistrationFramework::GetOutput()
+	void RegistrationFramework::PrintResults()
 	{
 		// print out final optimizer parameters
 		std::cout << "\n==== Final Parameters ====" << std::endl;
 		std::cout << "Iterations: " << this->m_optimizer->GetCurrentIteration() << std::endl;
 		std::cout << "Metric: " << this->m_optimizer->GetValue() << std::endl;
 		std::cout << "Stop Condition: " << this->m_registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+		std::cout << "Angle: " << this->m_finalTransform->GetVersor().GetAngle() << std::endl;
+		std::cout << "Axis: " << this->m_finalTransform->GetVersor().GetAxis() << std::endl;
+		std::cout << "Translation: " << this->m_finalTransform->GetTranslation() << std::endl;
+		std::cout << "Scaling: " << this->m_finalTransform->GetScale() << std::endl;
+		std::cout << std::endl;
 
-		// get final transform
-		TransformType::Pointer finalTransform = TransformType::New();
-		finalTransform->SetParameters( this->m_registration->GetLastTransformParameters() );
-		finalTransform->SetFixedParameters( this->m_transform->GetFixedParameters() );
-
-		std::cout << "Angle: " << finalTransform->GetVersor().GetAngle() << std::endl;
-		std::cout << "Translation: " << finalTransform->GetTranslation() << std::endl;
-		std::cout << "Scaling: " << finalTransform->GetScale() << std::endl;
-
-		return finalTransform;
+		return;
+	}
+	
+	RegistrationFramework::TransformType::Pointer RegistrationFramework::GetFinalTransform()
+	{
+		return this->m_finalTransform;
 	}
 
 } // end namespace

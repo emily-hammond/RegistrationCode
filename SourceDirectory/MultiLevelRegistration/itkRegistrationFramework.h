@@ -60,7 +60,8 @@ public:
 	void SetInitialTransform( TransformType::Pointer initialTransform );
 
 	void PerformRegistration();
-	TransformType::Pointer GetOutput();
+	TransformType::Pointer GetFinalTransform();
+	void PrintResults();
 	void ObserveOn()
 	{ 
 		this->m_observeFlag = true;
@@ -81,6 +82,7 @@ private:
 	// declare variables
 	ImageType::Pointer m_fixedImage;
 	ImageType::Pointer m_movingImage;
+	TransformType::Pointer m_finalTransform;
 	
 	// registration components
 	TransformType::Pointer m_initialTransform;

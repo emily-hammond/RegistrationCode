@@ -16,6 +16,11 @@ int main( int argc, char * argv[] )
 	char * movingImageFilename = argv[2];
 	char * roiFilename = argv[3];
 
+	if( argc < 4 )
+	{
+		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage roiFilename" << std::endl;
+	}
+
 	// instantiate image type
 	typedef itk::Image< unsigned short, 3 >	ImageType;
 	typedef itk::Image< unsigned int, 3 >	LabelMapType;
@@ -30,10 +35,7 @@ int main( int argc, char * argv[] )
 
 	std::cout << "\nFixed image: " << fixedImageFilename << std::endl;
 	std::cout << "Moving image: " << movingImageFilename << std::endl;
-
-	// start managing transforms
-	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
-	transforms->GenerateMaskFromROI( roiFilename, fixedImage );
+	std::cout << "ROI filename: " << roiFilename << std::endl;
 
 	// initialization
 	std::cout << "\n*********************************************" << std::endl;
@@ -49,9 +51,6 @@ int main( int argc, char * argv[] )
 	initialize->MetricAlignmentOn( 2 );
 	initialize->PerformInitialization();
 
-	// put initial transform into transforms object
-	//transforms->AddTransform( initialize->GetOutput() );
-
 	// test functionality of itkRegistrationFramework.h
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "               REGISTRATION                  " << std::endl;
@@ -62,11 +61,27 @@ int main( int argc, char * argv[] )
 	registration->SetInitialTransform( initialize->GetOutput() );
 	//registration->ObserveOn();
 	registration->PerformRegistration();
+	registration->PrintResults();
+	std::cout << registration->GetFinalTransform() << std::endl;
+	
+	// test functionality of itkManageTransformsFilter.h
+	std::cout << "\n*********************************************" << std::endl;
+	std::cout << "                TRANSFORMS                  " << std::endl;
+	std::cout << "*********************************************\n" << std::endl;
 
-	// put final registration transform into transforms object
-	transforms->AddTransform( registration->GetOutput() );
-	//transforms->Print();
-	transforms->SaveTransform();
+	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+	// create mask file from ROI points
+	transforms->GenerateMaskFromROI( roiFilename, fixedImage );
+	WriteOutTransform< TransformType >( "finalTransform.tfm", registration->GetFinalTransform() );
+	// apply transform to image (header data only)
+	WriteOutImage< ImageType, ImageType >( "finalImage.mhd", transforms->HardenTransform( movingImage, registration->GetFinalTransform() ) );
+
+	// compare two images
+	std::cout << "\n\nORIGINAL IMAGE\n" << std::endl;
+	std::cout << movingImage << std::endl;
+
+	std::cout << "\n\nMODIFIED IMAGE\n" << std::endl;
+	std::cout << transforms->HardenTransform( movingImage, registration->GetFinalTransform() ) << std::endl;
 
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "                VALIDATION                  " << std::endl;
@@ -74,8 +89,6 @@ int main( int argc, char * argv[] )
 
 	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
 	//validation->LabelOverlapMeasures( fixedLabelMap, movingLabelMap )
-	
-	std::cout << "\nFinished\n" << std::endl;
 
 	return EXIT_SUCCESS;
 }
