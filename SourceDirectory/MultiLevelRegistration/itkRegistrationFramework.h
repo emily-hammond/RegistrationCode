@@ -59,7 +59,7 @@ public:
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	void SetInitialTransform( TransformType::Pointer initialTransform );
 
-	void PerformRegistration();
+	void Update();
 	TransformType::Pointer GetFinalTransform();
 	void PrintResults();
 	void ObserveOn()

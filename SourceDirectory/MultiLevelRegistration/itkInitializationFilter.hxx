@@ -53,7 +53,7 @@ namespace itk
 	}
 
 	// perform the initialization by going through the set flags
-	void InitializationFilter::PerformInitialization()
+	void InitializationFilter::Update()
 	{
 		// center images based on geometry
 		if( this->m_centeredOnGeometryFlag )

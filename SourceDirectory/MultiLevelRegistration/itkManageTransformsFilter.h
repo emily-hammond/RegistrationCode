@@ -13,7 +13,6 @@ transform prior to validation.
 
 // include files
 #include "itkCompositeTransform.h"
-#include "itkImageMaskSpatialObject.h"
 #include "itkChangeInformationImageFilter.h"
 #include "itkResampleImageFilter.h"
 
@@ -32,8 +31,7 @@ public:
 	// definitions
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
-	typedef itk::ImageMaskSpatialObject< 3 >		MaskType;
-	typedef itk::Image< unsigned int, 3 >			MaskImageType;
+	typedef itk::Image< unsigned char, 3 >			MaskImageType;
 	typedef itk::Image< unsigned short, 3 >			ImageType;
 	
 	// method for creation
@@ -49,13 +47,14 @@ public:
 	void SaveTransform();
 	
 	// create/set images
-	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
+	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	MaskImageType::Pointer GenerateMaskFromROI( const char * filename );
 	ImageType::Pointer GetTransformedImage();
 
 	// apply transform
 	void HardenTransformOn();
 	void ResampleImageOn();
+	void Update();
 
 protected:
 	// constructor
@@ -80,7 +79,7 @@ private:
 
 	// creating mask file
 	double * ExtractROIPoints( const char * filename );
-	MaskImageType::Pointer CreateMask( double * roi, ImageType::Pointer fixedImage );
+	MaskImageType::Pointer CreateMask( double * roi );
 
 	// applying transform
 	void HardenTransform();

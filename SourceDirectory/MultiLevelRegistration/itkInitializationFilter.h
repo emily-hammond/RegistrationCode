@@ -53,7 +53,7 @@ public:
 	}
 
 	// get initialization
-	void PerformInitialization();
+	void Update();
 	TransformType::Pointer GetOutput();
 
 protected:

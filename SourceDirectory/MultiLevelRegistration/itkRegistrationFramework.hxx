@@ -23,7 +23,7 @@ namespace itk
 	}
 
 	// run through registration process
-	void RegistrationFramework::PerformRegistration()
+	void RegistrationFramework::Update()
 	{
 		//set up components
 		this->SetUpMetric();
