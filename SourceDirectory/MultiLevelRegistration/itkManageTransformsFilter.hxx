@@ -34,20 +34,10 @@ namespace itk
 		return;
 	}
 
-	// set fixed and moving images
-	void ManageTransformsFilter::SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
-	{
-		this->m_fixedImage = fixedImage;
-		this->m_movingImage = movingImage;
-		
-		std::cout << "Images set." << std::endl;
-		return;
-	}
-
-	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::GenerateMaskFromROI( const char * filename )
+	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::GenerateMaskFromROI( const char * filename, ImageType::Pointer image )
 	{
 		double * roi = ExtractROIPoints( filename );
-		MaskImageType::Pointer maskImage = CreateMask( roi );
+		MaskImageType::Pointer maskImage = CreateMask( roi, image );
 
 		return maskImage;
 	}
@@ -105,15 +95,15 @@ namespace itk
 		return roi;
 	}
 
-	// create the mask as an image
-	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask( double * roi )
+	// create the mask as an image based on the properties of the input image
+	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask( double * roi, ImageType::Pointer image )
 	{
 		// input fixed image properties into mask image
 		MaskImageType::Pointer maskImage = MaskImageType::New();
-		maskImage->SetRegions( this->m_fixedImage->GetLargestPossibleRegion() );
-		maskImage->SetOrigin( this->m_fixedImage->GetOrigin() );
-		maskImage->SetSpacing( this->m_fixedImage->GetSpacing() );
-		maskImage->SetDirection( this->m_fixedImage->GetDirection() );
+		maskImage->SetRegions( image->GetLargestPossibleRegion() );
+		maskImage->SetOrigin( image->GetOrigin() );
+		maskImage->SetSpacing( image->GetSpacing() );
+		maskImage->SetDirection( image->GetDirection() );
 		maskImage->Allocate();
 
 		// extract center and radius
@@ -157,7 +147,12 @@ namespace itk
 
 		return maskImage;
 	}
-			
+
+	// apply current transform on file to the header information of the input image
+	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::HardenTransform( ImageType::Pointer image )
+	{
+		
+	}
 	
 } // end namespace
 

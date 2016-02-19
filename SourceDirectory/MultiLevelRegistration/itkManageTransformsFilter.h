@@ -44,8 +44,8 @@ public:
 	void AddTransform( TransformType::Pointer transform );
 	void Print();
 	void SaveTransform();
-	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	MaskImageType::Pointer GenerateMaskFromROI( const char * filename );
+	MaskImageType::Pointer GenerateMaskFromROI( const char * filename, ImageType::Pointer image );
+	ImageType::Pointer HardenTransform( ImageType::Pointer image );
 	
 protected:
 	// constructor
@@ -60,11 +60,9 @@ protected:
 private:
 	// declare variables
 	CompositeTransformType::Pointer m_compositeTransform;
-	ImageType::Pointer m_fixedImage;
-	ImageType::Pointer m_movingImage;
 
 	double * ExtractROIPoints( const char * filename );
-	MaskImageType::Pointer CreateMask( double * roi );
+	MaskImageType::Pointer CreateMask( double * roi, ImageType::Pointer fixedImage );
 };
 } // end namespace
 

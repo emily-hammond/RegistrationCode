@@ -33,9 +33,7 @@ int main( int argc, char * argv[] )
 
 	// start managing transforms
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
-	transforms->SetImages( fixedImage, movingImage );
-	//transforms->GenerateMaskFromROI( roiFilename );
-	WriteOutImage< LabelMapType, LabelMapType >( "maskImage.mhd", transforms->GenerateMaskFromROI( roiFilename ) );
+	transforms->GenerateMaskFromROI( roiFilename, fixedImage );
 
 	// initialization
 	std::cout << "\n*********************************************" << std::endl;
