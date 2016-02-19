@@ -44,6 +44,14 @@ namespace itk
 		return;
 	}
 
+	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::GenerateMaskFromROI( const char * filename )
+	{
+		double * roi = ExtractROIPoints( filename );
+		MaskImageType::Pointer maskImage = CreateMask( roi );
+
+		return maskImage;
+	}
+
 	// extract point values from the slicer ROI file
 	double * ManageTransformsFilter::ExtractROIPoints( const char * filename )
 	{
@@ -75,11 +83,9 @@ namespace itk
 					{
 						positionsOfBars[numberOfBars] = positionOfBar;
 						++numberOfBars;
-						std::cout << positionOfBar << "  ";
 					}
 					++positionOfBar;
 				}
-				std::cout << std::endl;
 
 				// extract each point and place into ROI array
 				for( int i = 0; i < 3; ++i )
@@ -99,8 +105,10 @@ namespace itk
 		return roi;
 	}
 
-	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask()
+	// create the mask as an image
+	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask( double * roi )
 	{
+		// input fixed image properties into mask image
 		MaskImageType::Pointer maskImage = MaskImageType::New();
 		maskImage->SetRegions( this->m_fixedImage->GetLargestPossibleRegion() );
 		maskImage->SetOrigin( this->m_fixedImage->GetOrigin() );
@@ -108,9 +116,44 @@ namespace itk
 		maskImage->SetDirection( this->m_fixedImage->GetDirection() );
 		maskImage->Allocate();
 
+		// extract center and radius
+		double c[3] = {-*(roi),-*(roi+1),*(roi+2)};
+		double r[3] = {*(roi+3),*(roi+4),*(roi+5)};
 		
+		// create size of mask according to the roi array
+		// set start index of mask according to the roi array
+		MaskImageType::PointType startPoint, endPoint;
+		startPoint[0] = c[0] - r[0];
+		startPoint[1] = c[1] - r[1];
+		startPoint[2] = c[2] - r[2];
 
-		std::cout << maskImage << std::endl;
+		// find end index
+		endPoint[0] = c[0] + r[0];
+		endPoint[1] = c[1] + r[1];
+		endPoint[2] = c[2] + r[2];
+
+		// convert to indices
+		MaskImageType::IndexType startIndex, endIndex;
+		maskImage->TransformPhysicalPointToIndex( startPoint, startIndex );
+		maskImage->TransformPhysicalPointToIndex( endPoint, endIndex );
+
+		// plug into region
+		MaskImageType::SizeType regionSize;
+		regionSize[0] = abs( startIndex[0] - endIndex[0] );
+		regionSize[1] = abs( startIndex[1] - endIndex[1] );
+		regionSize[2] = abs( startIndex[2] - endIndex[2] );
+
+		MaskImageType::RegionType maskedRegion;
+		maskedRegion.SetSize( regionSize );
+		maskedRegion.SetIndex( startIndex );
+
+		// iterate over region and set pixels to white
+		itk::ImageRegionIterator< MaskImageType > it( maskImage, maskedRegion );
+		while( !it.IsAtEnd() )
+		{
+			it.Set( 255 );
+			++it;
+		}
 
 		return maskImage;
 	}

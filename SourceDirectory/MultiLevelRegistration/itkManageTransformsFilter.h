@@ -31,7 +31,7 @@ public:
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	typedef itk::ImageMaskSpatialObject< 3 >		MaskType;
-	typedef itk::Image< unsigned char, 3 >			MaskImageType;
+	typedef itk::Image< unsigned int, 3 >			MaskImageType;
 	typedef itk::Image< unsigned short, 3 >			ImageType;
 	
 	// method for creation
@@ -45,8 +45,8 @@ public:
 	void Print();
 	void SaveTransform();
 	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	void GenerateMaskFromROI( const char * filename );
-	MaskImageType::Pointer CreateMask();
+	MaskImageType::Pointer GenerateMaskFromROI( const char * filename );
+	
 protected:
 	// constructor
 	ManageTransformsFilter();
@@ -64,7 +64,7 @@ private:
 	ImageType::Pointer m_movingImage;
 
 	double * ExtractROIPoints( const char * filename );
-	
+	MaskImageType::Pointer CreateMask( double * roi );
 };
 } // end namespace
 
