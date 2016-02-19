@@ -15,6 +15,7 @@ transform prior to validation.
 #include "itkCompositeTransform.h"
 #include "itkImageMaskSpatialObject.h"
 #include "itkChangeInformationImageFilter.h"
+#include "itkResampleImageFilter.h"
 
 namespace itk
 {
@@ -42,13 +43,20 @@ public:
 	itkTypeMacro(ManageTransformsFilter, Object);
 
 	// declare functions
+	// manage transforms
 	void AddTransform( TransformType::Pointer transform );
 	void Print();
 	void SaveTransform();
-	MaskImageType::Pointer GenerateMaskFromROI( const char * filename, ImageType::Pointer image );
-	ImageType::Pointer HardenTransform( ImageType::Pointer image, TransformType::Pointer transform );
-	ImageType::Pointer ResampleImage( ImageType::Pointer image, TransformType::Pointer transform );
 	
+	// create/set images
+	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
+	MaskImageType::Pointer GenerateMaskFromROI( const char * filename );
+	ImageType::Pointer GetTransformedImage();
+
+	// apply transform
+	void HardenTransformOn();
+	void ResampleImageOn();
+
 protected:
 	// constructor
 	ManageTransformsFilter();
@@ -62,9 +70,21 @@ protected:
 private:
 	// declare variables
 	CompositeTransformType::Pointer m_compositeTransform;
+	ImageType::Pointer m_fixedImage;
+	ImageType::Pointer m_movingImage;
+	ImageType::Pointer m_transformedImage;
 
+	// flags
+	bool m_hardenTransform;
+	bool m_resampleImage;
+
+	// creating mask file
 	double * ExtractROIPoints( const char * filename );
 	MaskImageType::Pointer CreateMask( double * roi, ImageType::Pointer fixedImage );
+
+	// applying transform
+	void HardenTransform();
+	void ResampleImage();
 };
 } // end namespace
 

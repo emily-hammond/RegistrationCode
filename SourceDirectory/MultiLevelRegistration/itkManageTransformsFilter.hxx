@@ -10,6 +10,11 @@ namespace itk
 	ManageTransformsFilter::ManageTransformsFilter()
 	{
 		this->m_compositeTransform = CompositeTransformType::New();
+		this->m_fixedImage = ImageType::New();
+		this->m_movingImage = ImageType::New();
+		this->m_transformedImage = ImageType::New();
+		this->m_hardenTransform = false;
+		this->m_resampleImage = true;
 	}
 
 	void ManageTransformsFilter::AddTransform( TransformType::Pointer transform )
@@ -34,10 +39,37 @@ namespace itk
 		return;
 	}
 
-	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::GenerateMaskFromROI( const char * filename, ImageType::Pointer image )
+	// set fixed and moving images
+	void ManageTransformsFilter::SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
+	{
+		this->m_fixedImage = fixedImage;
+		this->m_movingImage = movingImage;
+		
+		std::cout << "Images set." << std::endl;
+		return;
+	}
+
+	void ManageTransformsFilter::HardenTransformOn()
+	{
+		this->m_hardenTransform = true;
+		return;
+	}
+
+	void ManageTransformsFilter::ResampleImageOn()
+	{
+		this->m_resampleImage = true;
+		return;
+	}
+
+	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::GetTransformedImage()
+	{
+		return this->m_transformedImage;
+	}
+
+	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::GenerateMaskFromROI( const char * filename )
 	{
 		double * roi = ExtractROIPoints( filename );
-		MaskImageType::Pointer maskImage = CreateMask( roi, image );
+		MaskImageType::Pointer maskImage = CreateMask( roi );
 
 		std::cout << "Mask has been generated." << std::endl;
 
@@ -99,14 +131,14 @@ namespace itk
 	}
 
 	// create the mask as an image based on the properties of the input image
-	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask( double * roi, ImageType::Pointer image )
+	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask( double * roi )
 	{
 		// input fixed image properties into mask image
 		MaskImageType::Pointer maskImage = MaskImageType::New();
-		maskImage->SetRegions( image->GetLargestPossibleRegion() );
-		maskImage->SetOrigin( image->GetOrigin() );
-		maskImage->SetSpacing( image->GetSpacing() );
-		maskImage->SetDirection( image->GetDirection() );
+		maskImage->SetRegions( this->fixedImage->GetLargestPossibleRegion() );
+		maskImage->SetOrigin( this->fixedImage->GetOrigin() );
+		maskImage->SetSpacing( this->fixedImage->GetSpacing() );
+		maskImage->SetDirection( this->fixedImage->GetDirection() );
 		maskImage->Allocate();
 
 		// extract center and radius
@@ -152,12 +184,12 @@ namespace itk
 	}
 
 	// apply current transform on file to the header information of the input image
-	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::HardenTransform( ImageType::Pointer image, TransformType::Pointer transform )
+	void ManageTransformsFilter::HardenTransform()
 	{
 		// get image properties
-		ImageType::PointType origin = image->GetOrigin();
-		ImageType::SpacingType spacing = image->GetSpacing();
-		ImageType::DirectionType direction = image->GetDirection();
+		ImageType::PointType origin = this->movingImage->GetOrigin();
+		ImageType::SpacingType spacing = this->movingImage->GetSpacing();
+		ImageType::DirectionType direction = this->movingImage->GetDirection();
 
 		// print out old parameters
 /*		std::cout << "OLD PARAMETERS" << std::endl;
@@ -168,9 +200,9 @@ namespace itk
 		std::cout << "            " << *direction[6] << ", " << *direction[7] << ", " << *direction[8] << "]" << std::endl;
 */
 		// get transform parameters
-		TransformType::TranslationType translation = transform->GetTranslation();
-		TransformType::ScaleVectorType scale = transform->GetScale();
-		TransformType::VersorType versor = transform->GetVersor();
+		TransformType::TranslationType translation = this->m_compositeTransform->GetTranslation();
+		TransformType::ScaleVectorType scale = this->m_compositeTransform->GetScale();
+		TransformType::VersorType versor = this->m_compositeTransform->GetVersor();
 
 		// apply parameters to image
 		for( int i = 0; i < 3; i++ )
@@ -192,7 +224,7 @@ namespace itk
 		// allocate hardening filter
 		typedef itk::ChangeInformationImageFilter< ImageType > HardenTransformFilter;
 		HardenTransformFilter::Pointer harden = HardenTransformFilter::New();
-		harden->SetInput( image );
+		harden->SetInput( this->m_movingImage );
 
 		// set new parameters
 		harden->SetOutputSpacing( spacing );
@@ -205,8 +237,30 @@ namespace itk
 		harden->ChangeDirectionOn();
 
 		harden->Update();
+		this->m_transformedImage = harden->GetOutput();
+		return; 
+	}
 
-		return harden->GetOutput();
+	void ManageTransformsFilter::ResampleImage()
+	{
+		// set up resampling object
+		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
+		ResampleFilterType::Pointer resample = ResampleFilterType::New();
+
+		// define image resampling with respect to fixed image
+		resample->SetSize( this->m_fixedImage->GetLargestPossibleRegion().GetSize() );
+		resample->SetOutputOrigin( this->m_fixedImage->GetOrigin() );
+		resample->SetOutputSpacing( this->m_fixedImage->GetSpacing() );
+		resample->SetOutputDirection( this->m_fixedImage->GetDirection() );
+
+		// input parameters
+		resample->SetInput( this->m_movingImage );
+		resample->SetTransform( this->m_compositeTransform );
+
+		// apply
+		resample->Update();
+		this->m_transformedImage = resample->GetOutput();
+		return;
 	}
 	
 } // end namespace

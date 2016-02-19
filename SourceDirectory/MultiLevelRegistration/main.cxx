@@ -70,11 +70,13 @@ int main( int argc, char * argv[] )
 	std::cout << "*********************************************\n" << std::endl;
 
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+	transforms->AddTransform( registration->GetFinalTransform() );
 	// create mask file from ROI points
 	transforms->GenerateMaskFromROI( roiFilename, fixedImage );
 	WriteOutTransform< TransformType >( "finalTransform.tfm", registration->GetFinalTransform() );
-	// apply transform to image (header data only)
-	WriteOutImage< ImageType, ImageType >( "finalImage.mhd", transforms->HardenTransform( movingImage, registration->GetFinalTransform() ) );
+	// apply transform to image by resampling
+	transforms->ResampleImageOn();
+	WriteOutImage< ImageType, ImageType >( "finalImage.mhd", transforms->GetTransformedImage() );
 
 	// compare two images
 	std::cout << "\n\nORIGINAL IMAGE\n" << std::endl;
