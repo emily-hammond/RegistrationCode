@@ -21,35 +21,35 @@ namespace itk
 		typedef itk::MinimumMaximumImageCalculator< LabelMapType >	MinMaxCalculatorType;
 		MinMaxCalculatorType::Pointer mms = MinMaxCalculatorType::New();
 		mms->SetImage( source );
-		mms->Compute();
+		mms->ComputeMaximum();
 
 		// repeat for target image
 		MinMaxCalculatorType::Pointer mmt = MinMaxCalculatorType::New();
 		mmt->SetImage( target );
-		mmt->Compute();
+		mmt->ComputeMaximum();
 
 		// check range of values for both images
-		int sMin = mms->GetMinimum();
 		int sMax = mms->GetMaximum();
-		int tMin = mms->GetMinimum();
 		int tMax = mms->GetMaximum();
 
-		std::cout << "Source min: " << sMin << std::endl;
 		std::cout << "Source max: " << sMax << std::endl;
-		std::cout << "Target min: " << tMin << std::endl;
 		std::cout << "Target max: " << tMax << std::endl;
 
+		// get number of labels in labelMaps
+		int numberOfSourceLabels = GetStatistics( this->m_source );
+		int numberOfTargetLabels = GetStatistics( this->m_target );
+
 		// check if the label maps agree
-		if( sMax != tMax || sMin != tMin )
+		if( numberOfSourceLabels != numberOfTargetLabels || sMax != tMax )
 		{
 			std::cout << "Err: LabelMap images do not agree" << std::endl;
 			return;
 		}
-
+		
 		// find overlap measures if there is more than one label
-		if( sMax - sMin > 0 )
+		if( numberOfSourceLabels > 0 )
 		{
-			for( int i = sMin; i < sMax; ++i )
+			for( int i = 1; i < sMax; ++i )
 			{
 				this->m_source = IsolateLabel( source, i );
 				this->m_target = IsolateLabel( target, i );
@@ -61,7 +61,7 @@ namespace itk
 		{
 			this->m_source = source;
 			this->m_target = target;
-			LabelOverlapMeasuresByLabel( sMin );
+			LabelOverlapMeasuresByLabel( sMax );
 		}
 
 		return;
@@ -144,6 +144,18 @@ namespace itk
 		// get isolated label
 		return threshold->GetOutput();
 	}
+
+	int ValidationFilter::GetStatistics( LabelMapType::Pointer image )
+	{
+		// set up statistics filter
+		typedef itk::LabelStatisticsImageFilter< LabelMapType, LabelMapType > StatisticsFilterType;
+		StatisticsFilterType::Pointer statistics = StatisticsFilterType::New();
+		statistics->SetLabelInput( image );
+		statistics->Update();
+
+		return statistics->GetNumberOfLabels();
+	}
+
 
 	ValidationFilter::ImageType::Pointer ValidationFilter::CheckerboardImage( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
 	{

@@ -28,6 +28,7 @@ Remaining to implement:
 #include "itkMinimumMaximumImageCalculator.h"
 #include "itkHausdorffDistanceImageFilter.h"
 #include "itkBinaryThresholdImageFilter.h"
+#include "itkLabelStatisticsImageFilter.h"
 
 #include "itkCheckerBoardImageFilter.h"
 
@@ -77,6 +78,7 @@ private:
 	// overlap measures
 	void LabelOverlapMeasuresByLabel( int label );
 	LabelMapType::Pointer IsolateLabel( LabelMapType::Pointer image, int label );
+	int GetStatistics( LabelMapType::Pointer image );
 	LabelMapType::Pointer m_source;
 	LabelMapType::Pointer m_target;
 
