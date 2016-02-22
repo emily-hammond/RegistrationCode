@@ -34,8 +34,10 @@ namespace itk
 		int tMin = mms->GetMinimum();
 		int tMax = mms->GetMaximum();
 
-		std::cout << "Source range: " << sMax - sMin << std::endl;
-		std::cout << "Target range: " << tMax - tMin << std::endl;
+		std::cout << "Source min: " << sMin << std::endl;
+		std::cout << "Source max: " << sMax << std::endl;
+		std::cout << "Target min: " << tMin << std::endl;
+		std::cout << "Target max: " << tMax << std::endl;
 
 		// check if the label maps agree
 		if( sMax != tMax || sMin != tMin )
@@ -59,6 +61,7 @@ namespace itk
 		{
 			this->m_source = source;
 			this->m_target = target;
+			LabelOverlapMeasuresByLabel( sMin );
 		}
 
 		return;

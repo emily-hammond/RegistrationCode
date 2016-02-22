@@ -15,10 +15,12 @@ int main( int argc, char * argv[] )
 	char * fixedImageFilename = argv[1];
 	char * movingImageFilename = argv[2];
 	char * roiFilename = argv[3];
+	char * fixedValidationMaskFilename = argv[4];
+	char * movingValidationMaskFilename = argv[5];
 
 	if( argc < 4 )
 	{
-		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage roiFilename" << std::endl;
+		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage roiFilename fixedValidationMask movingValidationMask" << std::endl;
 	}
 
 	// instantiate image type
@@ -30,13 +32,15 @@ int main( int argc, char * argv[] )
 	// read in necessary images
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	//ImageType::Pointer fixedLabelMap = ReadInImage< LabelMapType >( fixedLabelMapFilename );
-	//ImageType::Pointer movingLabelMap = ReadInImage< LabelMapType >( movingLabelMapFilename );
+	LabelMapType::Pointer fixedValidationMask = ReadInImage< LabelMapType >( fixedValidationMaskFilename );
+	LabelMapType::Pointer movingValidationMask = ReadInImage< LabelMapType >( movingValidationMaskFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	std::cout << "\nFixed image: " << fixedImageFilename << std::endl;
 	std::cout << "Moving image: " << movingImageFilename << std::endl;
 	std::cout << "ROI filename: " << roiFilename << std::endl;
+	std::cout << "Fixed validation mask: " << fixedValidationMaskFilename << std::endl;
+	std::cout << "Moving validation mask: " << movingValidationMaskFilename << std::endl;
 
 	// initialization
 	std::cout << "\n*********************************************" << std::endl;
@@ -86,7 +90,7 @@ int main( int argc, char * argv[] )
 	std::cout << "*********************************************\n" << std::endl;
 
 	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
-	//validation->LabelOverlapMeasures( fixedLabelMap, movingLabelMap )
+	validation->LabelOverlapMeasures( fixedValidationMask, movingValidationMask );
 
 	return EXIT_SUCCESS;
 }
