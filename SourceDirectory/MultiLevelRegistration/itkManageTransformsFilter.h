@@ -15,6 +15,7 @@ transform prior to validation.
 #include "itkCompositeTransform.h"
 #include "itkChangeInformationImageFilter.h"
 #include "itkResampleImageFilter.h"
+#include "itkNearestNeighborInterpolateImageFunction.h"
 
 namespace itk
 {
@@ -54,6 +55,7 @@ public:
 	// apply transform
 	void HardenTransformOn();
 	void ResampleImageOn();
+	void NearestNeighborInterpolateOn();
 	void Update();
 
 protected:
@@ -76,6 +78,7 @@ private:
 	// flags
 	bool m_hardenTransform;
 	bool m_resampleImage;
+	bool m_nearestNeighbor;
 
 	// creating mask file
 	double * ExtractROIPoints( const char * filename );

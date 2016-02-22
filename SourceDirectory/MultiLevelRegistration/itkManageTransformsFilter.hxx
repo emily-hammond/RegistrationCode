@@ -61,6 +61,12 @@ namespace itk
 		return;
 	}
 
+	void ManageTransformsFilter::NearestNeighborInterpolateOn()
+	{
+		this->m_nearestNeighbor = true;
+		return;
+	}
+
 	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::GetTransformedImage()
 	{
 		return this->m_transformedImage;
@@ -278,6 +284,15 @@ namespace itk
 		// input parameters
 		resample->SetInput( this->m_movingImage );
 		resample->SetTransform( this->m_compositeTransform );
+
+		// define interpolator
+		typedef itk::NearestNeighborInterpolateImageFunction< ImageType, double > NearestNeighborType;
+		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
+
+		if( this->m_nearestNeighbor )
+		{
+			resample->SetInterpolator( nnInterpolator );
+		}
 
 		// apply
 		resample->Update();

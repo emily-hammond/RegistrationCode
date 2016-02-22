@@ -46,7 +46,7 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 
 	// definitions
-	typedef itk::Image< unsigned int, 3 >	LabelMapType;
+	typedef itk::Image< unsigned short, 3 >	LabelMapType;
 	typedef itk::Image< unsigned short, 3 >	ImageType;
 	
 	// method for creation

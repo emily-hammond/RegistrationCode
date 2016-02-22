@@ -168,14 +168,14 @@ namespace itk
 	void RegistrationFramework::PrintResults()
 	{
 		// print out final optimizer parameters
-		std::cout << "\n==== Final Parameters ====" << std::endl;
-		std::cout << "Iterations: " << this->m_optimizer->GetCurrentIteration() << std::endl;
-		std::cout << "Metric: " << this->m_optimizer->GetValue() << std::endl;
-		std::cout << "Stop Condition: " << this->m_registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
-		std::cout << "Angle: " << this->m_finalTransform->GetVersor().GetAngle() << std::endl;
-		std::cout << "Axis: " << this->m_finalTransform->GetVersor().GetAxis() << std::endl;
-		std::cout << "Translation: " << this->m_finalTransform->GetTranslation() << std::endl;
-		std::cout << "Scaling: " << this->m_finalTransform->GetScale() << std::endl;
+		std::cout << "\nFinal Parameters" << std::endl;
+		std::cout << "  Iterations    : " << this->m_optimizer->GetCurrentIteration() << std::endl;
+		std::cout << "  Metric        : " << this->m_optimizer->GetValue() << std::endl;
+		std::cout << "  Stop Condition: " << this->m_registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
+		std::cout << "  Angle         : " << this->m_finalTransform->GetVersor().GetAngle() << std::endl;
+		std::cout << "  Axis          : " << this->m_finalTransform->GetVersor().GetAxis() << std::endl;
+		std::cout << "  Translation   : " << this->m_finalTransform->GetTranslation() << std::endl;
+		std::cout << "  Scaling       : " << this->m_finalTransform->GetScale() << std::endl;
 		std::cout << std::endl;
 
 		return;

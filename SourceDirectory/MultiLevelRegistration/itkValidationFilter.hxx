@@ -8,6 +8,11 @@ namespace itk
 	// constructor
 	ValidationFilter::ValidationFilter()
 	{
+		// allocate images
+		this->m_labelMap1 = LabelMapType::New();
+		this->m_labelMap2 = LabelMapType::New();
+		this->m_image1 = ImageType::New();
+		this->m_image2 = ImageType::New();
 	}
 
 	// perform desired measures
@@ -15,6 +20,7 @@ namespace itk
 	{
 		if( this->m_computeLabelMapOverlapMeasures )
 		{
+			std::cout << "Computing overlap measures." << std::endl;
 			ComputeLabelOverlapMeasures();
 		}
 
@@ -40,10 +46,6 @@ namespace itk
 	// calculate overlap measures by dividing up the labels in each image first
 	void ValidationFilter::ComputeLabelOverlapMeasures()
 	{
-		// allocate images
-		this->m_labelMap1 = LabelMapType::New();
-		this->m_labelMap2 = LabelMapType::New();
-
 		// create temp images
 		LabelMapType::Pointer source = LabelMapType::New();
 		LabelMapType::Pointer target = LabelMapType::New();
@@ -52,19 +54,18 @@ namespace itk
 		typedef itk::MinimumMaximumImageCalculator< LabelMapType >	MinMaxCalculatorType;
 		MinMaxCalculatorType::Pointer calculator = MinMaxCalculatorType::New();
 		calculator->SetImage( this->m_labelMap1 );
-		calculator->ComputeMaximum();
+		calculator->Compute();
 		int sMax = calculator->GetMaximum();
 
 		// repeat for target image
 		calculator->SetImage( this->m_labelMap2 );
-		calculator->ComputeMaximum();
+		calculator->Compute();
 		int tMax = calculator->GetMaximum();
 
-		std::cout << "Source max: " << sMax << std::endl;
-		std::cout << "Target max: " << tMax << std::endl;
-
 		// get number of labels in labelMaps
+		std::cout << "\nImage #1: " << std::endl;
 		int numberOfSourceLabels = GetStatistics( this->m_image1, this->m_labelMap1 );
+		std::cout << "\nImage #2: " << std::endl;
 		int numberOfTargetLabels = GetStatistics( this->m_image2, this->m_labelMap2 );
 
 		// check if the label maps agree
@@ -75,7 +76,7 @@ namespace itk
 		}
 		
 		// find overlap measures if there is more than one label
-		if( numberOfSourceLabels > 0 )
+		if( numberOfSourceLabels-1 > 1 )
 		{
 			for( int i = 1; i < sMax; ++i )
 			{
@@ -133,12 +134,12 @@ namespace itk
 		}
 
 		// write out results to screen
-		std::cout << "Overlap Measures for label: " << label << std::endl;
-		std::cout << "Total overlap: " << overlapFilter->GetTotalOverlap();
-		std::cout << "Union(Jaccard) overlap: " << overlapFilter->GetUnionOverlap();
-		std::cout << "Mean(Dice) overlap: " << overlapFilter->GetMeanOverlap();
-		std::cout << "Hausdorff distance: " << distanceFilter->GetHausdorffDistance();
-		std::cout << "Average HD: " << distanceFilter->GetAverageHausdorffDistance();
+		std::cout << "\nOverlap Measures for label: " << label << std::endl;
+		std::cout << "  Total overlap         : " << overlapFilter->GetTotalOverlap() << std::endl;
+		std::cout << "  Union(Jaccard) overlap: " << overlapFilter->GetUnionOverlap() << std::endl;
+		std::cout << "  Mean(Dice) overlap    : " << overlapFilter->GetMeanOverlap() << std::endl;
+		std::cout << "  Hausdorff distance    : " << distanceFilter->GetHausdorffDistance() << std::endl;
+		std::cout << "  Average HD            : " << distanceFilter->GetAverageHausdorffDistance() << std::endl;
 		std::cout << std::endl;
 
 		return;
@@ -167,6 +168,8 @@ namespace itk
 			std::cerr << std::endl;
 		}
 
+		std::cout << "Label " << label << " isolated." << std::endl;
+
 		// get isolated label
 		return threshold->GetOutput();
 	}
@@ -186,19 +189,26 @@ namespace itk
 		statistics->SetInput( image );
 		statistics->Update();
 
+		std::cout << "Statistics calculated." << std::endl;
+
 		// print out basic statistics to output
 		typedef StatisticsFilterType::ValidLabelValuesContainerType ValidLabelValuesType;
 	    typedef StatisticsFilterType::LabelPixelType                LabelPixelType;
+
+		std::cout << "Number of labels: " << statistics->GetNumberOfLabels() << std::endl;
 
 		for( ValidLabelValuesType::const_iterator vIt = statistics->GetValidLabelValues().begin(); vIt != statistics->GetValidLabelValues().end(); ++vIt )
 		{
 			if( statistics->HasLabel( *vIt ) )
 			{
 				LabelPixelType value = *vIt;
-				std::cout << "Label value: " << value << std::endl;
-				std::cout << "  Mean: " << statistics->GetMean( value ) << std::endl;
-				std::cout << "  St. Dev: " << statistics->GetSigma( value ) << std::endl;
-				std::cout << "  Count: " << statistics->GetCount( value ) << std::endl;
+				if( value > 0 )
+				{
+					std::cout << "Label value: " << value << std::endl;
+					std::cout << "  Mean   : " << statistics->GetMean( value ) << std::endl;
+					std::cout << "  St. Dev: " << statistics->GetSigma( value ) << std::endl;
+					std::cout << "  Count  : " << statistics->GetCount( value ) << std::endl;
+				}
 			}
 		}
 
