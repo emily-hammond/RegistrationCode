@@ -90,7 +90,6 @@ int main( int argc, char * argv[] )
 	std::cout << "*********************************************\n" << std::endl;
 
 	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
-	validation->LabelOverlapMeasures( fixedValidationMask, movingValidationMask );
 
 	return EXIT_SUCCESS;
 }

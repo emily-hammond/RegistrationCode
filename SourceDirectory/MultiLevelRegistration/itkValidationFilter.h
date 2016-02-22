@@ -29,6 +29,7 @@ Remaining to implement:
 #include "itkHausdorffDistanceImageFilter.h"
 #include "itkBinaryThresholdImageFilter.h"
 #include "itkLabelStatisticsImageFilter.h"
+#include "itkCastImageFilter.h"
 
 #include "itkCheckerBoardImageFilter.h"
 
@@ -55,10 +56,12 @@ public:
 	itkTypeMacro(ValidationFilter, Object);
 
 	// declare functions
-	
-	void LabelOverlapMeasures( LabelMapType::Pointer source, LabelMapType::Pointer target );
+	void Update();
+	void LabelOverlapMeasuresOn() { this->m_computeLabelMapOverlapMeasures = true; };
 	ImageType::Pointer CheckerboardImage( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
 	void FiducialComparison( char * fixedFilename, char * movingFilename );
+	void SetImageAndLabelMap1( ImageType::Pointer image, LabelMapType::Pointer label );
+	void SetImageAndLabelMap2( ImageType::Pointer image, LabelMapType::Pointer label );
 	
 protected:
 	// constructor
@@ -72,16 +75,20 @@ protected:
 	
 private:
 	// declare variables
+	ImageType::Pointer m_image1;
+	LabelMapType::Pointer m_labelMap1;
+	ImageType::Pointer m_image2;
+	LabelMapType::Pointer m_labelMap2;
 
 	// fiducial alignment
 
 	// overlap measures
-	void LabelOverlapMeasuresByLabel( int label );
+	void ComputeLabelOverlapMeasures();
+	bool m_computeLabelMapOverlapMeasures;
+	void LabelOverlapMeasuresByLabel( LabelMapType::Pointer source, LabelMapType::Pointer target, int label );
 	LabelMapType::Pointer IsolateLabel( LabelMapType::Pointer image, int label );
-	int GetStatistics( LabelMapType::Pointer image );
-	LabelMapType::Pointer m_source;
-	LabelMapType::Pointer m_target;
-
+	int GetStatistics( ImageType::Pointer image, LabelMapType::Pointer label );
+	
 	// checkerboard images
 	
 };
