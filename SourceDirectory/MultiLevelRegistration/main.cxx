@@ -14,13 +14,15 @@ int main( int argc, char * argv[] )
 	//desired inputs
 	char * fixedImageFilename = argv[1];
 	char * movingImageFilename = argv[2];
-	char * roiFilename = argv[3];
-	char * fixedValidationMaskFilename = argv[4];
-	char * movingValidationMaskFilename = argv[5];
+	char * fixedValidationMaskFilename = argv[3];
+	char * movingValidationMaskFilename = argv[4];
+	int numberOfLevels = atoi( argv[5] );
+	char * roiFilename = argv[6];
 
-	if( argc < 6 )
+	if( argc < 7 )
 	{
-		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage roiFilename fixedValidationMask movingValidationMask" << std::endl;
+		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage fixedValidationMask " << std::endl;
+		std::cout << "            movingValidationMask numberOfLevels roiFilename" << std::endl;
 	}
 
 	// instantiate image type
