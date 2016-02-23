@@ -7,88 +7,23 @@
 namespace itk
 {
 	// constructor
-	ManageTransformsFilter::ManageTransformsFilter()
+	ManageTransformsFilter::ManageTransformsFilter():
+		m_FixedImage( ITK_NULLPTR ),	// defined by user
+		m_MovingImage( ITK_NULLPTR ),	// defined by user
+		m_HardenTransform( false ),
+		m_ResampleImage( true ),
+		m_NearestNeighbor( false )
 	{
-		this->m_compositeTransform = CompositeTransformType::New();
-		this->m_fixedImage = ImageType::New();
-		this->m_movingImage = ImageType::New();
-		this->m_transformedImage = ImageType::New();
-		this->m_hardenTransform = false;
-		this->m_resampleImage = true;
-	}
-
-	void ManageTransformsFilter::AddTransform( TransformType::Pointer transform )
-	{
-		this->m_compositeTransform->AddTransform( transform );
-		//std::cout << this->m_compositeTransform << std::endl;
-
-		return;
-	}
-
-	// print transform to screen
-	void ManageTransformsFilter::Print()
-	{
-		std::cout << std::endl;
-		return;
-	}
-
-	// save composite transform
-	void ManageTransformsFilter::SaveTransform()
-	{
-		WriteOutTransform< CompositeTransformType >( "transforms.tfm", this->m_compositeTransform );
-		return;
-	}
-
-	// set fixed and moving images
-	void ManageTransformsFilter::SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
-	{
-		this->m_fixedImage = fixedImage;
-		this->m_movingImage = movingImage;
-		
-		std::cout << "Images set." << std::endl;
-		return;
-	}
-
-	void ManageTransformsFilter::HardenTransformOn()
-	{
-		this->m_hardenTransform = true;
-		return;
-	}
-
-	void ManageTransformsFilter::ResampleImageOn()
-	{
-		this->m_resampleImage = true;
-		return;
-	}
-
-	void ManageTransformsFilter::NearestNeighborInterpolateOn()
-	{
-		this->m_nearestNeighbor = true;
-		return;
-	}
-
-	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::GetTransformedImage()
-	{
-		return this->m_transformedImage;
-	}
-
-	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::GenerateMaskFromROI( const char * filename )
-	{
-		double * roi = ExtractROIPoints( filename );
-		MaskImageType::Pointer maskImage = CreateMask( roi );
-
-		std::cout << "Mask has been generated." << std::endl;
-
-		return maskImage;
+		m_CompositeTransform = CompositeTransformType::New();
 	}
 
 	void ManageTransformsFilter::Update()
 	{
-		if( this->m_resampleImage )
+		if( this->m_ResampleImage )
 		{
 			ResampleImage();
 		}
-		else if( this->m_hardenTransform )
+		else if( this->m_HardenTransform )
 		{
 			HardenTransform();
 		}
@@ -96,118 +31,6 @@ namespace itk
 		{
 		}
 		return;
-	}
-
-	// extract point values from the slicer ROI file
-	double * ManageTransformsFilter::ExtractROIPoints( const char * filename )
-	{
-		// instantiate ROI array
-		static double roi[] = {0.0,0.0,0.0,0.0,0.0,0.0};
-		bool fullROI = false; // denotes that ROI array is full
-		int numberOfPoints = 0;
-
-		// open file and extract lines
-		std::ifstream file( filename );
-		std::string line;
-		// iterate through file
-		while( getline( file,line ) )
-		{
-			// look at uncommented lines only unless point is found
-			if( line.compare(0,1,"#") != 0 && !fullROI )
-			{
-				// allocate position array and indices
-				int positionsOfBars[4] = {0};
-				int numberOfBars = 0;
-				int positionOfBar = 0;
-				
-				// iterate through the line in the file to find the | (bar) locations
-				// example line: point|18.8396|305.532|-458.046|1|1
-				for( std::string::iterator it = line.begin(); it != line.end(); ++it )
-				{
-					// only note the first 4 locations
-					if( (*it == '|') && numberOfBars < 4 )
-					{
-						positionsOfBars[numberOfBars] = positionOfBar;
-						++numberOfBars;
-					}
-					++positionOfBar;
-				}
-
-				// extract each point and place into ROI array
-				for( int i = 0; i < 3; ++i )
-				{
-					roi[numberOfPoints] = atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() );
-					++numberOfPoints;
-
-					// set flag to false if the roi array is filled
-					if( numberOfPoints > 5 )
-					{
-						fullROI = true;
-					}
-				}
-			}
-		}
-
-		std::cout << "ROI center: [" << roi[0] << ", " << roi[1] << ", " << roi[2] << "]" << std::endl;
-		std::cout << "ROI radius: [" << roi[3] << ", " << roi[4] << ", " << roi[5] << "]" << std::endl;
-
-		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
-		return roi;
-	}
-
-	// create the mask as an image based on the properties of the input image
-	ManageTransformsFilter::MaskImageType::Pointer ManageTransformsFilter::CreateMask( double * roi )
-	{
-		// input fixed image properties into mask image
-		MaskImageType::Pointer maskImage = MaskImageType::New();
-		maskImage->SetRegions( this->m_fixedImage->GetLargestPossibleRegion() );
-		maskImage->SetOrigin( this->m_fixedImage->GetOrigin() );
-		maskImage->SetSpacing( this->m_fixedImage->GetSpacing() );
-		maskImage->SetDirection( this->m_fixedImage->GetDirection() );
-		maskImage->Allocate();
-
-		// extract center and radius
-		double c[3] = {-*(roi),-*(roi+1),*(roi+2)};
-		double r[3] = {*(roi+3),*(roi+4),*(roi+5)};
-		
-		// create size of mask according to the roi array
-		// set start index of mask according to the roi array
-		MaskImageType::PointType startPoint, endPoint;
-		startPoint[0] = c[0] - r[0];
-		startPoint[1] = c[1] - r[1];
-		startPoint[2] = c[2] - r[2];
-
-		// find end index
-		endPoint[0] = c[0] + r[0];
-		endPoint[1] = c[1] + r[1];
-		endPoint[2] = c[2] + r[2];
-
-		// convert to indices
-		MaskImageType::IndexType startIndex, endIndex;
-		maskImage->TransformPhysicalPointToIndex( startPoint, startIndex );
-		maskImage->TransformPhysicalPointToIndex( endPoint, endIndex );
-
-		// plug into region
-		MaskImageType::SizeType regionSize;
-		regionSize[0] = abs( startIndex[0] - endIndex[0] );
-		regionSize[1] = abs( startIndex[1] - endIndex[1] );
-		regionSize[2] = abs( startIndex[2] - endIndex[2] );
-
-		MaskImageType::RegionType maskedRegion;
-		maskedRegion.SetSize( regionSize );
-		maskedRegion.SetIndex( startIndex );
-
-		std::cout << maskedRegion << std::endl;
-
-		// iterate over region and set pixels to white
-		itk::ImageRegionIterator< MaskImageType > it( maskImage, maskedRegion );
-		while( !it.IsAtEnd() )
-		{
-			it.Set( 255 );
-			++it;
-		}
-
-		return maskImage;
 	}
 
 	// apply current transform on file to the header information of the input image
@@ -276,27 +99,32 @@ namespace itk
 		ResampleFilterType::Pointer resample = ResampleFilterType::New();
 
 		// define image resampling with respect to fixed image
-		resample->SetSize( this->m_fixedImage->GetLargestPossibleRegion().GetSize() );
-		resample->SetOutputOrigin( this->m_fixedImage->GetOrigin() );
-		resample->SetOutputSpacing( this->m_fixedImage->GetSpacing() );
-		resample->SetOutputDirection( this->m_fixedImage->GetDirection() );
+		resample->SetSize( this->m_FixedImage->GetLargestPossibleRegion().GetSize() );
+		resample->SetOutputOrigin( this->m_FixedImage->GetOrigin() );
+		resample->SetOutputSpacing( this->m_FixedImage->GetSpacing() );
+		resample->SetOutputDirection( this->m_FixedImage->GetDirection() );
 
 		// input parameters
-		resample->SetInput( this->m_movingImage );
-		resample->SetTransform( this->m_compositeTransform );
+		resample->SetInput( this->m_MovingImage );
+		resample->SetTransform( this->m_CompositeTransform );
 
 		// define interpolator
+		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
 		typedef itk::NearestNeighborInterpolateImageFunction< ImageType, double > NearestNeighborType;
 		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
 
-		if( this->m_nearestNeighbor )
+		if( this->m_NearestNeighbor )
 		{
 			resample->SetInterpolator( nnInterpolator );
+		}
+		else
+		{
+			resample->SetInterpolator( linInterpolator );
 		}
 
 		// apply
 		resample->Update();
-		this->m_transformedImage = resample->GetOutput();
+		this->m_TransformedImage = resample->GetOutput();
 
 		std::cout << "Image resampled." << std::endl;
 		return;

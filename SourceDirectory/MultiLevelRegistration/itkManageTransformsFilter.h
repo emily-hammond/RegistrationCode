@@ -44,18 +44,46 @@ public:
 	// declare functions
 	// manage transforms
 	void AddTransform( TransformType::Pointer transform );
-	void Print();
-	void SaveTransform();
 	
 	// create/set images
-	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	MaskImageType::Pointer GenerateMaskFromROI( const char * filename );
-	ImageType::Pointer GetTransformedImage();
+	itkSetObjectMacro( FixedImage, ImageType );
+	itkSetObjectMacro( MovingImage, ImageType );
 
-	// apply transform
-	void HardenTransformOn();
-	void ResampleImageOn();
-	void NearestNeighborInterpolateOn();
+	// get results
+	itkGetObjectMacro( TransformedImage, ImageType );
+	itkGetObjectMacro( CompositeTransform, CompositeTransformType );
+
+	// Harden transform flag
+	void HardenTransformOn()
+	{
+		m_HardenTransform = true;
+	}
+	void HardenTransformOff()
+	{
+		m_HardenTransform = false;
+	}
+
+	// resample image flag
+	void ResampleImageOn()
+	{
+		m_ResampleImage = true;
+	}
+	void ResampleImageOff()
+	{
+		m_ResampleImage = false;
+	}
+
+	// use NN interpolation during resampling
+	void NearestNeighborInterpolateOn()
+	{
+		m_NearestNeighbor = true;
+	}
+	void NearestNeighborInterpolateOff()
+	{
+		m_NearestNeighbor = false;
+	}
+
+	// perform function
 	void Update();
 
 protected:
@@ -70,19 +98,15 @@ protected:
 	
 private:
 	// declare variables
-	CompositeTransformType::Pointer m_compositeTransform;
-	ImageType::Pointer m_fixedImage;
-	ImageType::Pointer m_movingImage;
-	ImageType::Pointer m_transformedImage;
+	CompositeTransformType::Pointer m_CompositeTransform;
+	ImageType::Pointer m_FixedImage;
+	ImageType::Pointer m_MovingImage;
+	ImageType::Pointer m_TransformedImage;
 
 	// flags
-	bool m_hardenTransform;
-	bool m_resampleImage;
-	bool m_nearestNeighbor;
-
-	// creating mask file
-	double * ExtractROIPoints( const char * filename );
-	MaskImageType::Pointer CreateMask( double * roi );
+	bool m_HardenTransform;
+	bool m_ResampleImage;
+	bool m_NearestNeighbor;
 
 	// applying transform
 	void HardenTransform();
