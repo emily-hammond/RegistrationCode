@@ -44,7 +44,7 @@ int main( int argc, char * argv[] )
 	std::cout << "Moving validation mask: " << movingValidationMaskFilename << std::endl;
 	std::cout << "ROI filename          : " << roiFilename << std::endl;
 
-	// initialization
+	// initialization with validation
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "              INITIALIZATION                 " << std::endl;
 	std::cout << "*********************************************\n" << std::endl;
@@ -74,13 +74,31 @@ int main( int argc, char * argv[] )
 	transforms->SetMovingImage( movingImage );
 	transforms->SetMovingLabelMap( movingValidationMask );
 	transforms->ResampleImageWithInitialTransformOn();
-	transforms->Update();
+	try
+	{
+		transforms->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
 
 	// insert resampled moving image and mask (WRT initial transform) into validation class
 	validation->SetImage2( transforms->GetTransformedImage() );
 	validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
 	validation->LabelOverlapMeasuresOn();
-	validation->Update();
+	try
+	{
+		validation->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
 
 	// write out initial transform
 	std::string initialTransformFilename = outputDirectory + "\\InitialTransform.tfm";
