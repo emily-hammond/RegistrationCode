@@ -69,7 +69,6 @@ namespace itk
 		try
 		{
 			this->m_Registration->Update();
-			std::cout << "OptimizerStopCondition: " << this->m_Registration->GetOptimizer()->GetStopConditionDescription() << std::endl;
 		}
 		catch( itk::ExceptionObject & err )
 		{

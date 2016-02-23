@@ -40,14 +40,12 @@ namespace itk
 		// perform functionality
 		if( this->m_ResampleImage )
 		{
-			std::cout << "Resampling image. " << std::endl;
 			this->m_TransformedImage = ResampleImage( this->m_MovingImage );
 			std::cout << "Moving image resampled." << std::endl;
 
 			// repeat for label map with nearest neighbor interpolation
 			if( m_MovingLabelMap )
 			{
-				std::cout << "Resampling label map. " << std::endl;
 				NearestNeighborInterpolateOn();
 				this->m_TransformedLabelMap = ResampleImage( this->m_MovingLabelMap );
 				NearestNeighborInterpolateOff();
@@ -65,14 +63,12 @@ namespace itk
 				itkExceptionMacro( << "InitialTransform not present" );
 			}
 
-			std::cout << "Resampling image with respect to initial transform. " << std::endl;
 			this->m_TransformedImage = ResampleImageWithInitialTransform( this->m_MovingImage );
 			std::cout << "Moving image resampled." << std::endl;
 
 			// repeat for label map with nearest neighbor interpolation
 			if( m_MovingLabelMap )
 			{
-				std::cout << "Resampling label map with respect to initial transform. " << std::endl;
 				NearestNeighborInterpolateOn();
 				this->m_TransformedLabelMap = ResampleImageWithInitialTransform( this->m_MovingLabelMap );
 				NearestNeighborInterpolateOff();

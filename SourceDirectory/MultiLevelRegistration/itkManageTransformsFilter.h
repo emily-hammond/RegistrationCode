@@ -58,7 +58,9 @@ public:
 	// Harden transform flag
 	void HardenTransformOn()
 	{
+		m_ResampleImage = false;
 		m_HardenTransform = true;
+		m_ResampleImageWithInitialTransform = false;
 	}
 	void HardenTransformOff()
 	{
@@ -69,6 +71,8 @@ public:
 	void ResampleImageOn()
 	{
 		m_ResampleImage = true;
+		m_HardenTransform = false;
+		m_ResampleImageWithInitialTransform = false;
 	}
 	void ResampleImageOff()
 	{
@@ -76,6 +80,8 @@ public:
 	}
 	void ResampleImageWithInitialTransformOn()
 	{
+		m_ResampleImage = false;
+		m_HardenTransform = false;
 		m_ResampleImageWithInitialTransform = true;
 	}
 	void ResampleImageWithInitialTransformOff()

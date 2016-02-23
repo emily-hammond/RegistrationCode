@@ -106,54 +106,66 @@ int main( int argc, char * argv[] )
 
 	// test functionality of itkRegistrationFramework.h
 	std::cout << "\n*********************************************" << std::endl;
-	std::cout << "               REGISTRATION                  " << std::endl;
+	std::cout << "            REGISTRATION LEVEL 1               " << std::endl;
 	std::cout << "*********************************************\n" << std::endl;
 
+	// create registration class
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	registration->SetFixedImage( fixedImage );
 	registration->SetMovingImage( movingImage );
 	registration->SetInitialTransform( initialize->GetTransform() );
 	//registration->ObserveOn();
-	registration->Update();
+	try
+	{
+		registration->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
 	registration->Print();
 
-	// write out final transform
-	std::string finalTransformFilename = outputDirectory + "\\FinalTransform.tfm";
-	WriteOutTransform< TransformType >( finalTransformFilename.c_str(), registration->GetFinalTransform() );
 
-	// test functionality of itkManageTransformsFilter.h
-	std::cout << "\n*********************************************" << std::endl;
-	std::cout << "                TRANSFORMS                  " << std::endl;
-	std::cout << "*********************************************\n" << std::endl;
-
+	// add transform to composite transform in transforms class and apply to moving image
 	transforms->AddTransform( registration->GetFinalTransform() );
-
-	// apply transform to image by resampling
 	transforms->ResampleImageOn();
-	transforms->Update();
+	try
+	{
+		transforms->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
 
-	// write out resampled image
-	ImageType::Pointer resampledImage = transforms->GetTransformedImage();
-	std::string resampledImageFilename = outputDirectory + "\\ResampledImage.mhd";
-	WriteOutImage< ImageType, ImageType >( resampledImageFilename.c_str(), resampledImage );
+	// acquire resampled image as the moving image for the next level
+	ImageType::Pointer level1ResampledImage = transforms->GetTransformedImage();
 
-	// resample validation mask
-	transforms->SetMovingImage( movingValidationMask );
-	transforms->Update();
-
-	// write out resampled mask
-	ImageType::Pointer resampledMask = transforms->GetTransformedImage();
-	std::string resampledMaskFilename = outputDirectory + "\\ResampledMask.mhd";
-	WriteOutImage< ImageType, ImageType >( resampledMaskFilename.c_str(), resampledMask );
-
-	std::cout << "\n*********************************************" << std::endl;
-	std::cout << "                VALIDATION                  " << std::endl;
-	std::cout << "*********************************************\n" << std::endl;
-
-	validation->SetImage2( resampledImage);
-	validation->SetLabelMap2( resampledMask );
+	// perform validation
+	validation->SetImage2( level1ResampledImage);
+	validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
 	validation->LabelOverlapMeasuresOn();
-	validation->Update();
-	
+	try
+	{
+		validation->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
+
+	// write out level 1 transform
+	std::string level1TransformFilename = outputDirectory + "\\Level1Transform.tfm";
+	WriteOutTransform< TransformType >( level1TransformFilename.c_str(), registration->GetFinalTransform() );
+	// write out image
+	std::string level1ResampledImageFilename = outputDirectory + "\\Level1ResampledImage.mhd";
+	WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), level1ResampledImage );
+
 	return EXIT_SUCCESS;
 }
