@@ -15,12 +15,9 @@ namespace itk
 		m_ROIFilename( NULL ),			// provided by user
 		m_MaskObject( ITK_NULLPTR ),	// generated from ROI 
 		m_MaskImage( ITK_NULLPTR ),		// generated from ROI
-		m_MaskRegion( ITK_NULLPTR ),	// generated from ROI
-		m_ROI[] = {0.0,0.0,0.0,0.0,0.0,0.0},
 
 		// transforms
 		m_InitialTransform( ITK_NULLPTR ),	// provided by user
-		m_FinalTransform( ITK_NULLPTR ),	// provided by user
 
 		// metric
 		m_PercentageOfSamples( 0.01 ),
@@ -29,7 +26,7 @@ namespace itk
 		// optimizer
 		m_MinimumStepLength( 0.0025 ),
 		m_MaximumStepLength( 0.5 ),
-		m_NumberOfIterations( 500 ),
+		m_NumberOfIterations( 50 ),
 		m_RelaxationFactor( 0.8 ),
 		m_GradientMagnitudeTolerance( 0.001 ),
 		m_RotationScale( 0.01 ),
@@ -38,7 +35,7 @@ namespace itk
 		m_ObserveOn( false )
 	{
 		// observer
-		m_Transform = TransformType::New(),
+		m_Transform = TransformType::New();
 
 		// registration components
 		m_Interpolator = InterpolatorType::New();
@@ -80,12 +77,12 @@ namespace itk
 			return;
 		}
 
-		std::cout << "Registration performed." << std::endl;
-
 		// get final transform
+		m_FinalTransform = TransformType::New();
 		this->m_FinalTransform->SetParameters( this->m_Registration->GetLastTransformParameters() );
 		this->m_FinalTransform->SetFixedParameters( this->m_Transform->GetFixedParameters() );
-
+		
+		std::cout << "Registration performed." << std::endl;
 		return;
 	}
 
@@ -108,13 +105,14 @@ namespace itk
 		int NumOfPixels = size[0]*size[1]*size[2];
 		this->m_Metric->SetNumberOfSpatialSamples( NumOfPixels*(this->m_PercentageOfSamples) );
 		// define number of histogram bins
-		this->m_Netric->SetNumberOfHistogramBins( this->m_HistogramBins );
+		this->m_Metric->SetNumberOfHistogramBins( this->m_HistogramBins );
 
 		// mask
 		if( m_ROIFilename )
 		{
-			CreateMask();
+			CreateMask(  );
 			m_Metric->SetFixedImageMask( m_MaskObject );
+			std::cout << "Mask object created." << std::endl;
 		}
 
 		// ****SET UP OPTIMIZER****
@@ -157,7 +155,7 @@ namespace itk
 	void RegistrationFramework::CreateMask()
 	{
 		// extract ROI points from the file
-		ExtractROIPoints();
+		double * roi = ExtractROIPoints();
 
 		// input fixed image properties into mask image
 		m_MaskImage->SetRegions( this->m_FixedImage->GetLargestPossibleRegion() );
@@ -167,8 +165,8 @@ namespace itk
 		m_MaskImage->Allocate();
 
 		// extract center and radius
-		double c[3] = {m_ROI[0], m_ROI[1], m_ROI[2]};
-		double r[3] = {m_ROI[3], m_ROI[4], m_ROI[5]};
+		double c[3] = {-*(roi),-*(roi+1),*(roi+2)};
+		double r[3] = {*(roi+3),*(roi+4),*(roi+5)};
 		
 		// create size of mask according to the roi array
 		// set start index of mask according to the roi array
@@ -184,8 +182,8 @@ namespace itk
 
 		// convert to indices
 		MaskImageType::IndexType startIndex, endIndex;
-		maskImage->TransformPhysicalPointToIndex( startPoint, startIndex );
-		maskImage->TransformPhysicalPointToIndex( endPoint, endIndex );
+		m_MaskImage->TransformPhysicalPointToIndex( startPoint, startIndex );
+		m_MaskImage->TransformPhysicalPointToIndex( endPoint, endIndex );
 
 		// plug into region
 		MaskImageType::SizeType regionSize;
@@ -210,9 +208,10 @@ namespace itk
 	}
 
 	// extract point values from the slicer ROI file
-	void RegistrationFramework::ExtractROIPoints()
+	double * RegistrationFramework::ExtractROIPoints()
 	{
 		// instantiate ROI array
+		static double roi[] = {0.0,0.0,0.0,0.0,0.0,0.0};
 		bool fullROI = false; // denotes that ROI array is full
 		int numberOfPoints = 0;
 
@@ -246,7 +245,7 @@ namespace itk
 				// extract each point and place into ROI array
 				for( int i = 0; i < 3; ++i )
 				{
-					m_ROI[numberOfPoints] = atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() );
+					roi[numberOfPoints] = atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() );
 					++numberOfPoints;
 
 					// set flag to false if the roi array is filled
@@ -260,7 +259,7 @@ namespace itk
 
 
 		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
-		return;
+		return roi;
 	}
 
 	// get final transform

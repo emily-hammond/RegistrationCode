@@ -59,19 +59,24 @@ public:
 	itkTypeMacro(RegistrationFramework, Object);
 
 	// set variables
-	itkSetConstObjectMacro( FixedImage, ImageType );
-	itkSetConstObjectMacro( MovingImage, ImageType );
+	itkSetObjectMacro( FixedImage, ImageType );
+	itkSetObjectMacro( MovingImage, ImageType );
 	itkSetObjectMacro( InitialTransform, TransformType );
-	itkSetMacro( ROIFilename, char * );
+	void SetROIFilename( char * filename )
+	{
+		this->m_ROIFilename = filename;
+	}
 	
 	// observer
 	void ObserveOn()
 	{
-		this->m_ObserveOn( true );
+		this->m_ObserveOn = true;
+		return;
 	}
 	void ObserveOff()
 	{
-		this->m_ObserveOn( false );
+		this->m_ObserveOn = false;
+		return;
 	}
 
 	// get results
@@ -101,7 +106,6 @@ private:
 	MaskImageType::Pointer m_MaskImage;
 	MaskImageType::RegionType m_MaskRegion;
 	char * m_ROIFilename;
-	double m_ROI[];
 
 	// transforms
 	TransformType::Pointer m_FinalTransform;
@@ -135,7 +139,7 @@ private:
 	// private functions
 	void Initialize();
 	void CreateMask();
-	void ExtractROIPoints();
+	double * ExtractROIPoints();
 };
 } // end namespace
 
