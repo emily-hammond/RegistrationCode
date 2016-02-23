@@ -6,67 +6,101 @@
 namespace itk
 {
 	// constructor
-	ValidationFilter::ValidationFilter()
-	{
-		// allocate images
-		this->m_labelMap1 = LabelMapType::New();
-		this->m_labelMap2 = LabelMapType::New();
-		this->m_image1 = ImageType::New();
-		this->m_image2 = ImageType::New();
-	}
+	ValidationFilter::ValidationFilter():
+		m_LabelMap1( ITK_NULLPTR ),	// defined by user
+		m_LabelMap2( ITK_NULLPTR ),	// defined by user
+		m_Image1( ITK_NULLPTR ),	// defined by user
+		m_Image2( ITK_NULLPTR ),	// defined by user
+		m_FixedFiducialFilename( ITK_NULLPTR ),	// defined by user
+		m_MovingFiducialFilename( ITK_NULLPTR ),	// defined by user
+		m_FiducialAlignment( false ),
+		m_LabelMapOverlapMeasures( false ),
+		m_CheckerboardImage( false )
+		{}
 
 	// perform desired measures
 	void ValidationFilter::Update()
 	{
-		if( this->m_computeLabelMapOverlapMeasures )
+		// compute overlap measures
+		if( this->m_LabelMapOverlapMeasures )
 		{
+			if( !m_LabelMap1 )
+			{
+				std::cout << "Label map 1 not present" << std::endl;
+			}
+			if( !m_LabelMap2 )
+			{
+				std::cout << "Label map 2 not present" << std::endl;
+			}
+			if( !m_Image1 )
+			{
+				std::cout << "Image 1 not present" << std::endl;
+			}
+			if( !m_Image2 )
+			{
+				std::cout << "Image 2 not present" << std::endl;
+			}
 			std::cout << "Computing overlap measures." << std::endl;
-			ComputeLabelOverlapMeasures();
+			LabelOverlapMeasures();
+		}
+
+		// compute fiducial alignment
+		if( this->m_FiducialAlignment )
+		{
+			if( !m_FixedFiducialFilename )
+			{
+				std::cout << "Fixed fiducials not present" << std::endl;
+			}
+			if( !m_MovingFiducialFilename )
+			{
+				std::cout << "Moving fiducials not present" << std::endl;
+			}
+			std::cout << "Computing fiducial alignment." << std::endl;
+			FiducialAlignment();
+		}
+
+		// compute checkerboard image
+		if( this->m_CheckerboardImage )
+		{
+			if( !m_Image1 )
+			{
+				std::cout << "Image 1 not present" << std::endl;
+			}
+			if( !m_Image2 )
+			{
+				std::cout << "Image 2 not present" << std::endl;
+			}
+			std::cout << "Computing checkerboard image." << std::endl;
+			CheckerboardImage();
 		}
 
 		return;
 	}
 
-	// set image and label map values 
-	void ValidationFilter::SetImageAndLabelMap1( ImageType::Pointer image, LabelMapType::Pointer label )
-	{
-		this->m_labelMap1 = label;
-		this->m_image1 = image;
-		return;
-	}
-
-	// set image and label map values 
-	void ValidationFilter::SetImageAndLabelMap2( ImageType::Pointer image, LabelMapType::Pointer label )
-	{
-		this->m_labelMap2 = label;
-		this->m_image2 = image;
-		return;
-	}
-
 	// calculate overlap measures by dividing up the labels in each image first
-	void ValidationFilter::ComputeLabelOverlapMeasures()
+	void ValidationFilter::LabelOverlapMeasures()
 	{
 		// create temp images
-		LabelMapType::Pointer source = LabelMapType::New();
-		LabelMapType::Pointer target = LabelMapType::New();
+		ImageType::Pointer source = ImageType::New();
+		ImageType::Pointer target = ImageType::New();
 
 		// find range of values in images
-		typedef itk::MinimumMaximumImageCalculator< LabelMapType >	MinMaxCalculatorType;
+		typedef itk::MinimumMaximumImageCalculator< ImageType >	MinMaxCalculatorType;
 		MinMaxCalculatorType::Pointer calculator = MinMaxCalculatorType::New();
-		calculator->SetImage( this->m_labelMap1 );
+		calculator->SetImage( this->m_LabelMap1 );
 		calculator->Compute();
 		int sMax = calculator->GetMaximum();
 
 		// repeat for target image
-		calculator->SetImage( this->m_labelMap2 );
+		calculator->SetImage( this->m_LabelMap2 );
 		calculator->Compute();
 		int tMax = calculator->GetMaximum();
 
 		// get number of labels in labelMaps
 		std::cout << "\nImage #1: " << std::endl;
-		int numberOfSourceLabels = GetStatistics( this->m_image1, this->m_labelMap1 );
+		int numberOfSourceLabels = GetStatistics( this->m_Image1, this->m_LabelMap1 );
 		std::cout << "\nImage #2: " << std::endl;
-		int numberOfTargetLabels = GetStatistics( this->m_image2, this->m_labelMap2 );
+		int numberOfTargetLabels = GetStatistics( this->m_Image2, this->m_LabelMap2 );
 
 		// check if the label maps agree
 		if( numberOfSourceLabels != numberOfTargetLabels || sMax != tMax )
@@ -80,25 +114,25 @@ namespace itk
 		{
 			for( int i = 1; i < sMax; ++i )
 			{
-				source = IsolateLabel( this->m_labelMap1, i );
-				target = IsolateLabel( this->m_labelMap2, i );
+				source = IsolateLabel( this->m_LabelMap1, i );
+				target = IsolateLabel( this->m_LabelMap2, i );
 				LabelOverlapMeasuresByLabel( source, target, i );
 			}
 		}
 		// or if there is not
 		else
 		{
-			LabelOverlapMeasuresByLabel( this->m_labelMap1, this->m_labelMap2, sMax );
+			LabelOverlapMeasuresByLabel( this->m_LabelMap1, this->m_LabelMap2, sMax );
 		}
 
 		return;
 	}
 
 	// calculate overlap measures according to the label in the image
-	void ValidationFilter::LabelOverlapMeasuresByLabel( LabelMapType::Pointer source, LabelMapType::Pointer target, int label )
+	void ValidationFilter::LabelOverlapMeasuresByLabel( ImageType::Pointer source, ImageType::Pointer target, int label )
 	{
 		// declare and input images
-		typedef itk::LabelOverlapMeasuresImageFilter< LabelMapType >	OverlapFilterType;
+		typedef itk::LabelOverlapMeasuresImageFilter< ImageType >	OverlapFilterType;
 		OverlapFilterType::Pointer overlapFilter = OverlapFilterType::New();
 		overlapFilter->SetSourceImage( source );
 		overlapFilter->SetTargetImage( target );
@@ -116,7 +150,7 @@ namespace itk
 		}
 
 		// calculate Hausdorff distances
-		typedef itk::HausdorffDistanceImageFilter< LabelMapType, LabelMapType >	DistanceFilterType;
+		typedef itk::HausdorffDistanceImageFilter< ImageType, ImageType >	DistanceFilterType;
 		DistanceFilterType::Pointer distanceFilter = DistanceFilterType::New();
 		distanceFilter->SetInput1( source );
 		distanceFilter->SetInput2( target );
@@ -145,10 +179,10 @@ namespace itk
 		return;
 	}
 
-	ValidationFilter::LabelMapType::Pointer ValidationFilter::IsolateLabel( LabelMapType::Pointer image, int label )
+	ValidationFilter::ImageType::Pointer ValidationFilter::IsolateLabel( ImageType::Pointer image, int label )
 	{
 		// set up thresholding
-		typedef itk::BinaryThresholdImageFilter< LabelMapType, LabelMapType >	ThresholdType;
+		typedef itk::BinaryThresholdImageFilter< ImageType, ImageType >	ThresholdType;
 		ThresholdType::Pointer threshold = ThresholdType::New();
 		threshold->SetInput( image );
 		threshold->SetLowerThreshold( label );
@@ -174,10 +208,10 @@ namespace itk
 		return threshold->GetOutput();
 	}
 
-	int ValidationFilter::GetStatistics( ImageType::Pointer image, LabelMapType::Pointer label )
+	int ValidationFilter::GetStatistics( ImageType::Pointer image, ImageType::Pointer label )
 	{
 		// convert label map to image type
-		typedef itk::CastImageFilter< LabelMapType, ImageType >	ConvertLabelMapFilterType;
+		typedef itk::CastImageFilter< ImageType, ImageType >	ConvertLabelMapFilterType;
 		ConvertLabelMapFilterType::Pointer convert = ConvertLabelMapFilterType::New();
 		convert->SetInput( label );
 		convert->Update();
@@ -216,13 +250,13 @@ namespace itk
 	}
 
 
-	ValidationFilter::ImageType::Pointer ValidationFilter::CheckerboardImage( ImageType::Pointer fixedImage, ImageType::Pointer movingImage )
+	void ValidationFilter::CheckerboardImage()
 	{
 		//declare and insert inputs
 		typedef itk::CheckerBoardImageFilter< ImageType >	CheckerboardFilterType;
 		CheckerboardFilterType::Pointer checker = CheckerboardFilterType::New();
-		checker->SetInput1( movingImage );
-		checker->SetInput2( fixedImage );
+		checker->SetInput1( this->m_Image1 );
+		checker->SetInput2( this->m_Image2 );
 
 		// define pattern type
 		CheckerboardFilterType::PatternArrayType pattern;
@@ -231,9 +265,15 @@ namespace itk
 		pattern[2] = 4;
 		checker->SetCheckerPattern( pattern );
 
-		return checker->GetOutput();
+		std::cout << "Checkerboard image created." << std::endl;
+		return;
 	}
 
+	void ValidationFilter::FiducialAlignment()
+	{
+		std::cout << "Fiducial alignment complete." << std::endl;
+		return;
+	}
 } // end namespace
 
 #endif

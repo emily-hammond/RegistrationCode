@@ -17,8 +17,24 @@ namespace itk
 		m_CompositeTransform = CompositeTransformType::New();
 	}
 
+	void ManageTransformsFilter::AddTransform( TransformType::Pointer transform )
+	{
+		this->m_CompositeTransform->AddTransform( transform );
+	}
+
 	void ManageTransformsFilter::Update()
 	{
+		// error checking
+		if( !m_FixedImage )
+		{
+			itkExceptionMacro( << "FixedImage not present" );
+		}
+		if( !m_MovingImage )
+		{
+			itkExceptionMacro( << "MovingImage not present" );
+		}
+
+		// perform functionality
 		if( this->m_ResampleImage )
 		{
 			ResampleImage();
@@ -29,6 +45,7 @@ namespace itk
 		}
 		else
 		{
+			std::cout << "No transform application option chosen." << std::endl;
 		}
 		return;
 	}
@@ -116,6 +133,7 @@ namespace itk
 		if( this->m_NearestNeighbor )
 		{
 			resample->SetInterpolator( nnInterpolator );
+			std::cout << "Nearest neighbor interpolator." << std::endl;
 		}
 		else
 		{

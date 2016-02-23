@@ -14,28 +14,28 @@ int main( int argc, char * argv[] )
 	//desired inputs
 	char * fixedImageFilename = argv[1];
 	char * movingImageFilename = argv[2];
-	char * fixedValidationMaskFilename = argv[3];
-	char * movingValidationMaskFilename = argv[4];
-	int numberOfLevels = atoi( argv[5] );
-	char * roiFilename = argv[6];
+	std::string outputDirectory = argv[3];
+	char * fixedValidationMaskFilename = argv[4];
+	char * movingValidationMaskFilename = argv[5];
+	int numberOfLevels = atoi( argv[6] );
+	char * roiFilename = argv[7];
 
 	if( argc < 7 )
 	{
-		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage fixedValidationMask " << std::endl;
+		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage outputDirectory fixedValidationMask " << std::endl;
 		std::cout << "            movingValidationMask numberOfLevels roiFilename" << std::endl;
 	}
 
 	// instantiate image type
 	typedef itk::Image< unsigned short, 3 >	ImageType;
-	typedef itk::Image< unsigned short, 3 >	LabelMapType;
 	typedef itk::Image< unsigned char, 3 >	MaskImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	// read in necessary images
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	LabelMapType::Pointer fixedValidationMask = ReadInImage< LabelMapType >( fixedValidationMaskFilename );
-	LabelMapType::Pointer movingValidationMask = ReadInImage< LabelMapType >( movingValidationMaskFilename );
+	ImageType::Pointer fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
+	ImageType::Pointer movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	std::cout << "\nFixed image           : " << fixedImageFilename << std::endl;
@@ -59,6 +59,10 @@ int main( int argc, char * argv[] )
 	initialize->MetricAlignmentOn( 2 );
 	initialize->Update();
 
+	// write out initial transform
+	std::string initialTransformFilename = outputDirectory + "\\InitialTransform.tfm";
+	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialize->GetTransform() );
+
 	// test functionality of itkRegistrationFramework.h
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "               REGISTRATION                  " << std::endl;
@@ -71,7 +75,11 @@ int main( int argc, char * argv[] )
 	//registration->ObserveOn();
 	registration->Update();
 	registration->Print();
-	/*
+
+	// write out final transform
+	std::string finalTransformFilename = outputDirectory + "\\FinalTransform.tfm";
+	WriteOutTransform< TransformType >( finalTransformFilename.c_str(), registration->GetFinalTransform() );
+
 	// test functionality of itkManageTransformsFilter.h
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "                TRANSFORMS                  " << std::endl;
@@ -79,35 +87,39 @@ int main( int argc, char * argv[] )
 
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
 	transforms->AddTransform( registration->GetFinalTransform() );
-	transforms->SetImages( fixedImage, movingImage );
-	// create mask file from ROI points
-	WriteOutImage< MaskImageType, MaskImageType >( "maskImage.mhd", transforms->GenerateMaskFromROI( roiFilename ) );
-	// write out final transform
-	WriteOutTransform< TransformType >( "finalTransform.tfm", registration->GetFinalTransform() );
+	transforms->SetFixedImage( fixedImage );
+	transforms->SetMovingImage( movingImage );
+
 	// apply transform to image by resampling
 	transforms->ResampleImageOn();
 	transforms->Update();
-	
-	// get transfomed image
-	ImageType::Pointer transformedImage = transforms->GetTransformedImage();
-	WriteOutImage< ImageType, ImageType >( "finalImage.mhd", transforms->GetTransformedImage() );
 
-	// transform corresponding mask
-	transforms->SetImages( fixedValidationMask, movingValidationMask );
-	transforms->NearestNeighborInterpolateOn();
+	// write out resampled image
+	ImageType::Pointer resampledImage = transforms->GetTransformedImage();
+	std::string resampledImageFilename = outputDirectory + "\\ResampledImage.mhd";
+	WriteOutImage< ImageType, ImageType >( resampledImageFilename.c_str(), resampledImage );
+
+	// resample validation mask
+	transforms->SetMovingImage( movingValidationMask );
 	transforms->Update();
-	LabelMapType::Pointer transformedMask = transforms->GetTransformedImage();
+
+	// write out resampled mask
+	ImageType::Pointer resampledMask = transforms->GetTransformedImage();
+	std::string resampledMaskFilename = outputDirectory + "\\ResampledMask.mhd";
+	WriteOutImage< ImageType, ImageType >( resampledMaskFilename.c_str(), resampledMask );
 
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "                VALIDATION                  " << std::endl;
 	std::cout << "*********************************************\n" << std::endl;
 
 	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
-	validation->SetImageAndLabelMap1( fixedImage, fixedValidationMask );
-	validation->SetImageAndLabelMap2( transformedImage, transformedMask );
+	validation->SetImage1( fixedImage );
+	validation->SetLabelMap1( fixedValidationMask );
+	validation->SetImage2( resampledImage);
+	validation->SetLabelMap2( resampledMask );
 	validation->LabelOverlapMeasuresOn();
 	validation->Update();
-	*/
+	
 
 	return EXIT_SUCCESS;
 }

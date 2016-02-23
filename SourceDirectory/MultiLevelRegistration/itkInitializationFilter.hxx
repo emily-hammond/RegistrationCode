@@ -71,6 +71,16 @@ namespace itk
 	// perform the initialization by going through the set flags
 	void InitializationFilter::Update()
 	{
+		// error checking
+		if( !m_FixedImage )
+		{
+			itkExceptionMacro( << "FixedImage not present" );
+		}
+		if( !m_MovingImage )
+		{
+			itkExceptionMacro( << "MovingImage not present" );
+		}
+
 		// center images based on geometry
 		if( this->m_CenteredOnGeometry )
 		{

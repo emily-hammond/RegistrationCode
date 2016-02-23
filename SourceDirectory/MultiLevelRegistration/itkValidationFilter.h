@@ -46,7 +46,6 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 
 	// definitions
-	typedef itk::Image< unsigned short, 3 >	LabelMapType;
 	typedef itk::Image< unsigned short, 3 >	ImageType;
 	
 	// method for creation
@@ -57,12 +56,50 @@ public:
 
 	// declare functions
 	void Update();
-	void LabelOverlapMeasuresOn() { this->m_computeLabelMapOverlapMeasures = true; };
-	ImageType::Pointer CheckerboardImage( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	void FiducialComparison( char * fixedFilename, char * movingFilename );
-	void SetImageAndLabelMap1( ImageType::Pointer image, LabelMapType::Pointer label );
-	void SetImageAndLabelMap2( ImageType::Pointer image, LabelMapType::Pointer label );
-	
+
+	// fiducial comparison
+	void SetFixedFiducialFilename( char * filename )
+	{
+		m_FixedFiducialFilename = filename;
+	}
+	void SetMovingFiducialFilename( char * filename )
+	{
+		m_MovingFiducialFilename = filename;
+	}
+	void FiducialAlignmentOn()
+	{
+		m_FiducialAlignment = true;
+	}
+	void FiducialAlignmentOff()
+	{
+		m_FiducialAlignment = false;
+	}
+
+	// set flags for computing label overlap measures
+	itkSetObjectMacro( Image1, ImageType );
+	itkSetObjectMacro( LabelMap1, ImageType );
+	itkSetObjectMacro( Image2, ImageType );
+	itkSetObjectMacro( LabelMap2, ImageType );
+	void LabelOverlapMeasuresOn()
+	{ 
+		m_LabelMapOverlapMeasures = true; 
+	}
+	void LabelOverlapMeasuresOff()
+	{
+		m_LabelMapOverlapMeasures = false;
+	}
+
+	// checkerboard images
+	itkGetObjectMacro( CBImage, ImageType );
+	void CheckerboardImageOn()
+	{
+		m_CheckerboardImage = true;
+	}
+	void CheckerboardImageOff()
+	{
+		m_CheckerboardImage = false;
+	}
+
 protected:
 	// constructor
 	ValidationFilter();
@@ -75,22 +112,28 @@ protected:
 	
 private:
 	// declare variables
-	ImageType::Pointer m_image1;
-	LabelMapType::Pointer m_labelMap1;
-	ImageType::Pointer m_image2;
-	LabelMapType::Pointer m_labelMap2;
+	ImageType::Pointer m_Image1;
+	ImageType::Pointer m_LabelMap1;
+	ImageType::Pointer m_Image2;
+	ImageType::Pointer m_LabelMap2;
+	char * m_FixedFiducialFilename;
+	char * m_MovingFiducialFilename;
 
 	// fiducial alignment
+	bool m_FiducialAlignment;
+	void FiducialAlignment();
 
 	// overlap measures
-	void ComputeLabelOverlapMeasures();
-	bool m_computeLabelMapOverlapMeasures;
-	void LabelOverlapMeasuresByLabel( LabelMapType::Pointer source, LabelMapType::Pointer target, int label );
-	LabelMapType::Pointer IsolateLabel( LabelMapType::Pointer image, int label );
-	int GetStatistics( ImageType::Pointer image, LabelMapType::Pointer label );
+	bool m_LabelMapOverlapMeasures;
+	void LabelOverlapMeasures();
+	void LabelOverlapMeasuresByLabel( ImageType::Pointer source, ImageType::Pointer target, int label );
+	ImageType::Pointer IsolateLabel( ImageType::Pointer image, int label );
+	int GetStatistics( ImageType::Pointer image, ImageType::Pointer label );
 	
 	// checkerboard images
-	
+	bool m_CheckerboardImage;
+	ImageType::Pointer m_CBImage;
+	void CheckerboardImage();	
 };
 } // end namespace
 
