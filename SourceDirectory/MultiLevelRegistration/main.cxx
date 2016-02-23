@@ -64,12 +64,13 @@ int main( int argc, char * argv[] )
 	std::cout << "*********************************************\n" << std::endl;
 
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
-	registration->SetImages( fixedImage, movingImage );
+	registration->SetFixedImage( fixedImage );
+	registration->SetMovingImage( movingImage );
 	registration->SetInitialTransform( initialize->GetOutput() );
 	//registration->ObserveOn();
 	registration->Update();
-	registration->PrintResults();
-	
+	registration->Print();
+	/*
 	// test functionality of itkManageTransformsFilter.h
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "                TRANSFORMS                  " << std::endl;
@@ -105,6 +106,7 @@ int main( int argc, char * argv[] )
 	validation->SetImageAndLabelMap2( transformedImage, transformedMask );
 	validation->LabelOverlapMeasuresOn();
 	validation->Update();
+	*/
 
 	return EXIT_SUCCESS;
 }

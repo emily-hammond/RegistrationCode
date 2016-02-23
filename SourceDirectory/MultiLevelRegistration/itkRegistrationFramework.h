@@ -19,6 +19,7 @@ Remaining to implement:
 
 // include files
 #include "itkImage.h"
+#include "itkImageMaskSpatialObject.h"
 #include "itkScaleVersor3DTransform.h"
 #include "itkCompositeTransform.h"
 
@@ -41,6 +42,8 @@ public:
 	
 	// definitions
 	typedef itk::Image< unsigned short, 3 >			ImageType;
+	typedef itk::Image< unsigned char, 3 >			MaskImageType;
+	typedef itk::ImageMaskSpatialObject< 3 >		MaskType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	// registration components
@@ -55,18 +58,28 @@ public:
 	// run-time type information and related methods
 	itkTypeMacro(RegistrationFramework, Object);
 
-	// declare functions
-	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
-	void SetInitialTransform( TransformType::Pointer initialTransform );
+	// set variables
+	itkSetConstObjectMacro( FixedImage, ImageType );
+	itkSetConstObjectMacro( MovingImage, ImageType );
+	itkSetObjectMacro( InitialTransform, TransformType );
+	itkSetMacro( ROIFilename, char * );
+	
+	// observer
+	void ObserveOn()
+	{
+		this->m_ObserveOn( true );
+	}
+	void ObserveOff()
+	{
+		this->m_ObserveOn( false );
+	}
+
+	// get results
+	itkGetObjectMacro( FinalTransform, TransformType );
+	itkGetObjectMacro( MaskImage, MaskImageType );
 
 	void Update();
-	TransformType::Pointer GetFinalTransform();
-	void PrintResults();
-	void ObserveOn()
-	{ 
-		this->m_observeFlag = true;
-		return;
-	}
+	void Print();
 
 protected:
 	// constructor
@@ -79,41 +92,50 @@ protected:
 	void GenerateData();
 	
 private:
-	// declare variables
-	ImageType::Pointer m_fixedImage;
-	ImageType::Pointer m_movingImage;
-	TransformType::Pointer m_finalTransform;
-	
+	// images
+	ImageType::Pointer m_FixedImage;
+	ImageType::Pointer m_MovingImage;
+
+	// mask
+	MaskType::Pointer m_MaskObject;
+	MaskImageType::Pointer m_MaskImage;
+	MaskImageType::RegionType m_MaskRegion;
+	char * m_ROIFilename;
+	double m_ROI[];
+
+	// transforms
+	TransformType::Pointer m_FinalTransform;
+	TransformType::Pointer m_InitialTransform;	
+
 	// registration components
-	TransformType::Pointer m_initialTransform;
-	TransformType::Pointer m_transform;
-	InterpolatorType::Pointer m_interpolator;
-	RegistrationType::Pointer m_registration;
+	TransformType::Pointer m_Transform;
+	InterpolatorType::Pointer m_Interpolator;
+	RegistrationType::Pointer m_Registration;
 	
 	// observer
-	RigidCommandIterationUpdate::Pointer m_observer;
-	bool m_observeFlag;
+	RigidCommandIterationUpdate::Pointer m_Observer;
+	bool m_ObserveOn;
 
 	// optimizer
-	OptimizerType::Pointer m_optimizer;
-	float m_minimumStepLength;
-	float m_maximumStepLength;
-	int m_numberOfIterations;
-	float m_relaxationFactor;
-	float m_gradientMagnitudeTolerance;
-	float m_rotationScale;
-	float m_translationScale;
-	float m_scalingScale;
+	OptimizerType::Pointer m_Optimizer;
+	float m_MinimumStepLength;
+	float m_MaximumStepLength;
+	int m_NumberOfIterations;
+	float m_RelaxationFactor;
+	float m_GradientMagnitudeTolerance;
+	float m_RotationScale;
+	float m_TranslationScale;
+	float m_ScalingScale;
 
 	// metric
-	MetricType::Pointer m_metric;
-	float m_percentageOfSamples;
-	int m_histogramBins;
+	MetricType::Pointer m_Metric;
+	float m_PercentageOfSamples;
+	int m_HistogramBins;
 
 	// private functions
-	void SetDefaults();
-	void SetUpMetric();
-	void SetUpOptimizer();
+	void Initialize();
+	void CreateMask();
+	void ExtractROIPoints();
 };
 } // end namespace
 
