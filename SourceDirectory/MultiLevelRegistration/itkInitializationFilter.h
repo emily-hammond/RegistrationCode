@@ -40,21 +40,35 @@ public:
 	// run-time type information and related methods
 	itkTypeMacro(InitializationFilter, Object);
 
-	// declare functions
-	void SetImages( ImageType::Pointer fixedImage, ImageType::Pointer movingImage );
+	// images
+	itkSetObjectMacro( FixedImage, ImageType );
+	itkSetObjectMacro( MovingImage, ImageType );
 
 	// set flags
-	void ObserveOn() { this->m_observeFlag = true; }
+	void ObserveOn()
+	{ 
+		this->m_ObserveOn = true; 
+	}
+	void ObserveOff()
+	{
+		this->m_ObserveOn = false;
+	}
 	void MetricAlignmentOn( int axis );	
+	void MetricAlignmentOff( int axis );	
 	void CenteredOnGeometryOn() 
 	{ 
-		this->m_centeredOnGeometryFlag = true;
-		return;
+		this->m_CenteredOnGeometry = true;
+	}
+	void CenteredOnGeometryOff() 
+	{ 
+		this->m_CenteredOnGeometry = false;
 	}
 
-	// get initialization
+	// perform function
 	void Update();
-	TransformType::Pointer GetOutput();
+
+	// get result
+	itkGetObjectMacro( Transform, TransformType );
 
 protected:
 	// constructor
@@ -68,21 +82,21 @@ protected:
 	
 private:
 	// declare variables
-	ImageType::Pointer m_fixedImage;
-	ImageType::Pointer m_movingImage;
-	TransformType::Pointer m_transform;
-	bool m_observeFlag;
+	ImageType::Pointer m_FixedImage;
+	ImageType::Pointer m_MovingImage;
+	TransformType::Pointer m_Transform;
+	bool m_ObserveOn;
 
 	// centered initialization
-	bool m_centeredOnGeometryFlag;
+	bool m_CenteredOnGeometry;
 	
 	// metric initialization
-	bool m_metricAlignment0Flag;
-	bool m_metricAlignment1Flag;
-	bool m_metricAlignment2Flag;
-	float m_translationRange;
-	float m_minMetric;
-	TransformType::ParametersType m_minParameters;
+	bool m_MetricAlignment0Flag;
+	bool m_MetricAlignment1Flag;
+	bool m_MetricAlignment2Flag;
+	float m_TranslationRange;
+	float m_MinMetric;
+	TransformType::ParametersType m_MinParameters;
 
 	// private functions
 	void GetRange( int axis );

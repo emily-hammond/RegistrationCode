@@ -50,7 +50,8 @@ int main( int argc, char * argv[] )
 	std::cout << "*********************************************\n" << std::endl;
 
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
-	initialize->SetImages( fixedImage, movingImage );
+	initialize->SetFixedImage( fixedImage );
+	initialize->SetMovingImage( movingImage );
 	//initialize->ObserveOn();
 	initialize->CenteredOnGeometryOn();
 	initialize->MetricAlignmentOn( 0 );
@@ -66,7 +67,7 @@ int main( int argc, char * argv[] )
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	registration->SetFixedImage( fixedImage );
 	registration->SetMovingImage( movingImage );
-	registration->SetInitialTransform( initialize->GetOutput() );
+	registration->SetInitialTransform( initialize->GetTransform() );
 	//registration->ObserveOn();
 	registration->Update();
 	registration->Print();

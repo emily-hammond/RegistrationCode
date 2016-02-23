@@ -36,6 +36,7 @@ namespace itk
 	{
 		// observer
 		m_Transform = TransformType::New();
+		m_FinalTransform = TransformType::New();
 
 		// registration components
 		m_Interpolator = InterpolatorType::New();
@@ -78,7 +79,6 @@ namespace itk
 		}
 
 		// get final transform
-		m_FinalTransform = TransformType::New();
 		this->m_FinalTransform->SetParameters( this->m_Registration->GetLastTransformParameters() );
 		this->m_FinalTransform->SetFixedParameters( this->m_Transform->GetFixedParameters() );
 		
