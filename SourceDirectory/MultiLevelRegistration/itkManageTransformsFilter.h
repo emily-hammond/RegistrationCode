@@ -32,7 +32,6 @@ public:
 	// definitions
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
-	typedef itk::Image< unsigned char, 3 >			MaskImageType;
 	typedef itk::Image< unsigned short, 3 >			ImageType;
 	
 	// method for creation
@@ -44,13 +43,16 @@ public:
 	// declare functions
 	// manage transforms
 	void AddTransform( TransformType::Pointer transform );
+	itkSetObjectMacro( InitialTransform, TransformType );
 	
 	// create/set images
 	itkSetObjectMacro( FixedImage, ImageType );
 	itkSetObjectMacro( MovingImage, ImageType );
+	itkSetObjectMacro( MovingLabelMap, ImageType );
 
 	// get results
 	itkGetObjectMacro( TransformedImage, ImageType );
+	itkGetObjectMacro( TransformedLabelMap, ImageType );
 	itkGetObjectMacro( CompositeTransform, CompositeTransformType );
 
 	// Harden transform flag
@@ -72,15 +74,13 @@ public:
 	{
 		m_ResampleImage = false;
 	}
-
-	// use NN interpolation during resampling
-	void NearestNeighborInterpolateOn()
+	void ResampleImageWithInitialTransformOn()
 	{
-		m_NearestNeighbor = true;
+		m_ResampleImageWithInitialTransform = true;
 	}
-	void NearestNeighborInterpolateOff()
+	void ResampleImageWithInitialTransformOff()
 	{
-		m_NearestNeighbor = false;
+		m_ResampleImageWithInitialTransform = false;
 	}
 
 	// perform function
@@ -99,18 +99,32 @@ protected:
 private:
 	// declare variables
 	CompositeTransformType::Pointer m_CompositeTransform;
+	TransformType::Pointer m_InitialTransform;
 	ImageType::Pointer m_FixedImage;
 	ImageType::Pointer m_MovingImage;
+	ImageType::Pointer m_MovingLabelMap;
 	ImageType::Pointer m_TransformedImage;
+	ImageType::Pointer m_TransformedLabelMap;
 
 	// flags
+	bool m_ResampleImageWithInitialTransform;
 	bool m_HardenTransform;
 	bool m_ResampleImage;
 	bool m_NearestNeighbor;
+	// use NN interpolation during resampling
+	void NearestNeighborInterpolateOn()
+	{
+		m_NearestNeighbor = true;
+	}
+	void NearestNeighborInterpolateOff()
+	{
+		m_NearestNeighbor = false;
+	}
 
 	// applying transform
 	void HardenTransform();
-	void ResampleImage();
+	ImageType::Pointer ResampleImage( ImageType::Pointer image );
+	ImageType::Pointer ResampleImageWithInitialTransform( ImageType::Pointer image );
 };
 } // end namespace
 

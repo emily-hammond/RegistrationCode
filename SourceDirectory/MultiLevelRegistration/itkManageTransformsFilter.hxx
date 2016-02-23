@@ -10,9 +10,12 @@ namespace itk
 	ManageTransformsFilter::ManageTransformsFilter():
 		m_FixedImage( ITK_NULLPTR ),	// defined by user
 		m_MovingImage( ITK_NULLPTR ),	// defined by user
+		m_MovingLabelMap( ITK_NULLPTR ),	// defined by user
+		m_InitialTransform( ITK_NULLPTR ),	// defined by user
 		m_HardenTransform( false ),
 		m_ResampleImage( true ),
-		m_NearestNeighbor( false )
+		m_NearestNeighbor( false ),
+		m_ResampleImageWithInitialTransform( false )
 	{
 		m_CompositeTransform = CompositeTransformType::New();
 	}
@@ -37,16 +40,37 @@ namespace itk
 		// perform functionality
 		if( this->m_ResampleImage )
 		{
-			ResampleImage();
+			this->m_TransformedImage = ResampleImage( this->m_MovingImage );
+			std::cout << "Moving image resampled." << std::endl;
+			if( m_MovingLabelMap )
+			{
+				NearestNeighborInterpolateOn();
+				this->m_TransformedLabelMap = ResampleImage( this->m_MovingLabelMap );
+				NearestNeighborInterpolateOff();
+				std::cout << "Moving label map resampled." << std::endl;
+			}
 		}
-		else if( this->m_HardenTransform )
+		if( this->m_HardenTransform )
 		{
 			HardenTransform();
 		}
-		else
+		if( this->m_ResampleImageWithInitialTransform )
 		{
-			std::cout << "No transform application option chosen." << std::endl;
+			if( !m_InitialTransform )
+			{
+				itkExceptionMacro( << "InitialTransform not present" );
+			}
+			this->m_TransformedImage = ResampleImageWithInitialTransform( this->m_MovingImage );
+			std::cout << "Moving image resampled." << std::endl;
+			if( m_MovingLabelMap )
+			{
+				NearestNeighborInterpolateOn();
+				this->m_TransformedLabelMap = ResampleImageWithInitialTransform( this->m_MovingLabelMap );
+				NearestNeighborInterpolateOff();
+				std::cout << "Moving label map resampled." << std::endl;
+			}
 		}
+
 		return;
 	}
 
@@ -109,7 +133,7 @@ namespace itk
 		return; 
 	}
 
-	void ManageTransformsFilter::ResampleImage()
+	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::ResampleImage( ImageType::Pointer image )
 	{
 		// set up resampling object
 		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
@@ -122,7 +146,7 @@ namespace itk
 		resample->SetOutputDirection( this->m_FixedImage->GetDirection() );
 
 		// input parameters
-		resample->SetInput( this->m_MovingImage );
+		resample->SetInput( image );
 		resample->SetTransform( this->m_CompositeTransform );
 
 		// define interpolator
@@ -142,10 +166,46 @@ namespace itk
 
 		// apply
 		resample->Update();
-		this->m_TransformedImage = resample->GetOutput();
 
-		std::cout << "Image resampled." << std::endl;
-		return;
+		return resample->GetOutput();
+	}
+
+	// resample moving image with an externally defined transform
+	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::ResampleImageWithInitialTransform( ImageType::Pointer image )
+	{
+		// set up resampling object
+		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
+		ResampleFilterType::Pointer resample = ResampleFilterType::New();
+
+		// define image resampling with respect to fixed image
+		resample->SetSize( this->m_FixedImage->GetLargestPossibleRegion().GetSize() );
+		resample->SetOutputOrigin( this->m_FixedImage->GetOrigin() );
+		resample->SetOutputSpacing( this->m_FixedImage->GetSpacing() );
+		resample->SetOutputDirection( this->m_FixedImage->GetDirection() );
+
+		// input parameters
+		resample->SetInput( image );
+		resample->SetTransform( this->m_InitialTransform );
+
+		// define interpolator
+		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
+		typedef itk::NearestNeighborInterpolateImageFunction< ImageType, double > NearestNeighborType;
+		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
+
+		if( this->m_NearestNeighbor )
+		{
+			resample->SetInterpolator( nnInterpolator );
+			std::cout << "Nearest neighbor interpolator." << std::endl;
+		}
+		else
+		{
+			resample->SetInterpolator( linInterpolator );
+		}
+
+		// apply
+		resample->Update();
+
+		return resample->GetOutput();
 	}
 	
 } // end namespace

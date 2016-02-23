@@ -59,6 +59,29 @@ int main( int argc, char * argv[] )
 	initialize->MetricAlignmentOn( 2 );
 	initialize->Update();
 
+	// set up transforms class and insert fixed image (will not change)
+	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+	transforms->SetInitialTransform( initialize->GetTransform() );
+	transforms->SetFixedImage( fixedImage );
+
+	// set up validation class and insert fixed image as image set 1 (will not change)
+	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
+	// insert image set 1 (this is the fixed image and will not change)
+	validation->SetImage1( fixedImage );
+	validation->SetLabelMap1( fixedValidationMask );
+
+	// apply initial transform to the moving image and mask
+	transforms->SetMovingImage( movingImage );
+	transforms->SetMovingLabelMap( movingValidationMask );
+	transforms->ResampleImageWithInitialTransformOn();
+	transforms->Update();
+
+	// insert resampled moving image and mask (WRT initial transform) into validation class
+	validation->SetImage2( transforms->GetTransformedImage() );
+	validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
+	validation->LabelOverlapMeasuresOn();
+	validation->Update();
+
 	// write out initial transform
 	std::string initialTransformFilename = outputDirectory + "\\InitialTransform.tfm";
 	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialize->GetTransform() );
@@ -85,10 +108,7 @@ int main( int argc, char * argv[] )
 	std::cout << "                TRANSFORMS                  " << std::endl;
 	std::cout << "*********************************************\n" << std::endl;
 
-	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
 	transforms->AddTransform( registration->GetFinalTransform() );
-	transforms->SetFixedImage( fixedImage );
-	transforms->SetMovingImage( movingImage );
 
 	// apply transform to image by resampling
 	transforms->ResampleImageOn();
@@ -112,14 +132,10 @@ int main( int argc, char * argv[] )
 	std::cout << "                VALIDATION                  " << std::endl;
 	std::cout << "*********************************************\n" << std::endl;
 
-	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
-	validation->SetImage1( fixedImage );
-	validation->SetLabelMap1( fixedValidationMask );
 	validation->SetImage2( resampledImage);
 	validation->SetLabelMap2( resampledMask );
 	validation->LabelOverlapMeasuresOn();
 	validation->Update();
 	
-
 	return EXIT_SUCCESS;
 }
