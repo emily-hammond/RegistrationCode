@@ -27,6 +27,7 @@ Remaining to implement:
 #include "itkMattesMutualInformationImageToImageMetric.h"
 #include "itkImageRegistrationMethod.h"
 #include "RigidCommandIterationUpdate.h"
+#include "itkIdentityTransform.h"
 
 namespace itk
 {
@@ -79,6 +80,16 @@ public:
 		return;
 	}
 
+	// initial transform
+	void UseInitialTransformOn()
+	{
+		m_UseInitialTransform = true;
+	}
+	void UseInitialTransformOff()
+	{
+		m_UseInitialTransform = false;
+	}
+
 	// get results
 	itkGetObjectMacro( FinalTransform, TransformType );
 	itkGetObjectMacro( MaskImage, MaskImageType );
@@ -109,7 +120,8 @@ private:
 
 	// transforms
 	TransformType::Pointer m_FinalTransform;
-	TransformType::Pointer m_InitialTransform;	
+	TransformType::Pointer m_InitialTransform;
+	bool m_UseInitialTransform;
 
 	// registration components
 	TransformType::Pointer m_Transform;

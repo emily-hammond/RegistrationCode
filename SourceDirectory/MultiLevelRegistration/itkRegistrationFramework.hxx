@@ -18,6 +18,7 @@ namespace itk
 
 		// transforms
 		m_InitialTransform( ITK_NULLPTR ),	// provided by user
+		m_UseInitialTransform( false ),
 
 		// metric
 		m_PercentageOfSamples( 0.01 ),
@@ -61,8 +62,20 @@ namespace itk
 		// input images and transform to registration class
 		this->m_Registration->SetFixedImage( this->m_FixedImage );
 		this->m_Registration->SetMovingImage( this->m_MovingImage );
-		this->m_Registration->SetInitialTransformParameters( this->m_InitialTransform->GetParameters() );
 		this->m_Registration->SetFixedImageRegion( this->m_FixedImage->GetBufferedRegion() );
+
+		itk::IdentityTransform< double >::Pointer identityTransform = itk::IdentityTransform< double >::New();
+		this->m_Registration->SetInitialTransformParameters( identityTransform->GetParameters() );
+
+		// initial transform
+		if( this->m_UseInitialTransform )
+		{
+			if( !m_InitialTransform )
+			{
+				itkExceptionMacro( << "InitialTransform not present" );
+			}
+			this->m_Registration->SetInitialTransformParameters( this->m_InitialTransform->GetParameters() );
+		}
 
 		// begin registration
 		std::cout << "Begin registration." << std::endl;

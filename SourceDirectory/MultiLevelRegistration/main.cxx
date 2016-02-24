@@ -38,13 +38,13 @@ int main( int argc, char * argv[] )
 	ImageType::Pointer fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
 	ImageType::Pointer movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
-	itk::IdentityTransform::Pointer identityTransform = itk::IdentityTransform::New();
+	itk::IdentityTransform< double >::Pointer identityTransform = itk::IdentityTransform< double >::New();
 
 	std::cout << "\nFixed image           : " << fixedImageFilename << std::endl;
 	std::cout << "Fixed validation mask : " << fixedValidationMaskFilename << std::endl;
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	std::cout << "Moving validation mask: " << movingValidationMaskFilename << std::endl;
-	std::cout << "ROI filename          : " << roiFilename << std::endl;
+	std::cout << "Level 2ROI filename   : " << level2ROIFilename << std::endl;
 
 	// initialization with validation
 	std::cout << "\n*********************************************" << std::endl;
