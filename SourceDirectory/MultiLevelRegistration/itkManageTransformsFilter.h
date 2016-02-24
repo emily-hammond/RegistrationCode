@@ -44,6 +44,7 @@ public:
 	// manage transforms
 	void AddTransform( TransformType::Pointer transform );
 	itkSetObjectMacro( InitialTransform, TransformType );
+	itkSetObjectMacro( Transform, TransformType );
 	
 	// create/set images
 	itkSetObjectMacro( FixedImage, ImageType );
@@ -60,7 +61,6 @@ public:
 	{
 		m_ResampleImage = false;
 		m_HardenTransform = true;
-		m_ResampleImageWithInitialTransform = false;
 	}
 	void HardenTransformOff()
 	{
@@ -72,21 +72,10 @@ public:
 	{
 		m_ResampleImage = true;
 		m_HardenTransform = false;
-		m_ResampleImageWithInitialTransform = false;
 	}
 	void ResampleImageOff()
 	{
 		m_ResampleImage = false;
-	}
-	void ResampleImageWithInitialTransformOn()
-	{
-		m_ResampleImage = false;
-		m_HardenTransform = false;
-		m_ResampleImageWithInitialTransform = true;
-	}
-	void ResampleImageWithInitialTransformOff()
-	{
-		m_ResampleImageWithInitialTransform = false;
 	}
 
 	// perform function
@@ -103,9 +92,12 @@ protected:
 	void GenerateData();
 	
 private:
-	// declare variables
+	// transforms
 	CompositeTransformType::Pointer m_CompositeTransform;
 	TransformType::Pointer m_InitialTransform;
+	TransformType::Pointer m_Transform;
+
+	// images
 	ImageType::Pointer m_FixedImage;
 	ImageType::Pointer m_MovingImage;
 	ImageType::Pointer m_MovingLabelMap;
@@ -113,7 +105,6 @@ private:
 	ImageType::Pointer m_TransformedLabelMap;
 
 	// flags
-	bool m_ResampleImageWithInitialTransform;
 	bool m_HardenTransform;
 	bool m_ResampleImage;
 	bool m_NearestNeighbor;
@@ -130,7 +121,6 @@ private:
 	// applying transform
 	void HardenTransform();
 	ImageType::Pointer ResampleImage( ImageType::Pointer image );
-	ImageType::Pointer ResampleImageWithInitialTransform( ImageType::Pointer image );
 };
 } // end namespace
 

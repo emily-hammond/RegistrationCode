@@ -63,6 +63,7 @@ int main( int argc, char * argv[] )
 
 	// set up transforms class and insert fixed image (will not change)
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+	transforms->AddTransform( initialize->GetTransform() );
 	transforms->SetInitialTransform( initialize->GetTransform() );
 	transforms->SetFixedImage( fixedImage );
 
@@ -75,7 +76,7 @@ int main( int argc, char * argv[] )
 	// apply initial transform to the moving image and mask
 	transforms->SetMovingImage( movingImage );
 	transforms->SetMovingLabelMap( movingValidationMask );
-	transforms->ResampleImageWithInitialTransformOn();
+	/*transforms->ResampleImageOn();
 	try
 	{
 		transforms->Update();
@@ -100,12 +101,12 @@ int main( int argc, char * argv[] )
 		std::cerr << "Exception Object Caught!" << std::endl;
 		std::cerr << err << std::endl;
 		std::cerr << std::endl;
-	}
+	}*/
 
 	// write out initial transform and add to composite transform
 	std::string initialTransformFilename = outputDirectory + "\\InitialTransform.tfm";
 	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialize->GetTransform() );
-	transforms->AddTransform( initialize->GetTransform() );
+	//transforms->AddTransform( initialize->GetTransform() );
 
 	// test functionality of itkRegistrationFramework.h
 	std::cout << "\n*********************************************" << std::endl;
@@ -137,6 +138,11 @@ int main( int argc, char * argv[] )
 	std::cout << "\n -> Transforms\n" << std::endl;
 	// add transform to composite transform in transforms class and apply to moving image
 	transforms->AddTransform( registration->GetFinalTransform() );
+	//transforms->SetTransform( transforms->GetCompositeTransform() );
+
+	std::string level1CompositeTransformFilename = outputDirectory + "\\Level1CompositeTransform.tfm";
+	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+
 	transforms->ResampleImageOn();
 	try
 	{
@@ -210,6 +216,7 @@ int main( int argc, char * argv[] )
 		// add transform to composite transform in transforms class and apply to moving image/label map image
 		// don't update images here. Apply composite transform to the original moving image and label map
 		transforms->AddTransform( registration->GetFinalTransform() );
+		//transforms->SetTransform( transforms->GetCompositeTransform() );
 		transforms->ResampleImageOn();
 		try
 		{
@@ -252,8 +259,8 @@ int main( int argc, char * argv[] )
 		WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), level2ResampledImage );
 	}
 
-	std::string compositeTransformFilename = outputDirectory + "\\CompositeTransform.tfm";
-	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( compositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+	std::string level2CompositeTransformFilename = outputDirectory + "\\Level2CompositeTransform.tfm";
+	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level2CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 
 	return EXIT_SUCCESS;
 }

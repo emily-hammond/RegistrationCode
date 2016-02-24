@@ -14,8 +14,7 @@ namespace itk
 		m_InitialTransform( ITK_NULLPTR ),	// defined by user
 		m_HardenTransform( false ),
 		m_ResampleImage( false ),
-		m_NearestNeighbor( false ),
-		m_ResampleImageWithInitialTransform( false )
+		m_NearestNeighbor( false )
 	{
 		m_CompositeTransform = CompositeTransformType::New();
 	}
@@ -55,25 +54,6 @@ namespace itk
 		if( this->m_HardenTransform )
 		{
 			HardenTransform();
-		}
-		if( this->m_ResampleImageWithInitialTransform )
-		{
-			if( !m_InitialTransform )
-			{
-				itkExceptionMacro( << "InitialTransform not present" );
-			}
-
-			this->m_TransformedImage = ResampleImageWithInitialTransform( this->m_MovingImage );
-			std::cout << "Moving image resampled." << std::endl;
-
-			// repeat for label map with nearest neighbor interpolation
-			if( m_MovingLabelMap )
-			{
-				NearestNeighborInterpolateOn();
-				this->m_TransformedLabelMap = ResampleImageWithInitialTransform( this->m_MovingLabelMap );
-				NearestNeighborInterpolateOff();
-				std::cout << "Moving label map resampled." << std::endl;
-			}
 		}
 
 		return;
@@ -152,7 +132,7 @@ namespace itk
 
 		// input parameters
 		resample->SetInput( image );
-		resample->SetTransform( this->m_CompositeTransform );
+		resample->SetTransform( m_CompositeTransform );
 
 		// define interpolator
 		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
@@ -175,44 +155,6 @@ namespace itk
 		return resample->GetOutput();
 	}
 
-	// resample moving image with an externally defined transform
-	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::ResampleImageWithInitialTransform( ImageType::Pointer image )
-	{
-		// set up resampling object
-		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
-		ResampleFilterType::Pointer resample = ResampleFilterType::New();
-
-		// define image resampling with respect to fixed image
-		resample->SetSize( this->m_FixedImage->GetLargestPossibleRegion().GetSize() );
-		resample->SetOutputOrigin( this->m_FixedImage->GetOrigin() );
-		resample->SetOutputSpacing( this->m_FixedImage->GetSpacing() );
-		resample->SetOutputDirection( this->m_FixedImage->GetDirection() );
-
-		// input parameters
-		resample->SetInput( image );
-		resample->SetTransform( this->m_InitialTransform );
-
-		// define interpolator
-		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
-		typedef itk::NearestNeighborInterpolateImageFunction< ImageType, double > NearestNeighborType;
-		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
-
-		if( this->m_NearestNeighbor )
-		{
-			resample->SetInterpolator( nnInterpolator );
-			std::cout << "Nearest neighbor interpolator." << std::endl;
-		}
-		else
-		{
-			resample->SetInterpolator( linInterpolator );
-		}
-
-		// apply
-		resample->Update();
-
-		return resample->GetOutput();
-	}
-	
 } // end namespace
 
 #endif
