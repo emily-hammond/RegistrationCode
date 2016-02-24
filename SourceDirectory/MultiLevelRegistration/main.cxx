@@ -102,9 +102,10 @@ int main( int argc, char * argv[] )
 		std::cerr << std::endl;
 	}
 
-	// write out initial transform
+	// write out initial transform and add to composite transform
 	std::string initialTransformFilename = outputDirectory + "\\InitialTransform.tfm";
 	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialize->GetTransform() );
+	transforms->AddTransform( initialize->GetTransform() );
 
 	// test functionality of itkRegistrationFramework.h
 	std::cout << "\n*********************************************" << std::endl;
@@ -189,7 +190,9 @@ int main( int argc, char * argv[] )
 		registration->UseInitialTransformOff();	// want to use inherent identity transform
 		registration->SetROIFilename( level2ROIFilename );
 		registration->SetMaximumStepLength( 0.1 );
-		registration->WriteOutMaskImageToFile( outputDirectory );
+		// write mask out to file
+		std::string level2MaskFilename = outputDirectory + "\\Level2MaskImage.mhd";
+		registration->WriteOutMaskImageToFile( level2MaskFilename );
 		registration->ObserveOn();
 		try
 		{
@@ -248,6 +251,9 @@ int main( int argc, char * argv[] )
 		std::string level2ResampledLabelMapFilename = outputDirectory + "\\Level2ResampledLabelMap.mhd";
 		WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), level2ResampledImage );
 	}
+
+	std::string compositeTransformFilename = outputDirectory + "\\CompositeTransform.tfm";
+	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( compositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 
 	return EXIT_SUCCESS;
 }

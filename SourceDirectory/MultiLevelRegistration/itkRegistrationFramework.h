@@ -101,9 +101,9 @@ public:
 
 	// get results
 	itkGetObjectMacro( FinalTransform, TransformType );
-	void WriteOutMaskImageToFile( std::string outputDirectory )
+	void WriteOutMaskImageToFile( std::string filename )
 	{
-		m_OutputDirectory = outputDirectory;
+		m_MaskFilename = filename;
 		m_WriteOutMaskImageToFile = true;
 	}
 
@@ -130,7 +130,7 @@ private:
 	MaskImageType::Pointer m_MaskImage;
 	MaskImageType::RegionType m_MaskRegion;
 	char * m_ROIFilename;
-	std::string m_OutputDirectory;
+	std::string m_MaskFilename;
 	bool m_WriteOutMaskImageToFile;
 
 	// transforms

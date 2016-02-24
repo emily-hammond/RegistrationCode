@@ -249,8 +249,7 @@ namespace itk
 
 		if( m_WriteOutMaskImageToFile )
 		{
-			std::string filename = m_OutputDirectory + "\\MaskImage.mhd";
-			WriteOutImage< MaskImageType, ImageType >( filename.c_str(), maskImage );
+			WriteOutImage< MaskImageType, ImageType >( m_MaskFilename.c_str(), maskImage );
 			std::cout << "Mask image written to file" << std::endl;
 		}
 
