@@ -204,6 +204,5 @@ int WriteOutTransform( const char * transformFilename, typename TransformType::P
 	}
 	
 	// return output
-	std::cout << transformFilename << " has successfully been created." << std::endl;
 	return EXIT_SUCCESS;
 }

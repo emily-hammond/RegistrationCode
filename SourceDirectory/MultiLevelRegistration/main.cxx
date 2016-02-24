@@ -111,11 +111,14 @@ int main( int argc, char * argv[] )
 	std::cout << "            REGISTRATION LEVEL 1               " << std::endl;
 	std::cout << "*********************************************\n" << std::endl;
 
+	std::cout << "\n -> Registration\n" << std::endl;
 	// create registration class
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	registration->SetFixedImage( fixedImage );
 	registration->SetMovingImage( movingImage );
 	registration->SetInitialTransform( initialize->GetTransform() );
+	registration->UseInitialTransformOn();
+	registration->SetScalingScale( 0 );
 	//registration->ObserveOn();
 	try
 	{
@@ -130,6 +133,7 @@ int main( int argc, char * argv[] )
 	registration->Print();
 
 
+	std::cout << "\n -> Transforms\n" << std::endl;
 	// add transform to composite transform in transforms class and apply to moving image
 	transforms->AddTransform( registration->GetFinalTransform() );
 	transforms->ResampleImageOn();
@@ -147,6 +151,7 @@ int main( int argc, char * argv[] )
 	// acquire resampled image as the moving image for the next level
 	ImageType::Pointer level1ResampledImage = transforms->GetTransformedImage();
 
+	std::cout << "\n -> Validation\n" << std::endl;
 	// perform validation
 	validation->SetImage2( level1ResampledImage);
 	validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
@@ -163,11 +168,13 @@ int main( int argc, char * argv[] )
 	}
 
 	// write out level 1 transform
+	/*
 	std::string level1TransformFilename = outputDirectory + "\\Level1Transform.tfm";
 	WriteOutTransform< TransformType >( level1TransformFilename.c_str(), registration->GetFinalTransform() );
 	// write out image
 	std::string level1ResampledImageFilename = outputDirectory + "\\Level1ResampledImage.mhd";
 	WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), level1ResampledImage );
+	*/
 
 	if( numberOfLevels > 1 )
 	{
@@ -176,10 +183,13 @@ int main( int argc, char * argv[] )
 		std::cout << "            REGISTRATION LEVEL 2               " << std::endl;
 		std::cout << "*********************************************\n" << std::endl;
 
+		std::cout << "\n -> Registration\n" << std::endl;
 		// change inputs to registration object
 		registration->SetMovingImage( level1ResampledImage );
-		registration->SetInitialTransform( identityTransform );
-		registration->SetROIFilename( level2ROIfilename );
+		registration->UseInitialTransformOff();	// want to use inherent identity transform
+		registration->SetROIFilename( level2ROIFilename );
+		registration->SetMaximumStepLength( 0.1 );
+		registration->ObserveOn();
 		try
 		{
 			registration->Update();
@@ -192,10 +202,11 @@ int main( int argc, char * argv[] )
 		}
 		registration->Print();
 
-		// write out mask used
-		std::string ROIMaskFilename = outputDirectory + "\Level2ROIMask.mhd";
-		WriteOutImage< ImageType, ImageType >( ROIMaskFilename.c_str(), registration->GetMaskImage() );
+		// write out mask image to file
+		std::string level2MaskImageFilename = outputDirectory + "\\Level2Mask.mhd";
+		WriteOutImage< itk::RegistrationFramework::MaskImageType, ImageType >( level2MaskImageFilename.c_str(), registration->GetMaskImage() );
 
+		std::cout << "\n -> Transforms\n" << std::endl;
 		// add transform to composite transform in transforms class and apply to moving image/label map image
 		// don't update images here. Apply composite transform to the original moving image and label map
 		transforms->AddTransform( registration->GetFinalTransform() );
@@ -214,6 +225,7 @@ int main( int argc, char * argv[] )
 		// acquire resampled image as the moving image for the next level
 		ImageType::Pointer level2ResampledImage = transforms->GetTransformedImage();
 
+		std::cout << "\n -> Validation\n" << std::endl;
 		// perform validation
 		validation->SetImage2( level2ResampledImage);
 		validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
@@ -235,6 +247,9 @@ int main( int argc, char * argv[] )
 		// write out image
 		std::string level2ResampledImageFilename = outputDirectory + "\\Level2ResampledImage.mhd";
 		WriteOutImage< ImageType, ImageType >( level2ResampledImageFilename.c_str(), level2ResampledImage );
+		// write out label map
+		std::string level2ResampledLabelMapFilename = outputDirectory + "\\Level2ResampledLabelMap.mhd";
+		WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), level2ResampledImage );
 	}
 
 	return EXIT_SUCCESS;

@@ -13,12 +13,11 @@ namespace itk
 
 		// mask
 		m_ROIFilename( NULL ),			// provided by user
-		m_MaskObject( ITK_NULLPTR ),	// generated from ROI 
-		m_MaskImage( ITK_NULLPTR ),		// generated from ROI
 
 		// transforms
 		m_InitialTransform( ITK_NULLPTR ),	// provided by user
 		m_UseInitialTransform( false ),
+		m_WriteOutMaskImageToFile( false ),
 
 		// metric
 		m_PercentageOfSamples( 0.01 ),
@@ -35,6 +34,10 @@ namespace itk
 		m_ScalingScale( 0.01 ),
 		m_ObserveOn( false )
 	{
+		// mask
+		m_MaskImage = MaskImageType::New();
+		m_MaskObject = MaskType::New();
+
 		// observer
 		m_Transform = TransformType::New();
 		m_FinalTransform = TransformType::New();
@@ -63,19 +66,36 @@ namespace itk
 		this->m_Registration->SetFixedImage( this->m_FixedImage );
 		this->m_Registration->SetMovingImage( this->m_MovingImage );
 		this->m_Registration->SetFixedImageRegion( this->m_FixedImage->GetBufferedRegion() );
-
-		itk::IdentityTransform< double >::Pointer identityTransform = itk::IdentityTransform< double >::New();
-		this->m_Registration->SetInitialTransformParameters( identityTransform->GetParameters() );
-
+		
 		// initial transform
+		TransformType::ParametersType identityParameters( this->m_Transform->GetNumberOfParameters() );
 		if( this->m_UseInitialTransform )
 		{
 			if( !m_InitialTransform )
 			{
 				itkExceptionMacro( << "InitialTransform not present" );
 			}
+			std::cout << "Using initial transform." << std::endl;
 			this->m_Registration->SetInitialTransformParameters( this->m_InitialTransform->GetParameters() );
 		}
+		else
+		{
+			// create identity transform parameters
+			identityParameters[0] = 0;	// rotation
+			identityParameters[1] = 0;
+			identityParameters[2] = 0;
+			identityParameters[3] = 0;	// translation
+			identityParameters[4] = 0;
+			identityParameters[5] = 0;
+			identityParameters[6] = 1;	// scaling
+			identityParameters[7] = 1;
+			identityParameters[8] = 1;
+			
+			// insert into initial transform parameters
+			this->m_Registration->SetInitialTransformParameters( identityParameters );
+		}
+
+		std::cout << m_Registration->GetInitialTransformParameters() << std::endl;
 
 		// begin registration
 		std::cout << "Begin registration." << std::endl;
@@ -122,8 +142,20 @@ namespace itk
 		// mask
 		if( m_ROIFilename )
 		{
-			CreateMask(  );
+			CreateMask();
+			m_MaskObject->SetImage( m_MaskImage );
+			try
+			{
+				this->m_MaskObject->Update();
+			}
+			catch( itk::ExceptionObject & err )
+			{
+				std::cerr << "ExceptionObjectCaught!" << std::endl;
+				std::cerr << err << std::endl;
+				return;
+			}
 			m_Metric->SetFixedImageMask( m_MaskObject );
+			m_Metric->SetMovingImageMask( m_MaskObject );
 			std::cout << "Mask object created." << std::endl;
 		}
 
@@ -170,6 +202,7 @@ namespace itk
 		double * roi = ExtractROIPoints();
 
 		// input fixed image properties into mask image
+		MaskImageType::Pointer m_MaskImage = MaskImageType::New();
 		m_MaskImage->SetRegions( this->m_FixedImage->GetLargestPossibleRegion() );
 		m_MaskImage->SetOrigin( this->m_FixedImage->GetOrigin() );
 		m_MaskImage->SetSpacing( this->m_FixedImage->GetSpacing() );
@@ -214,8 +247,6 @@ namespace itk
 			++it;
 		}
 
-		m_MaskObject->SetImage( m_MaskImage );
-
 		return;
 	}
 
@@ -229,6 +260,11 @@ namespace itk
 
 		// open file and extract lines
 		std::ifstream file( this->m_ROIFilename );
+		// check to see if file is open
+		if( !file.is_open() )
+		{
+			std::cerr << this->m_ROIFilename << " not properly opened" << std::endl;
+		}
 		std::string line;
 		// iterate through file
 		while( getline( file,line ) )
@@ -269,8 +305,8 @@ namespace itk
 			}
 		}
 
-
 		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
+		std::cout << "Points acquired from ROI file. " << std::endl;
 		return roi;
 	}
 
@@ -295,6 +331,7 @@ namespace itk
 		std::cout << "  Rotation scale    : " << m_RotationScale << std::endl;
 		std::cout << "  Translation scale : " << m_TranslationScale << std::endl;
 		std::cout << "  Scaling scale     : " << m_ScalingScale << std::endl;
+		std::cout << "  Initial transform : " << m_UseInitialTransform << std::endl;
 
 		// mask generation
 		if( m_ROIFilename )

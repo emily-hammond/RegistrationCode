@@ -27,7 +27,6 @@ Remaining to implement:
 #include "itkMattesMutualInformationImageToImageMetric.h"
 #include "itkImageRegistrationMethod.h"
 #include "RigidCommandIterationUpdate.h"
-#include "itkIdentityTransform.h"
 
 namespace itk
 {
@@ -67,7 +66,17 @@ public:
 	{
 		this->m_ROIFilename = filename;
 	}
-	
+
+	// set variables that might want to change
+	itkSetMacro( MinimumStepLength, float );
+	itkSetMacro( MaximumStepLength, float );
+	itkSetMacro( NumberOfIterations, int );
+	itkSetMacro( RelaxationFactor, float );
+	itkSetMacro( GradientMagnitudeTolerance, float );
+	itkSetMacro( RotationScale, float );
+	itkSetMacro( TranslationScale, float );
+	itkSetMacro( ScalingScale, float );
+
 	// observer
 	void ObserveOn()
 	{
@@ -93,7 +102,7 @@ public:
 	// get results
 	itkGetObjectMacro( FinalTransform, TransformType );
 	itkGetObjectMacro( MaskImage, MaskImageType );
-
+ 
 	void Update();
 	void Print();
 
@@ -117,6 +126,7 @@ private:
 	MaskImageType::Pointer m_MaskImage;
 	MaskImageType::RegionType m_MaskRegion;
 	char * m_ROIFilename;
+	bool m_WriteOutMaskImageToFile;
 
 	// transforms
 	TransformType::Pointer m_FinalTransform;
