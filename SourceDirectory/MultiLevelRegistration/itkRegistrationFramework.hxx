@@ -142,8 +142,8 @@ namespace itk
 		// mask
 		if( m_ROIFilename )
 		{
-			CreateMask();
-			m_MaskObject->SetImage( m_MaskImage );
+			MaskImageType::Pointer maskImage = CreateMask();
+			m_MaskObject->SetImage( maskImage );
 			try
 			{
 				this->m_MaskObject->Update();
@@ -196,18 +196,18 @@ namespace itk
 	}
 
 	// create the mask given an ROI filename
-	void RegistrationFramework::CreateMask()
+	RegistrationFramework::MaskImageType::Pointer RegistrationFramework::CreateMask()
 	{
 		// extract ROI points from the file
 		double * roi = ExtractROIPoints();
 
 		// input fixed image properties into mask image
-		MaskImageType::Pointer m_MaskImage = MaskImageType::New();
-		m_MaskImage->SetRegions( this->m_FixedImage->GetLargestPossibleRegion() );
-		m_MaskImage->SetOrigin( this->m_FixedImage->GetOrigin() );
-		m_MaskImage->SetSpacing( this->m_FixedImage->GetSpacing() );
-		m_MaskImage->SetDirection( this->m_FixedImage->GetDirection() );
-		m_MaskImage->Allocate();
+		MaskImageType::Pointer maskImage = MaskImageType::New();
+		maskImage->SetRegions( this->m_FixedImage->GetLargestPossibleRegion() );
+		maskImage->SetOrigin( this->m_FixedImage->GetOrigin() );
+		maskImage->SetSpacing( this->m_FixedImage->GetSpacing() );
+		maskImage->SetDirection( this->m_FixedImage->GetDirection() );
+		maskImage->Allocate();
 
 		// extract center and radius
 		double c[3] = {-*(roi),-*(roi+1),*(roi+2)};
@@ -227,8 +227,8 @@ namespace itk
 
 		// convert to indices
 		MaskImageType::IndexType startIndex, endIndex;
-		m_MaskImage->TransformPhysicalPointToIndex( startPoint, startIndex );
-		m_MaskImage->TransformPhysicalPointToIndex( endPoint, endIndex );
+		maskImage->TransformPhysicalPointToIndex( startPoint, startIndex );
+		maskImage->TransformPhysicalPointToIndex( endPoint, endIndex );
 
 		// plug into region
 		MaskImageType::SizeType regionSize;
@@ -240,14 +240,21 @@ namespace itk
 		m_MaskRegion.SetIndex( startIndex );
 
 		// iterate over region and set pixels to white
-		itk::ImageRegionIterator< MaskImageType > it( m_MaskImage, m_MaskRegion );
+		itk::ImageRegionIterator< MaskImageType > it( maskImage, m_MaskRegion );
 		while( !it.IsAtEnd() )
 		{
 			it.Set( 255 );
 			++it;
 		}
 
-		return;
+		if( m_WriteOutMaskImageToFile )
+		{
+			std::string filename = m_OutputDirectory + "\\MaskImage.mhd";
+			WriteOutImage< MaskImageType, ImageType >( filename.c_str(), maskImage );
+			std::cout << "Mask image written to file" << std::endl;
+		}
+
+		return maskImage;
 	}
 
 	// extract point values from the slicer ROI file

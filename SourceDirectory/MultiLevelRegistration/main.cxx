@@ -168,13 +168,13 @@ int main( int argc, char * argv[] )
 	}
 
 	// write out level 1 transform
-	/*
+	
 	std::string level1TransformFilename = outputDirectory + "\\Level1Transform.tfm";
 	WriteOutTransform< TransformType >( level1TransformFilename.c_str(), registration->GetFinalTransform() );
 	// write out image
 	std::string level1ResampledImageFilename = outputDirectory + "\\Level1ResampledImage.mhd";
 	WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), level1ResampledImage );
-	*/
+	
 
 	if( numberOfLevels > 1 )
 	{
@@ -189,6 +189,7 @@ int main( int argc, char * argv[] )
 		registration->UseInitialTransformOff();	// want to use inherent identity transform
 		registration->SetROIFilename( level2ROIFilename );
 		registration->SetMaximumStepLength( 0.1 );
+		registration->WriteOutMaskImageToFile( outputDirectory );
 		registration->ObserveOn();
 		try
 		{
@@ -201,10 +202,6 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 		registration->Print();
-
-		// write out mask image to file
-		std::string level2MaskImageFilename = outputDirectory + "\\Level2Mask.mhd";
-		WriteOutImage< itk::RegistrationFramework::MaskImageType, ImageType >( level2MaskImageFilename.c_str(), registration->GetMaskImage() );
 
 		std::cout << "\n -> Transforms\n" << std::endl;
 		// add transform to composite transform in transforms class and apply to moving image/label map image
