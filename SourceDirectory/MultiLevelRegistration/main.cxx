@@ -8,6 +8,7 @@ INSERT COMMENTS HERE
 #include "itkInitializationFilter.h"
 #include "itkValidationFilter.h"
 #include "itkManageTransformsFilter.h"
+#include "itkIdentityTransform.h"
 
 int main( int argc, char * argv[] )
 {
@@ -18,12 +19,12 @@ int main( int argc, char * argv[] )
 	char * fixedValidationMaskFilename = argv[4];
 	char * movingValidationMaskFilename = argv[5];
 	int numberOfLevels = atoi( argv[6] );
-	char * roiFilename = argv[7];
+	char * level2ROIFilename = argv[7];
 
 	if( argc < 7 )
 	{
 		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage outputDirectory fixedValidationMask " << std::endl;
-		std::cout << "            movingValidationMask numberOfLevels roiFilename" << std::endl;
+		std::cout << "            movingValidationMask numberOfLevels level2ROIFilename" << std::endl;
 	}
 
 	// instantiate image type
@@ -37,6 +38,7 @@ int main( int argc, char * argv[] )
 	ImageType::Pointer fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
 	ImageType::Pointer movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
+	itk::IdentityTransform::Pointer identityTransform = itk::IdentityTransform::New();
 
 	std::cout << "\nFixed image           : " << fixedImageFilename << std::endl;
 	std::cout << "Fixed validation mask : " << fixedValidationMaskFilename << std::endl;
@@ -166,6 +168,74 @@ int main( int argc, char * argv[] )
 	// write out image
 	std::string level1ResampledImageFilename = outputDirectory + "\\Level1ResampledImage.mhd";
 	WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), level1ResampledImage );
+
+	if( numberOfLevels > 1 )
+	{
+		// test functionality of itkRegistrationFramework.h
+		std::cout << "\n*********************************************" << std::endl;
+		std::cout << "            REGISTRATION LEVEL 2               " << std::endl;
+		std::cout << "*********************************************\n" << std::endl;
+
+		// change inputs to registration object
+		registration->SetMovingImage( level1ResampledImage );
+		registration->SetInitialTransform( identityTransform );
+		registration->SetROIFilename( level2ROIfilename );
+		try
+		{
+			registration->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+		registration->Print();
+
+		// write out mask used
+		std::string ROIMaskFilename = outputDirectory + "\Level2ROIMask.mhd";
+		WriteOutImage< ImageType, ImageType >( ROIMaskFilename.c_str(), registration->GetMaskImage() );
+
+		// add transform to composite transform in transforms class and apply to moving image/label map image
+		// don't update images here. Apply composite transform to the original moving image and label map
+		transforms->AddTransform( registration->GetFinalTransform() );
+		transforms->ResampleImageOn();
+		try
+		{
+			transforms->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		// acquire resampled image as the moving image for the next level
+		ImageType::Pointer level2ResampledImage = transforms->GetTransformedImage();
+
+		// perform validation
+		validation->SetImage2( level2ResampledImage);
+		validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
+		validation->LabelOverlapMeasuresOn();
+		try
+		{
+			validation->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		// write out level 1 transform
+		std::string level2TransformFilename = outputDirectory + "\\Level2Transform.tfm";
+		WriteOutTransform< TransformType >( level2TransformFilename.c_str(), registration->GetFinalTransform() );
+		// write out image
+		std::string level2ResampledImageFilename = outputDirectory + "\\Level2ResampledImage.mhd";
+		WriteOutImage< ImageType, ImageType >( level2ResampledImageFilename.c_str(), level2ResampledImage );
+	}
 
 	return EXIT_SUCCESS;
 }
