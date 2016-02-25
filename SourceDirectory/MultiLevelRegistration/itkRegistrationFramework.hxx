@@ -20,13 +20,13 @@ namespace itk
 
 		// optimizer
 		m_MinimumStepLength( 0.0025 ),
-		m_MaximumStepLength( 0.5 ),
-		m_NumberOfIterations( 50 ),
-		m_RelaxationFactor( 0.8 ),
+		m_MaximumStepLength( 1 ),
+		m_NumberOfIterations( 500 ),
+		m_RelaxationFactor( 0.5 ),
 		m_GradientMagnitudeTolerance( 0.001 ),
-		m_RotationScale( 0.01 ),
-		m_TranslationScale( 5 ),
-		m_ScalingScale( 0.01 ),
+		m_RotationScale( 0.001 ),
+		m_TranslationScale( 10 ),
+		m_ScalingScale( 0.001 ),
 		m_ObserveOn( false )
 	{
 		// observer

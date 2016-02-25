@@ -26,7 +26,7 @@ public:
 			return;
 		}
 		
-		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
-		std::cout << " " << optimizer->GetValue() << std::endl;//<< " " << optimizer->GetCurrentPosition()
+		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength(); // << " " << optimizer->GetGradientMagnitude();
+		std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition() << std::endl;
 	}
 };
