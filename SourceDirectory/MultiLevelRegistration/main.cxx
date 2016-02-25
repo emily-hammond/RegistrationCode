@@ -20,11 +20,12 @@ int main( int argc, char * argv[] )
 	char * movingValidationMaskFilename = argv[5];
 	int numberOfLevels = atoi( argv[6] );
 	char * level2ROIFilename = argv[7];
+	char * level3ROIFilename = argv[8];
 
-	if( argc < 7 )
+	if( argc < 8 )
 	{
 		std::cout << "Usage: MultiLevelRegistration.exe fixedImage movingImage outputDirectory fixedValidationMask " << std::endl;
-		std::cout << "            movingValidationMask numberOfLevels level2ROIFilename" << std::endl;
+		std::cout << "            movingValidationMask numberOfLevels level2ROIFilename level3ROIFilename" << std::endl;
 	}
 
 	// instantiate image type
@@ -190,6 +191,9 @@ int main( int argc, char * argv[] )
 	// write out label map
 	std::string level1ResampledLabelMapFilename = outputDirectory + "\\Level1ResampledLabelMap.mhd";
 	WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
+	// write out final composite transform
+	std::string level1CompositeTransformFilename = outputDirectory + "\\Level1CompositeTransform.tfm";
+	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 	
 	if( numberOfLevels > 1 )
 	{
@@ -225,7 +229,7 @@ int main( int argc, char * argv[] )
 		transforms->AddTransform( level2Registration->GetFinalTransform() );
 		//transforms->SetTransform( transforms->GetCompositeTransform() );
 		transforms->ResampleImageOn();
-		transforms->CropImageOff();
+		transforms->CropImageOn();
 		try
 		{
 			transforms->Update();
@@ -262,13 +266,96 @@ int main( int argc, char * argv[] )
 		// write out image
 		std::string level2ResampledImageFilename = outputDirectory + "\\Level2ResampledImage.mhd";
 		WriteOutImage< ImageType, ImageType >( level2ResampledImageFilename.c_str(), level2ResampledImage );
+		std::string level2MovingCroppedImageFilename = outputDirectory + "\\Level2MovingCroppedImage.mhd";
+		WriteOutImage< ImageType, ImageType >( level2MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
+		std::string level2FixedCroppedImageFilename = outputDirectory + "\\Level2FixedCroppedImage.mhd";
+		WriteOutImage< ImageType, ImageType >( level2FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedImage() );
 		// write out label map
 		std::string level2ResampledLabelMapFilename = outputDirectory + "\\Level2ResampledLabelMap.mhd";
 		WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
+		// final composite transform
+		std::string level2CompositeTransformFilename = outputDirectory + "\\Level2CompositeTransform.tfm";
+		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level2CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 	}
 
-	std::string level2CompositeTransformFilename = outputDirectory + "\\Level2CompositeTransform.tfm";
-	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level2CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+	if( numberOfLevels > 2 )
+	{
+		// test functionality of itkRegistrationFramework.h
+		std::cout << "\n*********************************************" << std::endl;
+		std::cout << "            REGISTRATION LEVEL 3               " << std::endl;
+		std::cout << "*********************************************\n" << std::endl;
+
+		std::cout << "\n -> Registration\n" << std::endl;
+		// create new registration class
+		itk::RegistrationFramework::Pointer level3Registration = itk::RegistrationFramework::New();
+		level3Registration->SetFixedImage( transforms->GetFixedCroppedImage() );
+		level3Registration->SetMovingImage( transforms->GetMovingCroppedImage() );
+		//level2Registration->SetInitialTransform( level1Registration->GetFinalTransform() );
+		level3Registration->SetScalingScale( 0 );
+		level3Registration->SetMaximumStepLength( 0.1 );
+		level3Registration->ObserveOn();
+		try
+		{
+			level3Registration->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+		level3Registration->Print();
+
+		std::cout << "\n -> Transforms\n" << std::endl;
+		// add transform to composite transform in transforms class and apply to moving image/label map image
+		// don't update images here. Apply composite transform to the original moving image and label map
+		transforms->AddTransform( level3Registration->GetFinalTransform() );
+		//transforms->SetTransform( transforms->GetCompositeTransform() );
+		transforms->ResampleImageOn();
+		transforms->CropImageOff();
+		try
+		{
+			transforms->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		// acquire resampled image as the moving image for the next level
+		ImageType::Pointer level3ResampledImage = transforms->GetTransformedImage();
+
+		std::cout << "\n -> Validation\n" << std::endl;
+		// perform validation
+		validation->SetImage2( level3ResampledImage);
+		validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
+		validation->LabelOverlapMeasuresOn();
+		try
+		{
+			validation->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		// write out level 1 transform
+		std::string level3TransformFilename = outputDirectory + "\\Level3Transform.tfm";
+		WriteOutTransform< TransformType >( level3TransformFilename.c_str(), level3Registration->GetFinalTransform() );
+		// write out image
+		std::string level3ResampledImageFilename = outputDirectory + "\\Level3ResampledImage.mhd";
+		WriteOutImage< ImageType, ImageType >( level3ResampledImageFilename.c_str(), level3ResampledImage );
+		// write out label map
+		std::string level3ResampledLabelMapFilename = outputDirectory + "\\Level3ResampledLabelMap.mhd";
+		WriteOutImage< ImageType, ImageType >( level3ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
+		// write out final composite transform
+		std::string level3CompositeTransformFilename = outputDirectory + "\\Level3CompositeTransform.tfm";
+		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level3CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+	}
 
 	return EXIT_SUCCESS;
 }
