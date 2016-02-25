@@ -19,6 +19,8 @@ namespace itk
 		m_CropImage( false )
 	{
 		m_CompositeTransform = CompositeTransformType::New();
+		m_FixedCroppedImage = ImageType::New();
+		m_MovingCroppedImage = ImageType::New();
 	}
 
 	void ManageTransformsFilter::AddTransform( TransformType::Pointer transform )
@@ -59,11 +61,12 @@ namespace itk
 		}
 		if( this->m_CropImage )
 		{
-			if( m_ROIFilename.empty() )
+			if( m_ROIFilename == NULL )
 			{
 				itkExceptionMacro( << "ROI filename not present" );
 			}
-			this->m_CroppedImage = CropImage( this->m_TransformedImage );
+			this->m_MovingCroppedImage = CropImage( this->m_TransformedImage );
+			this->m_FixedCroppedImage = CropImage( this->m_FixedImage );
 			std::cout << "Image cropped." << std::endl;
 		}
 

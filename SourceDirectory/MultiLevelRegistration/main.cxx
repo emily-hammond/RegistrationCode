@@ -144,6 +144,8 @@ int main( int argc, char * argv[] )
 	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 
 	transforms->ResampleImageOn();
+	transforms->CropImageOn();
+	transforms->SetROIFilename( level2ROIFilename );
 	try
 	{
 		transforms->Update();
@@ -155,8 +157,9 @@ int main( int argc, char * argv[] )
 		std::cerr << std::endl;
 	}
 
-	// acquire resampled image as the moving image for the next level
+	// acquire resampled and cropped image as the moving image for the next level
 	ImageType::Pointer level1ResampledImage = transforms->GetTransformedImage();
+	ImageType::Pointer level1MovingCroppedImage = transforms->GetMovingCroppedImage();
 
 	std::cout << "\n -> Validation\n" << std::endl;
 	// perform validation
@@ -175,17 +178,19 @@ int main( int argc, char * argv[] )
 	}
 
 	// write out level 1 transform
-	
 	std::string level1TransformFilename = outputDirectory + "\\Level1Transform.tfm";
 	WriteOutTransform< TransformType >( level1TransformFilename.c_str(), level1Registration->GetFinalTransform() );
-	// write out image
+	// write out images
 	std::string level1ResampledImageFilename = outputDirectory + "\\Level1ResampledImage.mhd";
 	WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), level1ResampledImage );
+	std::string level1MovingCroppedImageFilename = outputDirectory + "\\Level1MovingCroppedImage.mhd";
+	WriteOutImage< ImageType, ImageType >( level1MovingCroppedImageFilename.c_str(), level1MovingCroppedImage );
+	std::string level1FixedCroppedImageFilename = outputDirectory + "\\Level1FixedCroppedImage.mhd";
+	WriteOutImage< ImageType, ImageType >( level1FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedImage() );
 	// write out label map
 	std::string level1ResampledLabelMapFilename = outputDirectory + "\\Level1ResampledLabelMap.mhd";
 	WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
 	
-
 	if( numberOfLevels > 1 )
 	{
 		// test functionality of itkRegistrationFramework.h
@@ -193,16 +198,12 @@ int main( int argc, char * argv[] )
 		std::cout << "            REGISTRATION LEVEL 2               " << std::endl;
 		std::cout << "*********************************************\n" << std::endl;
 
-		std::cout << "\n -> Images\n" << std::endl;
-		std::cout << "Fixed image" << fixedImage << std::endl;
-		std::cout << "Moving image" << level1ResampledImage << std::endl;
-
 		std::cout << "\n -> Registration\n" << std::endl;
 		// create new registration class
 		itk::RegistrationFramework::Pointer level2Registration = itk::RegistrationFramework::New();
-		level2Registration->SetFixedImage( fixedImage );
-		level2Registration->SetMovingImage( level1ResampledImage );
-		level2Registration->SetInitialTransform( level1Registration->GetFinalTransform() );
+		level2Registration->SetFixedImage( transforms->GetFixedCroppedImage() );
+		level2Registration->SetMovingImage( level1MovingCroppedImage );
+		//level2Registration->SetInitialTransform( level1Registration->GetFinalTransform() );
 		level2Registration->SetScalingScale( 0 );
 		level2Registration->SetMaximumStepLength( 0.1 );
 		level2Registration->ObserveOn();
@@ -224,6 +225,7 @@ int main( int argc, char * argv[] )
 		transforms->AddTransform( level2Registration->GetFinalTransform() );
 		//transforms->SetTransform( transforms->GetCompositeTransform() );
 		transforms->ResampleImageOn();
+		transforms->CropImageOff();
 		try
 		{
 			transforms->Update();
