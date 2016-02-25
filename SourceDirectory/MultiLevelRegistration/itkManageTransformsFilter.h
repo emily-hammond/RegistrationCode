@@ -16,6 +16,7 @@ transform prior to validation.
 #include "itkChangeInformationImageFilter.h"
 #include "itkResampleImageFilter.h"
 #include "itkNearestNeighborInterpolateImageFunction.h"
+#include "itkExtractImageFilter.h"
 
 namespace itk
 {
@@ -50,11 +51,13 @@ public:
 	itkSetObjectMacro( FixedImage, ImageType );
 	itkSetObjectMacro( MovingImage, ImageType );
 	itkSetObjectMacro( MovingLabelMap, ImageType );
+	itkSetMacro( ROIFilename, char * );
 
 	// get results
 	itkGetObjectMacro( TransformedImage, ImageType );
 	itkGetObjectMacro( TransformedLabelMap, ImageType );
 	itkGetObjectMacro( CompositeTransform, CompositeTransformType );
+	itkGetObjectMacro( CroppedImage, ImageType );
 
 	// Harden transform flag
 	void HardenTransformOn()
@@ -76,6 +79,16 @@ public:
 	void ResampleImageOff()
 	{
 		m_ResampleImage = false;
+	}
+
+	// crop image
+	void CropImageOn()
+	{
+		m_CropImage = true;
+	}
+	void CropImageOff()
+	{
+		m_CropImage = false;
 	}
 
 	// perform function
@@ -103,11 +116,21 @@ private:
 	ImageType::Pointer m_MovingLabelMap;
 	ImageType::Pointer m_TransformedImage;
 	ImageType::Pointer m_TransformedLabelMap;
+	ImageType::Pointer m_CroppedImage;
 
 	// flags
 	bool m_HardenTransform;
 	bool m_ResampleImage;
 	bool m_NearestNeighbor;
+	bool m_CropImage;
+	ImageType::RegionType m_CropRegion;
+
+	// ROI
+	char * m_ROIFilename;
+	ImageType::Pointer CropImage( ImageType::Pointer image );
+	double * ExtractROIPoints();
+
+
 	// use NN interpolation during resampling
 	void NearestNeighborInterpolateOn()
 	{

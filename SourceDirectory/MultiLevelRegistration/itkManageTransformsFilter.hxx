@@ -12,9 +12,11 @@ namespace itk
 		m_MovingImage( ITK_NULLPTR ),	// defined by user
 		m_MovingLabelMap( ITK_NULLPTR ),	// defined by user
 		m_InitialTransform( ITK_NULLPTR ),	// defined by user
+		m_ROIFilename( ITK_NULLPTR ),	// defined by user
 		m_HardenTransform( false ),
 		m_ResampleImage( false ),
-		m_NearestNeighbor( false )
+		m_NearestNeighbor( false ),
+		m_CropImage( false )
 	{
 		m_CompositeTransform = CompositeTransformType::New();
 	}
@@ -54,6 +56,15 @@ namespace itk
 		if( this->m_HardenTransform )
 		{
 			HardenTransform();
+		}
+		if( this->m_CropImage )
+		{
+			if( m_ROIFilename.empty() )
+			{
+				itkExceptionMacro( << "ROI filename not present" );
+			}
+			this->m_CroppedImage = CropImage( this->m_TransformedImage );
+			std::cout << "Image cropped." << std::endl;
 		}
 
 		return;
@@ -153,6 +164,124 @@ namespace itk
 		resample->Update();
 
 		return resample->GetOutput();
+	}
+
+	// create the mask given an ROI filename
+	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::CropImage( ImageType::Pointer image )
+	{
+		double * roi = ExtractROIPoints();
+
+		// extract center and radius
+		double c[3] = {-*(roi),-*(roi+1),*(roi+2)};
+		double r[3] = {*(roi+3),*(roi+4),*(roi+5)};
+		
+		// create size of mask according to the roi array
+		// set start index of mask according to the roi array
+		ImageType::PointType startPoint, endPoint;
+		startPoint[0] = c[0] - r[0];
+		startPoint[1] = c[1] - r[1];
+		startPoint[2] = c[2] - r[2];
+
+		// find end index
+		endPoint[0] = c[0] + r[0];
+		endPoint[1] = c[1] + r[1];
+		endPoint[2] = c[2] + r[2];
+
+		// convert to indices
+		ImageType::IndexType startIndex, endIndex;
+		image->TransformPhysicalPointToIndex( startPoint, startIndex );
+		image->TransformPhysicalPointToIndex( endPoint, endIndex );
+
+		// plug into region
+		ImageType::SizeType regionSize;
+		regionSize[0] = abs( startIndex[0] - endIndex[0] );
+		regionSize[1] = abs( startIndex[1] - endIndex[1] );
+		regionSize[2] = abs( startIndex[2] - endIndex[2] );
+
+		m_CropRegion.SetSize( regionSize );
+		m_CropRegion.SetIndex( startIndex );
+		m_CropRegion.Crop( image->GetLargestPossibleRegion() );
+
+		// extract cropped image
+		typedef itk::ExtractImageFilter< ImageType, ImageType > ExtractFilterType;
+		ExtractFilterType::Pointer extract = ExtractFilterType::New();
+		extract->SetExtractionRegion( m_CropRegion );
+		extract->SetInput( image );
+		extract->SetDirectionCollapseToIdentity();
+
+		// update filter
+		try
+		{
+			extract->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		return extract->GetOutput();
+	}
+
+	// extract point values from the slicer ROI file
+	double * ManageTransformsFilter::ExtractROIPoints()
+	{
+		// instantiate ROI array
+		static double roi[] = {0.0,0.0,0.0,0.0,0.0,0.0};
+		bool fullROI = false; // denotes that ROI array is full
+		int numberOfPoints = 0;
+
+		// open file and extract lines
+		std::ifstream file( this->m_ROIFilename );
+		// check to see if file is open
+		if( !file.is_open() )
+		{
+			std::cerr << this->m_ROIFilename << " not properly opened" << std::endl;
+		}
+		std::string line;
+		// iterate through file
+		while( getline( file,line ) )
+		{
+			// look at uncommented lines only unless point is found
+			if( line.compare(0,1,"#") != 0 && !fullROI )
+			{
+				// allocate position array and indices
+				int positionsOfBars[4] = {0};
+				int numberOfBars = 0;
+				int positionOfBar = 0;
+				
+				// iterate through the line in the file to find the | (bar) locations
+				// example line: point|18.8396|305.532|-458.046|1|1
+				for( std::string::iterator it = line.begin(); it != line.end(); ++it )
+				{
+					// only note the first 4 locations
+					if( (*it == '|') && numberOfBars < 4 )
+					{
+						positionsOfBars[numberOfBars] = positionOfBar;
+						++numberOfBars;
+					}
+					++positionOfBar;
+				}
+
+				// extract each point and place into ROI array
+				for( int i = 0; i < 3; ++i )
+				{
+					roi[numberOfPoints] = atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() );
+					++numberOfPoints;
+
+					// set flag to false if the roi array is filled
+					if( numberOfPoints > 5 )
+					{
+						fullROI = true;
+					}
+				}
+			}
+		}
+
+		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
+		std::cout << "Points acquired from ROI file. " << std::endl;
+		return roi;
 	}
 
 } // end namespace

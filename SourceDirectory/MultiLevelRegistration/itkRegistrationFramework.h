@@ -19,7 +19,6 @@ Remaining to implement:
 
 // include files
 #include "itkImage.h"
-#include "itkImageMaskSpatialObject.h"
 #include "itkScaleVersor3DTransform.h"
 #include "itkCompositeTransform.h"
 
@@ -43,7 +42,6 @@ public:
 	// definitions
 	typedef itk::Image< unsigned short, 3 >			ImageType;
 	typedef itk::Image< unsigned char, 3 >			MaskImageType;
-	typedef itk::ImageMaskSpatialObject< 3 >		MaskType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	// registration components
@@ -62,10 +60,6 @@ public:
 	itkSetObjectMacro( FixedImage, ImageType );
 	itkSetObjectMacro( MovingImage, ImageType );
 	itkSetObjectMacro( InitialTransform, TransformType );
-	void SetROIFilename( char * filename )
-	{
-		this->m_ROIFilename = filename;
-	}
 
 	// set variables that might want to change
 	itkSetMacro( MinimumStepLength, float );
@@ -89,23 +83,8 @@ public:
 		return;
 	}
 
-	// initial transform
-	void UseInitialTransformOn()
-	{
-		m_UseInitialTransform = true;
-	}
-	void UseInitialTransformOff()
-	{
-		m_UseInitialTransform = false;
-	}
-
 	// get results
 	itkGetObjectMacro( FinalTransform, TransformType );
-	void WriteOutMaskImageToFile( std::string filename )
-	{
-		m_MaskFilename = filename;
-		m_WriteOutMaskImageToFile = true;
-	}
 
 	void Update();
 	void Print();
@@ -125,18 +104,9 @@ private:
 	ImageType::Pointer m_FixedImage;
 	ImageType::Pointer m_MovingImage;
 
-	// mask
-	MaskType::Pointer m_MaskObject;
-	MaskImageType::Pointer m_MaskImage;
-	MaskImageType::RegionType m_MaskRegion;
-	char * m_ROIFilename;
-	std::string m_MaskFilename;
-	bool m_WriteOutMaskImageToFile;
-
 	// transforms
 	TransformType::Pointer m_FinalTransform;
 	TransformType::Pointer m_InitialTransform;
-	bool m_UseInitialTransform;
 
 	// registration components
 	TransformType::Pointer m_Transform;
@@ -165,8 +135,6 @@ private:
 
 	// private functions
 	void Initialize();
-	MaskImageType::Pointer CreateMask();
-	double * ExtractROIPoints();
 };
 } // end namespace
 

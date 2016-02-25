@@ -11,13 +11,8 @@ namespace itk
 		m_FixedImage( ITK_NULLPTR ),	// provided by user
 		m_MovingImage( ITK_NULLPTR ),	// provided by user
 
-		// mask
-		m_ROIFilename( NULL ),			// provided by user
-
 		// transforms
 		m_InitialTransform( ITK_NULLPTR ),	// provided by user
-		m_UseInitialTransform( false ),
-		m_WriteOutMaskImageToFile( false ),
 
 		// metric
 		m_PercentageOfSamples( 0.01 ),
@@ -34,10 +29,6 @@ namespace itk
 		m_ScalingScale( 0.01 ),
 		m_ObserveOn( false )
 	{
-		// mask
-		m_MaskImage = MaskImageType::New();
-		m_MaskObject = MaskType::New();
-
 		// observer
 		m_Transform = TransformType::New();
 		m_FinalTransform = TransformType::New();
@@ -69,17 +60,9 @@ namespace itk
 		
 		// initial transform
 		TransformType::ParametersType identityParameters( this->m_Transform->GetNumberOfParameters() );
-		if( this->m_UseInitialTransform )
+		if( !m_InitialTransform )
 		{
-			if( !m_InitialTransform )
-			{
-				itkExceptionMacro( << "InitialTransform not present" );
-			}
-			std::cout << "Using initial transform." << std::endl;
-			this->m_Registration->SetInitialTransformParameters( this->m_InitialTransform->GetParameters() );
-		}
-		else
-		{
+			std::cout << "InitialTransform not present" << std::endl;
 			// create identity transform parameters
 			identityParameters[0] = 0;	// rotation
 			identityParameters[1] = 0;
@@ -93,6 +76,10 @@ namespace itk
 			
 			// insert into initial transform parameters
 			this->m_Registration->SetInitialTransformParameters( identityParameters );
+		}
+		else
+		{
+			this->m_Registration->SetInitialTransformParameters( this->m_InitialTransform->GetParameters() );
 		}
 
 		std::cout << m_Registration->GetInitialTransformParameters() << std::endl;
@@ -139,25 +126,6 @@ namespace itk
 		// define number of histogram bins
 		this->m_Metric->SetNumberOfHistogramBins( this->m_HistogramBins );
 
-		// mask
-		if( m_ROIFilename )
-		{
-			MaskImageType::Pointer maskImage = CreateMask();
-			m_MaskObject->SetImage( maskImage );
-			try
-			{
-				this->m_MaskObject->Update();
-			}
-			catch( itk::ExceptionObject & err )
-			{
-				std::cerr << "ExceptionObjectCaught!" << std::endl;
-				std::cerr << err << std::endl;
-				return;
-			}
-			m_Metric->SetFixedImageMask( m_MaskObject );
-			m_Metric->SetMovingImageMask( m_MaskObject );
-			std::cout << "Mask object created." << std::endl;
-		}
 
 		// ****SET UP OPTIMIZER****
 		// set defaults
@@ -195,128 +163,7 @@ namespace itk
 		return;
 	}
 
-	// create the mask given an ROI filename
-	RegistrationFramework::MaskImageType::Pointer RegistrationFramework::CreateMask()
-	{
-		// extract ROI points from the file
-		double * roi = ExtractROIPoints();
-
-		// input fixed image properties into mask image
-		MaskImageType::Pointer maskImage = MaskImageType::New();
-		maskImage->SetRegions( this->m_FixedImage->GetLargestPossibleRegion() );
-		maskImage->SetOrigin( this->m_FixedImage->GetOrigin() );
-		maskImage->SetSpacing( this->m_FixedImage->GetSpacing() );
-		maskImage->SetDirection( this->m_FixedImage->GetDirection() );
-		maskImage->Allocate();
-
-		// extract center and radius
-		double c[3] = {-*(roi),-*(roi+1),*(roi+2)};
-		double r[3] = {*(roi+3),*(roi+4),*(roi+5)};
-		
-		// create size of mask according to the roi array
-		// set start index of mask according to the roi array
-		MaskImageType::PointType startPoint, endPoint;
-		startPoint[0] = c[0] - r[0];
-		startPoint[1] = c[1] - r[1];
-		startPoint[2] = c[2] - r[2];
-
-		// find end index
-		endPoint[0] = c[0] + r[0];
-		endPoint[1] = c[1] + r[1];
-		endPoint[2] = c[2] + r[2];
-
-		// convert to indices
-		MaskImageType::IndexType startIndex, endIndex;
-		maskImage->TransformPhysicalPointToIndex( startPoint, startIndex );
-		maskImage->TransformPhysicalPointToIndex( endPoint, endIndex );
-
-		// plug into region
-		MaskImageType::SizeType regionSize;
-		regionSize[0] = abs( startIndex[0] - endIndex[0] );
-		regionSize[1] = abs( startIndex[1] - endIndex[1] );
-		regionSize[2] = abs( startIndex[2] - endIndex[2] );
-
-		m_MaskRegion.SetSize( regionSize );
-		m_MaskRegion.SetIndex( startIndex );
-
-		// iterate over region and set pixels to white
-		itk::ImageRegionIterator< MaskImageType > it( maskImage, m_MaskRegion );
-		while( !it.IsAtEnd() )
-		{
-			it.Set( 255 );
-			++it;
-		}
-
-		if( m_WriteOutMaskImageToFile )
-		{
-			WriteOutImage< MaskImageType, ImageType >( m_MaskFilename.c_str(), maskImage );
-			std::cout << "Mask image written to file" << std::endl;
-		}
-
-		return maskImage;
-	}
-
-	// extract point values from the slicer ROI file
-	double * RegistrationFramework::ExtractROIPoints()
-	{
-		// instantiate ROI array
-		static double roi[] = {0.0,0.0,0.0,0.0,0.0,0.0};
-		bool fullROI = false; // denotes that ROI array is full
-		int numberOfPoints = 0;
-
-		// open file and extract lines
-		std::ifstream file( this->m_ROIFilename );
-		// check to see if file is open
-		if( !file.is_open() )
-		{
-			std::cerr << this->m_ROIFilename << " not properly opened" << std::endl;
-		}
-		std::string line;
-		// iterate through file
-		while( getline( file,line ) )
-		{
-			// look at uncommented lines only unless point is found
-			if( line.compare(0,1,"#") != 0 && !fullROI )
-			{
-				// allocate position array and indices
-				int positionsOfBars[4] = {0};
-				int numberOfBars = 0;
-				int positionOfBar = 0;
-				
-				// iterate through the line in the file to find the | (bar) locations
-				// example line: point|18.8396|305.532|-458.046|1|1
-				for( std::string::iterator it = line.begin(); it != line.end(); ++it )
-				{
-					// only note the first 4 locations
-					if( (*it == '|') && numberOfBars < 4 )
-					{
-						positionsOfBars[numberOfBars] = positionOfBar;
-						++numberOfBars;
-					}
-					++positionOfBar;
-				}
-
-				// extract each point and place into ROI array
-				for( int i = 0; i < 3; ++i )
-				{
-					roi[numberOfPoints] = atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() );
-					++numberOfPoints;
-
-					// set flag to false if the roi array is filled
-					if( numberOfPoints > 5 )
-					{
-						fullROI = true;
-					}
-				}
-			}
-		}
-
-		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
-		std::cout << "Points acquired from ROI file. " << std::endl;
-		return roi;
-	}
-
-	// get final transform
+	// print out results
 	void RegistrationFramework::Print()
 	{
 		// Set up values
@@ -337,14 +184,6 @@ namespace itk
 		std::cout << "  Rotation scale    : " << m_RotationScale << std::endl;
 		std::cout << "  Translation scale : " << m_TranslationScale << std::endl;
 		std::cout << "  Scaling scale     : " << m_ScalingScale << std::endl;
-		std::cout << "  Initial transform : " << m_UseInitialTransform << std::endl;
-
-		// mask generation
-		if( m_ROIFilename )
-		{
-			std::cout << "\nMask generation" << std::endl;
-			std::cout << m_MaskRegion << std::endl;
-		}
 		
 		// print out final optimizer parameters
 		std::cout << "\nFinal Parameters" << std::endl;

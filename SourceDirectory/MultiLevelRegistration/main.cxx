@@ -63,7 +63,7 @@ int main( int argc, char * argv[] )
 
 	// set up transforms class and insert fixed image (will not change)
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
-	transforms->AddTransform( initialize->GetTransform() );
+	//transforms->AddTransform( initialize->GetTransform() );
 	transforms->SetInitialTransform( initialize->GetTransform() );
 	transforms->SetFixedImage( fixedImage );
 
@@ -115,16 +115,16 @@ int main( int argc, char * argv[] )
 
 	std::cout << "\n -> Registration\n" << std::endl;
 	// create registration class
-	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
-	registration->SetFixedImage( fixedImage );
-	registration->SetMovingImage( movingImage );
-	registration->SetInitialTransform( initialize->GetTransform() );
-	registration->UseInitialTransformOn();
-	registration->SetScalingScale( 0 );
+	itk::RegistrationFramework::Pointer level1Registration = itk::RegistrationFramework::New();
+	level1Registration->SetFixedImage( fixedImage );
+	level1Registration->SetMovingImage( movingImage );
+	level1Registration->SetInitialTransform( initialize->GetTransform() );
+	level1Registration->SetScalingScale( 0 );
+	level1Registration->ObserveOn();
 	//registration->ObserveOn();
 	try
 	{
-		registration->Update();
+		level1Registration->Update();
 	}
 	catch(itk::ExceptionObject & err)
 	{
@@ -132,12 +132,12 @@ int main( int argc, char * argv[] )
 		std::cerr << err << std::endl;
 		std::cerr << std::endl;
 	}
-	registration->Print();
+	level1Registration->Print();
 
 
 	std::cout << "\n -> Transforms\n" << std::endl;
 	// add transform to composite transform in transforms class and apply to moving image
-	transforms->AddTransform( registration->GetFinalTransform() );
+	transforms->AddTransform( level1Registration->GetFinalTransform() );
 	//transforms->SetTransform( transforms->GetCompositeTransform() );
 
 	std::string level1CompositeTransformFilename = outputDirectory + "\\Level1CompositeTransform.tfm";
@@ -177,10 +177,13 @@ int main( int argc, char * argv[] )
 	// write out level 1 transform
 	
 	std::string level1TransformFilename = outputDirectory + "\\Level1Transform.tfm";
-	WriteOutTransform< TransformType >( level1TransformFilename.c_str(), registration->GetFinalTransform() );
+	WriteOutTransform< TransformType >( level1TransformFilename.c_str(), level1Registration->GetFinalTransform() );
 	// write out image
 	std::string level1ResampledImageFilename = outputDirectory + "\\Level1ResampledImage.mhd";
 	WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), level1ResampledImage );
+	// write out label map
+	std::string level1ResampledLabelMapFilename = outputDirectory + "\\Level1ResampledLabelMap.mhd";
+	WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
 	
 
 	if( numberOfLevels > 1 )
@@ -190,19 +193,22 @@ int main( int argc, char * argv[] )
 		std::cout << "            REGISTRATION LEVEL 2               " << std::endl;
 		std::cout << "*********************************************\n" << std::endl;
 
+		std::cout << "\n -> Images\n" << std::endl;
+		std::cout << "Fixed image" << fixedImage << std::endl;
+		std::cout << "Moving image" << level1ResampledImage << std::endl;
+
 		std::cout << "\n -> Registration\n" << std::endl;
-		// change inputs to registration object
-		registration->SetMovingImage( level1ResampledImage );
-		registration->UseInitialTransformOff();	// want to use inherent identity transform
-		registration->SetROIFilename( level2ROIFilename );
-		registration->SetMaximumStepLength( 0.1 );
-		// write mask out to file
-		std::string level2MaskFilename = outputDirectory + "\\Level2MaskImage.mhd";
-		registration->WriteOutMaskImageToFile( level2MaskFilename );
-		registration->ObserveOn();
+		// create new registration class
+		itk::RegistrationFramework::Pointer level2Registration = itk::RegistrationFramework::New();
+		level2Registration->SetFixedImage( fixedImage );
+		level2Registration->SetMovingImage( level1ResampledImage );
+		level2Registration->SetInitialTransform( level1Registration->GetFinalTransform() );
+		level2Registration->SetScalingScale( 0 );
+		level2Registration->SetMaximumStepLength( 0.1 );
+		level2Registration->ObserveOn();
 		try
 		{
-			registration->Update();
+			level2Registration->Update();
 		}
 		catch(itk::ExceptionObject & err)
 		{
@@ -210,12 +216,12 @@ int main( int argc, char * argv[] )
 			std::cerr << err << std::endl;
 			std::cerr << std::endl;
 		}
-		registration->Print();
+		level2Registration->Print();
 
 		std::cout << "\n -> Transforms\n" << std::endl;
 		// add transform to composite transform in transforms class and apply to moving image/label map image
 		// don't update images here. Apply composite transform to the original moving image and label map
-		transforms->AddTransform( registration->GetFinalTransform() );
+		transforms->AddTransform( level2Registration->GetFinalTransform() );
 		//transforms->SetTransform( transforms->GetCompositeTransform() );
 		transforms->ResampleImageOn();
 		try
@@ -250,13 +256,13 @@ int main( int argc, char * argv[] )
 
 		// write out level 1 transform
 		std::string level2TransformFilename = outputDirectory + "\\Level2Transform.tfm";
-		WriteOutTransform< TransformType >( level2TransformFilename.c_str(), registration->GetFinalTransform() );
+		WriteOutTransform< TransformType >( level2TransformFilename.c_str(), level2Registration->GetFinalTransform() );
 		// write out image
 		std::string level2ResampledImageFilename = outputDirectory + "\\Level2ResampledImage.mhd";
 		WriteOutImage< ImageType, ImageType >( level2ResampledImageFilename.c_str(), level2ResampledImage );
 		// write out label map
 		std::string level2ResampledLabelMapFilename = outputDirectory + "\\Level2ResampledLabelMap.mhd";
-		WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), level2ResampledImage );
+		WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
 	}
 
 	std::string level2CompositeTransformFilename = outputDirectory + "\\Level2CompositeTransform.tfm";
