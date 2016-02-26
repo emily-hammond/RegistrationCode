@@ -97,7 +97,17 @@ public:
 
 	// perform function
 	void Update();
+	ImageType::Pointer ResampleImage( ImageType::Pointer image, TransformType::Pointer transform );
 
+	// use NN interpolation during resampling
+	void NearestNeighborInterpolateOn()
+	{
+		m_NearestNeighbor = true;
+	}
+	void NearestNeighborInterpolateOff()
+	{
+		m_NearestNeighbor = false;
+	}
 protected:
 	// constructor
 	ManageTransformsFilter();
@@ -135,16 +145,6 @@ private:
 	ImageType::Pointer CropImage( ImageType::Pointer image );
 	double * ExtractROIPoints();
 
-
-	// use NN interpolation during resampling
-	void NearestNeighborInterpolateOn()
-	{
-		m_NearestNeighbor = true;
-	}
-	void NearestNeighborInterpolateOff()
-	{
-		m_NearestNeighbor = false;
-	}
 
 	// applying transform
 	void HardenTransform();

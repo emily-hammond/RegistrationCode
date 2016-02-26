@@ -169,6 +169,43 @@ namespace itk
 		return resample->GetOutput();
 	}
 
+	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::ResampleImage( ImageType::Pointer image, TransformType::Pointer transform )
+	{
+		// set up resampling object
+		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
+		ResampleFilterType::Pointer resample = ResampleFilterType::New();
+
+		// define image resampling with respect to fixed image
+		resample->SetSize( this->m_FixedImage->GetLargestPossibleRegion().GetSize() );
+		resample->SetOutputOrigin( this->m_FixedImage->GetOrigin() );
+		resample->SetOutputSpacing( this->m_FixedImage->GetSpacing() );
+		resample->SetOutputDirection( this->m_FixedImage->GetDirection() );
+
+		// input parameters
+		resample->SetInput( image );
+		resample->SetTransform( transform );
+
+		// define interpolator
+		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
+		typedef itk::NearestNeighborInterpolateImageFunction< ImageType, double > NearestNeighborType;
+		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
+
+		if( this->m_NearestNeighbor )
+		{
+			resample->SetInterpolator( nnInterpolator );
+			std::cout << "Nearest neighbor interpolator." << std::endl;
+		}
+		else
+		{
+			resample->SetInterpolator( linInterpolator );
+		}
+
+		// apply
+		resample->Update();
+
+		return resample->GetOutput();
+	}
+
 	// create the mask given an ROI filename
 	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::CropImage( ImageType::Pointer image )
 	{

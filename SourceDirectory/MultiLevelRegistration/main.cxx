@@ -8,7 +8,6 @@ INSERT COMMENTS HERE
 #include "itkInitializationFilter.h"
 #include "itkValidationFilter.h"
 #include "itkManageTransformsFilter.h"
-#include "itkIdentityTransform.h"
 
 // monitoring
 #include "itkTimeProbesCollectorBase.h"
@@ -27,6 +26,13 @@ int main( int argc, char * argv[] )
 	timestamp();
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 
+	std::cout << "\nNumber of arguments: " << argc << std::endl;
+	
+	for( int i = 0; i < argc; ++i )
+	{
+		std::cout << argv[i] << std::endl;
+	}
+
 	// probes
 	itk::TimeProbesCollectorBase	chronometer;
 	itk::MemoryProbesCollectorBase	memorymeter;
@@ -40,7 +46,6 @@ int main( int argc, char * argv[] )
 	memorymeter.Start( "Inputs" );
 
 	// required inputs
-	int n = 1;
 	char * fixedImageFilename;
 	char * movingImageFilename;
 	char * fixedValidationMaskFilename;
@@ -69,7 +74,7 @@ int main( int argc, char * argv[] )
 	float scalingScale = 0.001;
 
 	// minimum input
-	if( argc < 5 )
+	if( argc < 6 )
 	{
 		PrintOutManual();
 		return EXIT_FAILURE;
@@ -77,69 +82,87 @@ int main( int argc, char * argv[] )
 	else
 	{
 		//desired inputs
-		char * fixedImageFilename = argv[n]; ++n;
-		char * movingImageFilename = argv[n]; ++n;
-		std::string outputDirectory = argv[n]; ++n;
-		char * fixedValidationMaskFilename = argv[n]; ++n;
-		char * movingValidationMaskFilename = argv[n]; ++n;
+		fixedImageFilename = argv[1];
+		movingImageFilename = argv[2];
+		outputDirectory = argv[3];
+		fixedValidationMaskFilename = argv[4];
+		movingValidationMaskFilename = argv[5];
+		std::cout << "images" << std::endl;
 	}
 
 	// number of levels
-	if( argc > n )
+	if( argc > 7 )
 	{
-		numberOfLevels = atoi( argv[n] ); ++n;
-		if( argc < n )
+		numberOfLevels = atoi( argv[6] );
+		std::cout << "# of levels" << std::endl;
+		if( argc < 8 )
 		{
 			std::cout << "Please insert a region of interest filename." << std::endl;
 			return EXIT_FAILURE;
 		}
 		else
 		{
-			char * level2ROIFilename = argv[n]; ++n;
+			level2ROIFilename = argv[7];
+			std::cout << "ROI2" << std::endl;
 		}
 	}
-	if( argc > n )
+	if( argc > 8 && numberOfLevels > 2 )
 	{
-		char * level3ROIFilename = argv[n]; ++n;
+		level3ROIFilename = argv[8];
+		std::cout << "ROI3" << std::endl;
+	}
+	if( numberOfLevels > 3 )
+	{
+		std::cout << "Maximum number of levels is 3" << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	// observation
-	if( argc > n ){ observe = atoi( argv[n] ); ++n; }
+	if( argc > 9 ){ observe = atoi( argv[9] ); std::cout << "Observe" << std::endl; }
 
 	// initialization
-	if( argc > n ){ center = atoi( argv[n] ); ++n; }
-	if( argc > n ){ metricX = atoi( argv[n] ); ++n; }
-	if( argc > n ){ metricY = atoi( argv[n] ); ++n; }
-	if( argc > n ){ metricZ = atoi( argv[n] ); ++n; }
+	if( argc > 10 ){ center = atoi( argv[10] ); std::cout << "Center" << std::endl; }
+	if( argc > 11 ){ metricX = atoi( argv[11] ); std::cout << "Mx" << std::endl; }
+	if( argc > 12 ){ metricY = atoi( argv[12] ); std::cout << "My" << std::endl; }
+	if( argc > 13 ){ metricZ = atoi( argv[13] ); std::cout << "Mz" << std::endl; }
 
 	// registration parameters
-	if( argc > n ){ rotationScale = atof( argv[n] ); ++n; }
-	if( argc > n ){ translationScale = atof( argv[n] ); ++n; }
-	if( argc > n ){ scalingScale = atof( argv[n] ); ++n; }
-	if( argc > n ){ numberOfIterations = atoi( argv[n] ); ++n; }
-	if( argc > n ){ maximumStepLength = atof( argv[n] ); ++n; }
-	if( argc > n ){ relaxationFactor = atof( argv[n] ); ++n; }
-	if( argc > n ){ gradientMagnitudeTolerance = atof( argv[n] ); ++n; }
+	if( argc > 14 ){ rotationScale = atof( argv[14] ); std::cout << "Rot scale" << std::endl; }
+	if( argc > 15 ){ translationScale = atof( argv[15] ); std::cout << "Trans scale" << std::endl; }
+	if( argc > 16 ){ scalingScale = atof( argv[16] ); std::cout << "Scale scale" << std::endl; }
+	if( argc > 17 ){ numberOfIterations = atoi( argv[17] ); std::cout << "# iterations" << std::endl; }
+	if( argc > 18 ){ maximumStepLength = atof( argv[18] ); std::cout << "Max step length" << std::endl; }
+	if( argc > 19 ){ relaxationFactor = atof( argv[19] ); std::cout << "Relaxation factor" << std::endl; }
+	if( argc > 20 ){ gradientMagnitudeTolerance = atof( argv[20] ); std::cout << "Grad mag tol" << std::endl; }
+	if( argc > 21 )
+	{ 
+		std::cout << "Too many inputs" << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	// instantiate image type
 	typedef itk::Image< unsigned short, 3 >	ImageType;
 	typedef itk::Image< unsigned char, 3 >	MaskImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
+	// check inputs
 	// read in necessary images
+	std::cout << "fixed image" << std::endl;
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
+	std::cout << "moving image" << std::endl;
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
+	std::cout << "fixed label map image" << std::endl;
 	ImageType::Pointer fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
+	std::cout << "moving label map image" << std::endl;
 	ImageType::Pointer movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
-	itk::IdentityTransform< double >::Pointer identityTransform = itk::IdentityTransform< double >::New();
 
 	std::cout << "\nFixed image           : " << fixedImageFilename << std::endl;
 	std::cout << "Fixed validation mask : " << fixedValidationMaskFilename << std::endl;
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	std::cout << "Moving validation mask: " << movingValidationMaskFilename << std::endl;
-	std::cout << "Level 2 ROI filename  : " << level2ROIFilename << std::endl;
-	std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl;
+	if( argc > 7 ){ std::cout << "Level 2 ROI filename  : " << level2ROIFilename << std::endl; }
+	if( argc > 8 ){	std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl; }
 
 	// inputs
 	chronometer.Stop( "Inputs" );
@@ -179,6 +202,23 @@ int main( int argc, char * argv[] )
 	// apply initial transform to the moving image and mask
 	transforms->SetMovingImage( movingImage );
 	transforms->SetMovingLabelMap( movingValidationMask );
+	
+	// perform validation
+	validation->SetImage2( transforms->ResampleImage( movingImage, initialize->GetTransform() ) );
+	transforms->NearestNeighborInterpolateOn();
+	validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialize->GetTransform() ) );
+	transforms->NearestNeighborInterpolateOff();
+	validation->LabelOverlapMeasuresOn();
+	try
+		{
+			validation->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
 
 	// write out initial transform and add to composite transform
 	std::string initialTransformFilename = outputDirectory + "\\InitialTransform.tfm";
@@ -483,7 +523,7 @@ void timestamp()
 
 void PrintOutManual()
 {
-	std::cout << "Inputs" << std::endl;
+	std::cout << "                           **** USER MANUAL ****                             " << std::endl;
 	std::cout << std::endl;
 
 	std::cout << " REQUIRED: " << std::endl;
