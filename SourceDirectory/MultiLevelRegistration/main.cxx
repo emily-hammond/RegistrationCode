@@ -26,10 +26,10 @@ int main( int argc, char * argv[] )
 	timestamp();
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 
-	for( int i = 0; i < argc; ++i )
+	/*for( int i = 0; i < argc; ++i )
 	{
 		std::cout << argv[i] << std::endl;
-	}
+	}*/
 
 	// probes
 	itk::TimeProbesCollectorBase	chronometer;
@@ -44,16 +44,16 @@ int main( int argc, char * argv[] )
 	memorymeter.Start( "Inputs" );
 
 	// required inputs
-	char * fixedImageFilename;
-	char * movingImageFilename;
-	char * fixedValidationMaskFilename;
-	char * movingValidationMaskFilename;
-	std::string outputDirectory;
+	char * fixedImageFilename = '\0';
+	char * movingImageFilename = '\0';
+	char * fixedValidationMaskFilename = '\0';
+	char * movingValidationMaskFilename = '\0';
+	std::string outputDirectory = "\0";
 
 	// multi-level
 	int numberOfLevels = 0;
-	char * level2ROIFilename;
-	char * level3ROIFilename;
+	char * level2ROIFilename = '\0';
+	char * level3ROIFilename = '\0';
 	int observe = 0;
 
 	// initialization
@@ -85,11 +85,10 @@ int main( int argc, char * argv[] )
 		outputDirectory = argv[3];
 		fixedValidationMaskFilename = argv[4];
 		movingValidationMaskFilename = argv[5];
-		std::cout << "images" << std::endl;
 	}
 
 	// number of levels
-	if( argc > 7 )
+	if( argc > 7 && atoi(argv[6]) > 0 )
 	{
 		numberOfLevels = atoi( argv[6] );
 		if( argc < 8 )
@@ -105,6 +104,7 @@ int main( int argc, char * argv[] )
 	if( argc > 8 && numberOfLevels > 2 )
 	{
 		level3ROIFilename = argv[8];
+		std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl; 
 	}
 	if( numberOfLevels > 3 )
 	{
@@ -152,8 +152,8 @@ int main( int argc, char * argv[] )
 	std::cout << "Fixed validation mask : " << fixedValidationMaskFilename << std::endl;
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	std::cout << "Moving validation mask: " << movingValidationMaskFilename << std::endl;
-	if( argc > 7 ){ std::cout << "Level 2 ROI filename  : " << level2ROIFilename << std::endl; }
-	if( argc > 8 ){	std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl; }
+	if( argc > 7 && numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << level2ROIFilename << std::endl; }
+	if( argc > 8 && numberOfLevels > 2 ){	std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl; }
 
 	// inputs
 	chronometer.Stop( "Inputs" );
@@ -490,7 +490,7 @@ int main( int argc, char * argv[] )
 	}
 
 	// write out final composite transform
-	std::string level3CompositeTransformFilename = outputDirectory + "\\Level3CompositeTransform.tfm";
+	std::string level3CompositeTransformFilename = outputDirectory + "\\CompositeTransform.tfm";
 	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level3CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 
 	// full program
