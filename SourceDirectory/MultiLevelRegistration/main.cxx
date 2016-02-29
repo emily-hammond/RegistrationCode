@@ -26,8 +26,6 @@ int main( int argc, char * argv[] )
 	timestamp();
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 
-	std::cout << "\nNumber of arguments: " << argc << std::endl;
-	
 	for( int i = 0; i < argc; ++i )
 	{
 		std::cout << argv[i] << std::endl;
@@ -94,7 +92,6 @@ int main( int argc, char * argv[] )
 	if( argc > 7 )
 	{
 		numberOfLevels = atoi( argv[6] );
-		std::cout << "# of levels" << std::endl;
 		if( argc < 8 )
 		{
 			std::cout << "Please insert a region of interest filename." << std::endl;
@@ -103,13 +100,11 @@ int main( int argc, char * argv[] )
 		else
 		{
 			level2ROIFilename = argv[7];
-			std::cout << "ROI2" << std::endl;
 		}
 	}
 	if( argc > 8 && numberOfLevels > 2 )
 	{
 		level3ROIFilename = argv[8];
-		std::cout << "ROI3" << std::endl;
 	}
 	if( numberOfLevels > 3 )
 	{
@@ -118,22 +113,22 @@ int main( int argc, char * argv[] )
 	}
 
 	// observation
-	if( argc > 9 ){ observe = atoi( argv[9] ); std::cout << "Observe" << std::endl; }
+	if( argc > 9 ){ observe = atoi( argv[9] ); }
 
 	// initialization
-	if( argc > 10 ){ center = atoi( argv[10] ); std::cout << "Center" << std::endl; }
-	if( argc > 11 ){ metricX = atoi( argv[11] ); std::cout << "Mx" << std::endl; }
-	if( argc > 12 ){ metricY = atoi( argv[12] ); std::cout << "My" << std::endl; }
-	if( argc > 13 ){ metricZ = atoi( argv[13] ); std::cout << "Mz" << std::endl; }
+	if( argc > 10 ){ center = atoi( argv[10] ); }
+	if( argc > 11 ){ metricX = atoi( argv[11] ); }
+	if( argc > 12 ){ metricY = atoi( argv[12] ); }
+	if( argc > 13 ){ metricZ = atoi( argv[13] ); }
 
 	// registration parameters
-	if( argc > 14 ){ rotationScale = atof( argv[14] ); std::cout << "Rot scale" << std::endl; }
-	if( argc > 15 ){ translationScale = atof( argv[15] ); std::cout << "Trans scale" << std::endl; }
-	if( argc > 16 ){ scalingScale = atof( argv[16] ); std::cout << "Scale scale" << std::endl; }
-	if( argc > 17 ){ numberOfIterations = atoi( argv[17] ); std::cout << "# iterations" << std::endl; }
-	if( argc > 18 ){ maximumStepLength = atof( argv[18] ); std::cout << "Max step length" << std::endl; }
-	if( argc > 19 ){ relaxationFactor = atof( argv[19] ); std::cout << "Relaxation factor" << std::endl; }
-	if( argc > 20 ){ gradientMagnitudeTolerance = atof( argv[20] ); std::cout << "Grad mag tol" << std::endl; }
+	if( argc > 14 ){ rotationScale = atof( argv[14] ); }
+	if( argc > 15 ){ translationScale = atof( argv[15] ); }
+	if( argc > 16 ){ scalingScale = atof( argv[16] ); }
+	if( argc > 17 ){ numberOfIterations = atoi( argv[17] ); }
+	if( argc > 18 ){ maximumStepLength = atof( argv[18] ); }
+	if( argc > 19 ){ relaxationFactor = atof( argv[19] ); }
+	if( argc > 20 ){ gradientMagnitudeTolerance = atof( argv[20] ); }
 	if( argc > 21 )
 	{ 
 		std::cout << "Too many inputs" << std::endl;
@@ -147,13 +142,9 @@ int main( int argc, char * argv[] )
 
 	// check inputs
 	// read in necessary images
-	std::cout << "fixed image" << std::endl;
 	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
-	std::cout << "moving image" << std::endl;
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	std::cout << "fixed label map image" << std::endl;
 	ImageType::Pointer fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
-	std::cout << "moving label map image" << std::endl;
 	ImageType::Pointer movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
