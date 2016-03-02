@@ -19,7 +19,7 @@ namespace itk
 		m_HistogramBins( 50 ),
 
 		// optimizer
-		m_MinimumStepLength( 0.0025 ),
+		m_MinimumStepLength( 0.001 ),
 		m_MaximumStepLength( 1 ),
 		m_NumberOfIterations( 500 ),
 		m_RelaxationFactor( 0.5 ),

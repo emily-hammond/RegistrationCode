@@ -49,6 +49,7 @@ public:
 	
 	// create/set images
 	itkSetObjectMacro( FixedImage, ImageType );
+	itkSetObjectMacro( FixedLabelMap, ImageType );
 	itkSetObjectMacro( MovingImage, ImageType );
 	itkSetObjectMacro( MovingLabelMap, ImageType );
 	void SetROIFilename( char * filename )
@@ -61,7 +62,9 @@ public:
 	itkGetObjectMacro( TransformedLabelMap, ImageType );
 	itkGetObjectMacro( CompositeTransform, CompositeTransformType );
 	itkGetObjectMacro( FixedCroppedImage, ImageType );
+	itkGetObjectMacro( FixedCroppedLabelMap, ImageType );
 	itkGetObjectMacro( MovingCroppedImage, ImageType );
+	itkGetObjectMacro( MovingCroppedLabelMap, ImageType );
 
 	// Harden transform flag
 	void HardenTransformOn()
@@ -126,12 +129,15 @@ private:
 
 	// images
 	ImageType::Pointer m_FixedImage;
+	ImageType::Pointer m_FixedLabelMap;
 	ImageType::Pointer m_MovingImage;
 	ImageType::Pointer m_MovingLabelMap;
 	ImageType::Pointer m_TransformedImage;
 	ImageType::Pointer m_TransformedLabelMap;
 	ImageType::Pointer m_FixedCroppedImage;
+	ImageType::Pointer m_FixedCroppedLabelMap;
 	ImageType::Pointer m_MovingCroppedImage;
+	ImageType::Pointer m_MovingCroppedLabelMap;
 
 	// flags
 	bool m_HardenTransform;
