@@ -9,6 +9,9 @@ INSERT COMMENTS HERE
 #include "itkValidationFilter.h"
 #include "itkManageTransformsFilter.h"
 
+// rescale images
+#include "itkRescaleIntensityImageFilter.h"
+
 // monitoring
 #include "itkTimeProbesCollectorBase.h"
 #include "itkMemoryProbesCollectorBase.h"
@@ -17,13 +20,13 @@ INSERT COMMENTS HERE
 
 // declare function
 void PrintOutManual();
-void timestamp();
+void Timestamp();
 
 int main( int argc, char * argv[] )
 {
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 	std::cout << "             MULTI-LEVEL REGISTRATION ";
-	timestamp();
+	Timestamp();
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 
 	/*for( int i = 0; i < argc; ++i )
@@ -70,6 +73,10 @@ int main( int argc, char * argv[] )
 	float rotationScale = 0.001; 
 	float translationScale = 10;
 	float scalingScale = 0.001;
+	float minimumStepLength = 0.001;
+
+	// special inputs
+	int skipWB = 0;
 
 	// minimum input
 	if( argc < 6 )
@@ -126,16 +133,18 @@ int main( int argc, char * argv[] )
 	if( argc > 16 ){ scalingScale = atof( argv[16] ); }
 	if( argc > 17 ){ numberOfIterations = atoi( argv[17] ); }
 	if( argc > 18 ){ maximumStepLength = atof( argv[18] ); }
-	if( argc > 19 ){ relaxationFactor = atof( argv[19] ); }
-	if( argc > 20 ){ gradientMagnitudeTolerance = atof( argv[20] ); }
-	if( argc > 21 )
+	if( argc > 19 ){ minimumStepLength = atof( argv[19] ); }
+	if( argc > 20 ){ relaxationFactor = atof( argv[20] ); }
+	if( argc > 21 ){ gradientMagnitudeTolerance = atof( argv[21] ); }
+	if( argc > 22 ){ skipWB = atoi( argv[22] ); }
+	if( argc > 23 )
 	{ 
 		std::cout << "Too many inputs" << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	// instantiate image type
-	typedef itk::Image< unsigned short, 3 >	ImageType;
+	typedef itk::Image< short, 3 >	ImageType;
 	typedef itk::Image< unsigned char, 3 >	MaskImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
@@ -154,6 +163,10 @@ int main( int argc, char * argv[] )
 	if( argc > 7 && numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << level2ROIFilename << std::endl; }
 	if( argc > 8 && numberOfLevels > 2 ){	std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl; }
 
+	// rescale images if necessary
+	//fixedImage = RescaleImage( fixedImage );
+	//movingImage = RescaleImage( movingImage );
+
 	// inputs
 	chronometer.Stop( "Inputs" );
 	memorymeter.Stop( "Inputs" );
@@ -170,7 +183,7 @@ int main( int argc, char * argv[] )
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
 	initialize->SetFixedImage( fixedImage );
 	initialize->SetMovingImage( movingImage );
-	//initialize->ObserveOn();
+	if( observe ){ initialize->ObserveOn(); }
 	if( center ){ initialize->CenteredOnGeometryOn(); }
 	if( metricX ){ initialize->MetricAlignmentOn( 0 ); }
 	if( metricY ){ initialize->MetricAlignmentOn( 1 ); }
@@ -225,41 +238,50 @@ int main( int argc, char * argv[] )
 		chronometer.Start( "Level 1" );
 		memorymeter.Start( "Level 1" );
 
-		itk::RegistrationFramework::Pointer level1Registration = itk::RegistrationFramework::New();
-
-		// test functionality of itkRegistrationFramework.h
-		std::cout << "\n*********************************************" << std::endl;
-		std::cout << "            REGISTRATION LEVEL 1               " << std::endl;
-		std::cout << "*********************************************\n" << std::endl;
-
-		std::cout << "\n -> Registration\n" << std::endl;
-		// create registration class
-		level1Registration->SetFixedImage( fixedImage );
-		level1Registration->SetMovingImage( movingImage );
-		level1Registration->SetInitialTransform( initialize->GetTransform() );
-		level1Registration->SetNumberOfIterations( numberOfIterations );
-		level1Registration->SetRelaxationFactor( relaxationFactor );
-		level1Registration->SetMaximumStepLength( maximumStepLength );
-		level1Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
-		level1Registration->SetRotationScale( rotationScale );
-		level1Registration->SetTranslationScale( translationScale );
-		level1Registration->SetScalingScale( scalingScale );
-		if( observe ){ level1Registration->ObserveOn(); }
-		try
+		if( !skipWB )
 		{
-			level1Registration->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-		level1Registration->Print();
+			itk::RegistrationFramework::Pointer level1Registration = itk::RegistrationFramework::New();
 
-		std::cout << "\n -> Transforms\n" << std::endl;
-		// add transform to composite transform in transforms class and apply to moving image
-		transforms->AddTransform( level1Registration->GetFinalTransform() );
+			// test functionality of itkRegistrationFramework.h
+			std::cout << "\n*********************************************" << std::endl;
+			std::cout << "            REGISTRATION LEVEL 1               " << std::endl;
+			std::cout << "*********************************************\n" << std::endl;
+
+			std::cout << "\n -> Registration\n" << std::endl;
+			// create registration class
+			level1Registration->SetFixedImage( fixedImage );
+			level1Registration->SetMovingImage( movingImage );
+			level1Registration->SetInitialTransform( initialize->GetTransform() );
+			level1Registration->SetNumberOfIterations( numberOfIterations );
+			level1Registration->SetRelaxationFactor( relaxationFactor );
+			level1Registration->SetMaximumStepLength( maximumStepLength );
+			level1Registration->SetMinimumStepLength( minimumStepLength );
+			level1Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
+			level1Registration->SetRotationScale( rotationScale );
+			level1Registration->SetTranslationScale( translationScale );
+			level1Registration->SetScalingScale( scalingScale );
+			if( observe ){ level1Registration->ObserveOn(); }
+			try
+			{
+				level1Registration->Update();
+			}
+			catch(itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
+			level1Registration->Print();
+
+			std::cout << "\n -> Transforms\n" << std::endl;
+			// add transform to composite transform in transforms class and apply to moving image
+			transforms->AddTransform( level1Registration->GetFinalTransform() );
+		}
+		else
+		{
+			transforms->AddTransform( initialize->GetTransform() );
+			std::cout << "Level 1 registration skipped" << std::endl;
+		}
 		transforms->ResampleImageOn();
 		try
 		{
@@ -336,11 +358,13 @@ int main( int argc, char * argv[] )
 		level2Registration->SetMovingImage( transforms->GetMovingCroppedImage() );
 		level2Registration->SetNumberOfIterations( numberOfIterations );
 		level2Registration->SetRelaxationFactor( relaxationFactor );
-		level2Registration->SetMaximumStepLength( maximumStepLength );
+		level2Registration->SetMaximumStepLength( maximumStepLength/2.0 );
+		level2Registration->SetMinimumStepLength( minimumStepLength );
 		level2Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
 		level2Registration->SetRotationScale( rotationScale );
 		level2Registration->SetTranslationScale( translationScale );
 		level2Registration->SetScalingScale( scalingScale );
+
 		if( observe ){ level2Registration->ObserveOn(); }
 		try
 		{
@@ -438,7 +462,8 @@ int main( int argc, char * argv[] )
 		level3Registration->SetMovingImage( transforms->GetMovingCroppedImage() );
 		level3Registration->SetNumberOfIterations( numberOfIterations );
 		level3Registration->SetRelaxationFactor( relaxationFactor );
-		level3Registration->SetMaximumStepLength( maximumStepLength );
+		level3Registration->SetMaximumStepLength( maximumStepLength/4.0 );
+		level3Registration->SetMinimumStepLength( minimumStepLength );
 		level3Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
 		level3Registration->SetRotationScale( rotationScale );
 		level3Registration->SetTranslationScale( translationScale );
@@ -499,17 +524,15 @@ int main( int argc, char * argv[] )
 		//std::string level3ResampledLabelMapFilename = outputDirectory + "_Level3ResampledLabelMap.mhd";
 		//WriteOutImage< ImageType, ImageType >( level3ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
 		// final composite transform
+
+		// write out final composite transform
 		std::string level3CompositeTransformFilename = outputDirectory + "_Level3CompositeTransform.tfm";
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level3CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
-
+		
 		// Registration level 3
 		chronometer.Stop( "Level 3" );
 		memorymeter.Stop( "Level 3" );
 	}
-
-	// write out final composite transform
-	std::string level3CompositeTransformFilename = outputDirectory + "_Level3CompositeTransform.tfm";
-	WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level3CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 
 	// full program
 	chronometer.Stop( "Full program" );
@@ -522,7 +545,7 @@ int main( int argc, char * argv[] )
 	return EXIT_SUCCESS;
 }
 
-void timestamp()
+void Timestamp()
 {
 	time_t ltime;
 	ltime = time( NULL );
@@ -585,10 +608,13 @@ void PrintOutManual()
 	std::cout << "  [numberOfIterations]: number of iterations allowed at each level of \n";
 	std::cout << "                        registration | default = 500" << std::endl;
 	std::cout << "  [maximumStepLength]: maximum step length allowed at each level | default = 1" << std::endl;
+	std::cout << "  [minimumStepLength]: minimum step length allowed at each level | default = 0.001" << std::endl;
 	std::cout << "  [relaxationFactor]: amount by which the step length decreases during \n";
 	std::cout << "                      optimization | default = 0.5" << std::endl;
 	std::cout << "  [gradientMagnitudeTolerance]: the minimum gradient magnitude \n";
 	std::cout << "                                allowed | default = 0.001" << std::endl;
+	std::cout << "  [skipWB]: skip the first level of registration and begin with application" << std::endl;
+	std::cout << "            of the second level ROI after initialization | default = 0" << std::endl;
 	std::cout << std::endl;
 	
 	return;

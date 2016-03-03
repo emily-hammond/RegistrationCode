@@ -117,7 +117,7 @@ namespace itk
 		const ImageType::SpacingType & fixedSpacing = this->m_FixedImage->GetSpacing();
 
 		// determine range
-		this->m_TranslationRange = fixedSize[ axis ]*fixedSpacing[ axis ] - movingSize[ axis ]*movingSpacing[ axis ];
+		this->m_TranslationRange = abs(fixedSize[ axis ]*fixedSpacing[ axis ] - movingSize[ axis ]*movingSpacing[ axis ]);
 
 		return;
 	}
@@ -177,7 +177,8 @@ namespace itk
 		// header for section
 		if( this->m_ObserveOn )
 		{
-			std::cout << "\n\nMetric Initialization on " << axis << " axis:\n";
+			std::cout << "\nMetric Initialization on " << axis << " axis:\n";
+			std::cout << "Translation range: " << m_TranslationRange << std::endl;
 		}
 
 		// parse through translation range and determine smallest metric value
@@ -200,7 +201,7 @@ namespace itk
 				{
 					std::cout << " " << parameters[j];
 				}
-				std::cout << std::endl;
+				std::cout << std::endl;;
 			}
 		}
 
@@ -208,6 +209,7 @@ namespace itk
 		this->m_Transform->SetParameters( this->m_MinParameters );
 		//std::cout << this->m_transform << std::endl;
 	
+		if( this->m_ObserveOn ){ std::cout << std::endl; }
 		std::cout << "Metric initialization on " << axis << " complete." << std::endl;
 		return;
 	}

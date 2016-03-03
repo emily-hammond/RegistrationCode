@@ -31,7 +31,7 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 
 	// definitions
-	typedef itk::Image< unsigned short, 3 >			ImageType;
+	typedef itk::Image< short, 3 >			ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	
 	// method for creation

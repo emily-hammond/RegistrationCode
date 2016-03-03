@@ -33,7 +33,7 @@ public:
 	// definitions
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
-	typedef itk::Image< unsigned short, 3 >			ImageType;
+	typedef itk::Image< short, 3 >			ImageType;
 	
 	// method for creation
 	itkNewMacro(Self);

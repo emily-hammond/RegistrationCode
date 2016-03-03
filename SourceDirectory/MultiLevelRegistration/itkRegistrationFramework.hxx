@@ -89,6 +89,9 @@ namespace itk
 		try
 		{
 			this->m_Registration->Update();
+			std::cout << m_Optimizer->GetCurrentIteration() << " " << m_Optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
+			std::cout << " " << m_Optimizer->GetValue() << " " << m_Optimizer->GetCurrentPosition();
+			std::cout << std::endl;
 		}
 		catch( itk::ExceptionObject & err )
 		{

@@ -322,7 +322,6 @@ namespace itk
 		}
 
 		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
-		std::cout << "Points acquired from ROI file. " << std::endl;
 		return roi;
 	}
 

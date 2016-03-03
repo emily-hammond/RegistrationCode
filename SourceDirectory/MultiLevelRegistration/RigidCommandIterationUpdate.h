@@ -25,9 +25,11 @@ public:
 		{
 			return;
 		}
-		
-		std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
-		std::cout << " " << optimizer->GetValue();// << " " << optimizer->GetCurrentPosition()
-		std::cout << std::endl;
+		if( optimizer->GetCurrentIteration()%50 == 1 || optimizer->GetCurrentIteration()%50 == 2 )
+		{
+			std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
+			std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition();
+			std::cout << std::endl;
+		}
 	}
 };
