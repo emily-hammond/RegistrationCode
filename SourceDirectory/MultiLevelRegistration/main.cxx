@@ -77,6 +77,7 @@ int main( int argc, char * argv[] )
 
 	// special inputs
 	int skipWB = 0;
+	int debug = 0;
 
 	// minimum input
 	if( argc < 6 )
@@ -137,7 +138,8 @@ int main( int argc, char * argv[] )
 	if( argc > 20 ){ relaxationFactor = atof( argv[20] ); }
 	if( argc > 21 ){ gradientMagnitudeTolerance = atof( argv[21] ); }
 	if( argc > 22 ){ skipWB = atoi( argv[22] ); }
-	if( argc > 23 )
+	if( argc > 23 ){ debug = atoi( argv[22] ); }
+	if( argc > 24 )
 	{ 
 		std::cout << "Too many inputs" << std::endl;
 		return EXIT_FAILURE;
@@ -310,13 +312,17 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-/*		// write out images
-		std::string level1ResampledImageFilename = outputDirectory + "_Level1ResampledImage.mhd";
-		WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), transforms->GetTransformedImage() );
-		// write out label map
-		std::string level1ResampledLabelMapFilename = outputDirectory + "_Level1ResampledLabelMap.mhd";
-		WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
-*/		// write out composite transform
+		if( debug )
+		{
+			// write out images
+			std::string level1ResampledImageFilename = outputDirectory + "_Level1ResampledImage.mhd";
+			WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), transforms->GetTransformedImage() );
+			// write out label map
+			std::string level1ResampledLabelMapFilename = outputDirectory + "_Level1ResampledLabelMap.mhd";
+			WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
+			// write out composite transform
+		}
+
 		std::string level1CompositeTransformFilename = outputDirectory + "_Level1CompositeTransform.tfm";
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 
@@ -413,13 +419,17 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		// write out image
-		std::string level2MovingCroppedImageFilename = outputDirectory + "_Level2MovingCroppedImage.mhd";
-		WriteOutImage< ImageType, ImageType >( level2MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-		//std::string level2FixedCroppedImageFilename = outputDirectory + "_Level2FixedLabelMap.mhd";
-		//WriteOutImage< ImageType, ImageType >( level2FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
-		//std::string level2ResampledLabelMapFilename = outputDirectory + "_Level2ResampledLabelMap.mhd";
-		//WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
+		if( debug )
+		{
+			// write out image
+			std::string level2MovingCroppedImageFilename = outputDirectory + "_Level2MovingCroppedImage.mhd";
+			WriteOutImage< ImageType, ImageType >( level2MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
+			std::string level2FixedCroppedImageFilename = outputDirectory + "_Level2FixedLabelMap.mhd";
+			WriteOutImage< ImageType, ImageType >( level2FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
+			std::string level2ResampledLabelMapFilename = outputDirectory + "_Level2ResampledLabelMap.mhd";
+			WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
+		}
+
 		// final composite transform
 		std::string level2CompositeTransformFilename = outputDirectory + "_Level2CompositeTransform.tfm";
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level2CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
@@ -516,14 +526,16 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		// write out image
-		std::string level3MovingCroppedImageFilename = outputDirectory + "_Level3MovingCroppedImage.mhd";
-		WriteOutImage< ImageType, ImageType >( level3MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-		//std::string level3FixedCroppedImageFilename = outputDirectory + "_Level3FixedLabelMap.mhd";
-		//WriteOutImage< ImageType, ImageType >( level3FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
-		//std::string level3ResampledLabelMapFilename = outputDirectory + "_Level3ResampledLabelMap.mhd";
-		//WriteOutImage< ImageType, ImageType >( level3ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
-		// final composite transform
+		if( debug )
+		{
+			// write out image
+			std::string level3MovingCroppedImageFilename = outputDirectory + "_Level3MovingCroppedImage.mhd";
+			WriteOutImage< ImageType, ImageType >( level3MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
+			std::string level3FixedCroppedImageFilename = outputDirectory + "_Level3FixedLabelMap.mhd";
+			WriteOutImage< ImageType, ImageType >( level3FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
+			std::string level3ResampledLabelMapFilename = outputDirectory + "_Level3ResampledLabelMap.mhd";
+			WriteOutImage< ImageType, ImageType >( level3ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
+		}
 
 		// write out final composite transform
 		std::string level3CompositeTransformFilename = outputDirectory + "_Level3CompositeTransform.tfm";
@@ -615,6 +627,7 @@ void PrintOutManual()
 	std::cout << "                                allowed | default = 0.001" << std::endl;
 	std::cout << "  [skipWB]: skip the first level of registration and begin with application" << std::endl;
 	std::cout << "            of the second level ROI after initialization | default = 0" << std::endl;
+	std::cout << "  [debug]: print out images are at each level | default = 0" << std::endl;
 	std::cout << std::endl;
 	
 	return;
