@@ -138,12 +138,13 @@ int main( int argc, char * argv[] )
 	if( argc > 20 ){ relaxationFactor = atof( argv[20] ); }
 	if( argc > 21 ){ gradientMagnitudeTolerance = atof( argv[21] ); }
 	if( argc > 22 ){ skipWB = atoi( argv[22] ); }
-	if( argc > 23 ){ debug = atoi( argv[22] ); }
+	if( argc > 23 ){ debug = atoi( argv[23] ); }
 	if( argc > 24 )
 	{ 
 		std::cout << "Too many inputs" << std::endl;
 		return EXIT_FAILURE;
 	}
+	std::cout << "DEBUG: " << debug << std::endl;
 
 	// instantiate image type
 	typedef itk::Image< short, 3 >	ImageType;
