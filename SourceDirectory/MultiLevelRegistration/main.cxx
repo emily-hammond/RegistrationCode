@@ -338,6 +338,7 @@ int main( int argc, char * argv[] )
 		chronometer.Start( "Level 2" );
 		memorymeter.Start( "Level 2" );
 
+
 		// test functionality of itkRegistrationFramework.h
 		std::cout << "\n*********************************************" << std::endl;
 		std::cout << "            REGISTRATION LEVEL 2               " << std::endl;
@@ -358,6 +359,13 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
+		// write out inputs
+		if( debug )
+		{
+			std::string level2InputMovingImage = outputDirectory + "_Level2InputMovingImage.mhd";
+			WriteOutImage< ImageType, ImageType >( level2InputMovingImage.c_str(), transforms->GetMovingCroppedImage() );
+		}
+
 		std::cout << "\n -> Registration\n" << std::endl;
 		// create new registration class
 		itk::RegistrationFramework::Pointer level2Registration = itk::RegistrationFramework::New();
@@ -365,8 +373,8 @@ int main( int argc, char * argv[] )
 		level2Registration->SetMovingImage( transforms->GetMovingCroppedImage() );
 		level2Registration->SetNumberOfIterations( numberOfIterations );
 		level2Registration->SetRelaxationFactor( relaxationFactor );
-		level2Registration->SetMaximumStepLength( maximumStepLength/2.0 );
-		level2Registration->SetMinimumStepLength( minimumStepLength );
+		level2Registration->SetMaximumStepLength( maximumStepLength );
+		level2Registration->SetMinimumStepLength( minimumStepLength/2.0 );
 		level2Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
 		level2Registration->SetRotationScale( rotationScale );
 		level2Registration->SetTranslationScale( translationScale );
@@ -464,6 +472,13 @@ int main( int argc, char * argv[] )
 			std::cerr << "Exception Object Caught!" << std::endl;
 			std::cerr << err << std::endl;
 			std::cerr << std::endl;
+		}
+
+		// write out inputs
+		if( debug )
+		{
+			std::string level3InputMovingImage = outputDirectory + "_Level3InputMovingImage.mhd";
+			WriteOutImage< ImageType, ImageType >( level3InputMovingImage.c_str(), transforms->GetMovingCroppedImage() );
 		}
 
 		std::cout << "\n -> Registration\n" << std::endl;

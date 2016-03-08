@@ -25,7 +25,7 @@ public:
 		{
 			return;
 		}
-		if( optimizer->GetCurrentIteration()%50 == 1 || optimizer->GetCurrentIteration()%50 == 2 )
+		if( optimizer->GetCurrentIteration()%10 == 1 || optimizer->GetCurrentIteration()%10 == 2 )
 		{
 			std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
 			std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition();
