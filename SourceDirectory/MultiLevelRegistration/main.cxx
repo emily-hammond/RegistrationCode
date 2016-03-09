@@ -193,9 +193,15 @@ int main( int argc, char * argv[] )
 	if( metricZ ){ initialize->MetricAlignmentOn( 2 ); }
 	initialize->Update();
 
+	std::cout << "\nFinal Parameters" << std::endl;
+	std::cout << "Transform" << std::endl;
+	std::cout << "  Translation   : " << initialize->GetTransform()->GetTranslation() << std::endl;
+	std::cout << std::endl;
+
 	// set up transforms class and insert fixed image (will not change)
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
 	//transforms->AddTransform( initialize->GetTransform() );
+	std::cout << "\n -> Transforms\n" << std::endl;
 	transforms->SetInitialTransform( initialize->GetTransform() );
 	transforms->SetFixedImage( fixedImage );
 	transforms->SetFixedLabelMap( fixedValidationMask );
