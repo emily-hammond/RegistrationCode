@@ -18,6 +18,8 @@ INSERT COMMENTS HERE
 #include <time.h>
 #include <stdio.h>
 
+#include <windows.h>
+
 // declare function
 void PrintOutManual();
 void Timestamp();
@@ -29,10 +31,10 @@ int main( int argc, char * argv[] )
 	Timestamp();
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 
-	/*for( int i = 0; i < argc; ++i )
+	for( int i = 0; i < argc; ++i )
 	{
 		std::cout << argv[i] << std::endl;
-	}*/
+	}
 
 	// probes
 	itk::TimeProbesCollectorBase	chronometer;
@@ -144,7 +146,6 @@ int main( int argc, char * argv[] )
 		std::cout << "Too many inputs" << std::endl;
 		return EXIT_FAILURE;
 	}
-	std::cout << "DEBUG: " << debug << std::endl;
 
 	// instantiate image type
 	typedef itk::Image< short, 3 >	ImageType;
@@ -166,9 +167,17 @@ int main( int argc, char * argv[] )
 	if( argc > 7 && numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << level2ROIFilename << std::endl; }
 	if( argc > 8 && numberOfLevels > 2 ){	std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl; }
 
-	// rescale images if necessary
-	//fixedImage = RescaleImage( fixedImage );
-	//movingImage = RescaleImage( movingImage );
+	// create debug directory if desired
+	std::string debugDirectory = "\0";
+	if( debug )
+	{
+		debugDirectory = outputDirectory + "debug\\";
+		if( !CreateDirectory( debugDirectory.c_str(), NULL ) ) {}
+		else
+		{
+			CreateDirectory( debugDirectory.c_str(), NULL );
+		}
+	}
 
 	// inputs
 	chronometer.Stop( "Inputs" );
@@ -322,10 +331,10 @@ int main( int argc, char * argv[] )
 		if( debug )
 		{
 			// write out images
-			std::string level1ResampledImageFilename = outputDirectory + "_Level1ResampledImage.mhd";
+			std::string level1ResampledImageFilename = debugDirectory + "_Level1ResampledImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), transforms->GetTransformedImage() );
 			// write out label map
-			std::string level1ResampledLabelMapFilename = outputDirectory + "_Level1ResampledLabelMap.mhd";
+			std::string level1ResampledLabelMapFilename = debugDirectory + "_Level1ResampledLabelMap.mhd";
 			WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
 			// write out composite transform
 		}
@@ -368,8 +377,10 @@ int main( int argc, char * argv[] )
 		// write out inputs
 		if( debug )
 		{
-			std::string level2InputMovingImage = outputDirectory + "_Level2InputMovingImage.mhd";
+			std::string level2InputMovingImage = debugDirectory + "_Level2InputMovingImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level2InputMovingImage.c_str(), transforms->GetMovingCroppedImage() );
+			std::string level2InputFixedImage = debugDirectory + "_Level2InputFixedImage.mhd";
+			WriteOutImage< ImageType, ImageType >( level2InputFixedImage.c_str(), transforms->GetFixedCroppedImage() );
 		}
 
 		std::cout << "\n -> Registration\n" << std::endl;
@@ -379,8 +390,8 @@ int main( int argc, char * argv[] )
 		level2Registration->SetMovingImage( transforms->GetMovingCroppedImage() );
 		level2Registration->SetNumberOfIterations( numberOfIterations );
 		level2Registration->SetRelaxationFactor( relaxationFactor );
-		level2Registration->SetMaximumStepLength( maximumStepLength );
-		level2Registration->SetMinimumStepLength( minimumStepLength/2.0 );
+		level2Registration->SetMaximumStepLength( maximumStepLength/2.0 );
+		level2Registration->SetMinimumStepLength( minimumStepLength );
 		level2Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
 		level2Registration->SetRotationScale( rotationScale );
 		level2Registration->SetTranslationScale( translationScale );
@@ -437,11 +448,11 @@ int main( int argc, char * argv[] )
 		if( debug )
 		{
 			// write out image
-			std::string level2MovingCroppedImageFilename = outputDirectory + "_Level2MovingCroppedImage.mhd";
+			std::string level2MovingCroppedImageFilename = debugDirectory + "_Level2MovingCroppedImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level2MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-			std::string level2FixedCroppedImageFilename = outputDirectory + "_Level2FixedLabelMap.mhd";
+			std::string level2FixedCroppedImageFilename = debugDirectory + "_Level2FixedLabelMap.mhd";
 			WriteOutImage< ImageType, ImageType >( level2FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
-			std::string level2ResampledLabelMapFilename = outputDirectory + "_Level2ResampledLabelMap.mhd";
+			std::string level2ResampledLabelMapFilename = debugDirectory + "_Level2ResampledLabelMap.mhd";
 			WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
 		}
 
@@ -483,8 +494,10 @@ int main( int argc, char * argv[] )
 		// write out inputs
 		if( debug )
 		{
-			std::string level3InputMovingImage = outputDirectory + "_Level3InputMovingImage.mhd";
+			std::string level3InputMovingImage = debugDirectory + "_Level3InputMovingImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level3InputMovingImage.c_str(), transforms->GetMovingCroppedImage() );
+			std::string level3InputFixedImage = debugDirectory + "_Level3InputFixedImage.mhd";
+			WriteOutImage< ImageType, ImageType >( level3InputFixedImage.c_str(), transforms->GetFixedCroppedImage() );
 		}
 
 		std::cout << "\n -> Registration\n" << std::endl;
@@ -551,11 +564,11 @@ int main( int argc, char * argv[] )
 		if( debug )
 		{
 			// write out image
-			std::string level3MovingCroppedImageFilename = outputDirectory + "_Level3MovingCroppedImage.mhd";
+			std::string level3MovingCroppedImageFilename = debugDirectory + "_Level3MovingCroppedImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level3MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-			std::string level3FixedCroppedImageFilename = outputDirectory + "_Level3FixedLabelMap.mhd";
+			std::string level3FixedCroppedImageFilename = debugDirectory + "_Level3FixedLabelMap.mhd";
 			WriteOutImage< ImageType, ImageType >( level3FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
-			std::string level3ResampledLabelMapFilename = outputDirectory + "_Level3ResampledLabelMap.mhd";
+			std::string level3ResampledLabelMapFilename = debugDirectory + "_Level3ResampledLabelMap.mhd";
 			WriteOutImage< ImageType, ImageType >( level3ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
 		}
 
