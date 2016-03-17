@@ -35,8 +35,8 @@ int main( int argc, char * argv[] )
 	}
 	if( argc > 9 )
 	{
-		level3TransformFilename = argv[8];
-		level3ROIFilename = argv[9];
+		level3TransformFilename = argv[9];
+		level3ROIFilename = argv[10];
 	}
 
 	typedef itk::Image< short, 3 >	ImageType;
@@ -106,7 +106,6 @@ int main( int argc, char * argv[] )
 	if( argc > 7 )
 	{
 		TransformType::Pointer level2Transform = ReadInTransform< TransformType >( level2TransformFilename );
-		TransformType::Pointer level1Transform = ReadInTransform< TransformType >( level1TransformFilename );
 
 		// transforms filter
 		itk::ManageTransformsFilter::Pointer transforms2 = itk::ManageTransformsFilter::New();
@@ -115,10 +114,10 @@ int main( int argc, char * argv[] )
 		transforms2->SetMovingImage( movingImage );
 		transforms2->SetMovingLabelMap( movingMask );
 
-		transforms2->AddTransform( level1Transform );
-		transforms2->CropImageOn();
-		transforms2->ResampleImageOn();
+		transforms2->AddTransform( level2Transform );
 		transforms2->SetROIFilename( level2ROIFilename );
+		transforms2->ResampleImageOn();
+		transforms2->CropImageOn();
 		try
 		{
 			transforms2->Update();
@@ -132,9 +131,10 @@ int main( int argc, char * argv[] )
 
 		std::cout << "\nTransform: " << level2TransformFilename << std::endl;
 
-		validation->SetImage2( transforms->ResampleImage( transforms2->GetMovingCroppedImage(), level2Transform ) );
-		transforms->NearestNeighborInterpolateOn();
-		validation->SetLabelMap2( transforms->ResampleImage( transforms2->GetMovingCroppedLabelMap(), level2Transform ) );
+		validation->SetImage1( transforms2->GetFixedCroppedImage() );
+		validation->SetLabelMap1( transforms2->GetFixedCroppedLabelMap() );
+		validation->SetImage2( transforms2->GetMovingCroppedImage() );
+		validation->SetLabelMap2( transforms2->GetMovingCroppedLabelMap() );
 		validation->LabelOverlapMeasuresOn();
 		try
 		{
@@ -151,7 +151,6 @@ int main( int argc, char * argv[] )
 	if( argc > 9 )
 	{
 		TransformType::Pointer level3Transform = ReadInTransform< TransformType >( level3TransformFilename );
-		TransformType::Pointer level2Transform = ReadInTransform< TransformType >( level1TransformFilename );
 
 		// transforms filter
 		itk::ManageTransformsFilter::Pointer transforms3 = itk::ManageTransformsFilter::New();
@@ -160,10 +159,10 @@ int main( int argc, char * argv[] )
 		transforms3->SetMovingImage( movingImage );
 		transforms3->SetMovingLabelMap( movingMask );
 
-		transforms3->AddTransform( level2Transform );
-		transforms3->CropImageOn();
-		transforms3->ResampleImageOn();
+		transforms3->AddTransform( level3Transform );
 		transforms3->SetROIFilename( level3ROIFilename );
+		transforms3->ResampleImageOn();
+		transforms3->CropImageOn();
 		try
 		{
 			transforms3->Update();
@@ -177,9 +176,10 @@ int main( int argc, char * argv[] )
 
 		std::cout << "\nTransform: " << level3TransformFilename << std::endl;
 
-		validation->SetImage2( transforms->ResampleImage( transforms3->GetMovingCroppedImage(), level3Transform ) );
-		transforms->NearestNeighborInterpolateOn();
-		validation->SetLabelMap2( transforms->ResampleImage( transforms3->GetMovingCroppedLabelMap(), level3Transform ) );
+		validation->SetImage1( transforms3->GetFixedCroppedImage() );
+		validation->SetLabelMap1( transforms3->GetFixedCroppedLabelMap() );
+		validation->SetImage2( transforms3->GetMovingCroppedImage() );
+		validation->SetLabelMap2( transforms3->GetMovingCroppedLabelMap() );
 		validation->LabelOverlapMeasuresOn();
 		try
 		{
