@@ -13,6 +13,7 @@ transform prior to validation.
 
 // include files
 #include "itkCompositeTransform.h"
+#include "itkScaleVersor3DTransform.h"
 #include "itkChangeInformationImageFilter.h"
 #include "itkResampleImageFilter.h"
 #include "itkNearestNeighborInterpolateImageFunction.h"

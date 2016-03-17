@@ -3,11 +3,11 @@ INSERT COMMENTS HERE
 */
 
 // include files
-#include "ReadWriteFunctions.hxx"
-#include "itkRegistrationFramework.h"
-#include "itkInitializationFilter.h"
-#include "itkValidationFilter.h"
-#include "itkManageTransformsFilter.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkRegistrationFramework.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkInitializationFilter.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkValidationFilter.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkManageTransformsFilter.h"
 
 // rescale images
 #include "itkRescaleIntensityImageFilter.h"
@@ -15,7 +15,7 @@ INSERT COMMENTS HERE
 // monitoring
 #include "itkTimeProbesCollectorBase.h"
 #include "itkMemoryProbesCollectorBase.h"
-#include <time.h>
+#include <time.h>"Read
 #include <stdio.h>
 
 #include <windows.h>
