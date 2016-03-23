@@ -177,6 +177,12 @@ namespace itk
 		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
 		ResampleFilterType::Pointer resample = ResampleFilterType::New();
 
+		if( !this->m_FixedImage )
+		{
+			std::cout << "Fixed Image not defined. " << std::endl;
+			return image;
+		}
+
 		// define image resampling with respect to fixed image
 		resample->SetSize( this->m_FixedImage->GetLargestPossibleRegion().GetSize() );
 		resample->SetOutputOrigin( this->m_FixedImage->GetOrigin() );

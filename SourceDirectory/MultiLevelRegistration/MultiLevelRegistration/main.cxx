@@ -80,6 +80,8 @@ int main( int argc, char * argv[] )
 	// special inputs
 	int skipWB = 0;
 	int debug = 0;
+	char * initialFixedTransformFilename = '\0';
+	char * referenceImageFilename = '\0';
 
 	// minimum input
 	if( argc < 6 )
@@ -143,6 +145,11 @@ int main( int argc, char * argv[] )
 	if( argc > 23 ){ debug = atoi( argv[23] ); }
 	if( argc > 24 )
 	{ 
+		initialFixedTransformFilename = argv[24];
+		referenceImageFilename = argv[25];
+	}
+	if( argc > 26 )
+	{ 
 		std::cout << "Too many inputs" << std::endl;
 		return EXIT_FAILURE;
 	}
@@ -153,10 +160,35 @@ int main( int argc, char * argv[] )
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	// check inputs
+	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+	ImageType::Pointer fixedImage = ImageType::New();
+	ImageType::Pointer fixedValidationMask = ImageType::New();
+
+	// apply fixed initial transform if given
+	if( argc > 24 )
+	{
+		// apply transform to fixed image
+		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( initialFixedTransformFilename );
+		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >( fixedImageFilename );
+		transforms->SetFixedImage( ReadInImage< ImageType >( referenceImageFilename ) );
+		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
+
+		// apply transform to fixed validation mask
+		transforms->NearestNeighborInterpolateOn();
+		ImageType::Pointer fixedValidationMaskTemp = ReadInImage< ImageType >( fixedValidationMaskFilename );
+		fixedValidationMask = transforms->ResampleImage( fixedValidationMaskTemp, initialFixedTransform );
+		transforms->NearestNeighborInterpolateOff();
+		
+		std::cout << "Initial transform applied to fixed image." << std::endl;
+	}
+	else
+	{
+		fixedImage = ReadInImage< ImageType >( fixedImageFilename );
+		fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
+	}
+
 	// read in necessary images
-	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	ImageType::Pointer fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
 	ImageType::Pointer movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
@@ -208,7 +240,6 @@ int main( int argc, char * argv[] )
 	std::cout << std::endl;
 
 	// set up transforms class and insert fixed image (will not change)
-	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
 	//transforms->AddTransform( initialize->GetTransform() );
 	std::cout << "\n -> Transforms\n" << std::endl;
 	transforms->SetInitialTransform( initialize->GetTransform() );
@@ -393,9 +424,9 @@ int main( int argc, char * argv[] )
 		level2Registration->SetMaximumStepLength( maximumStepLength/2.0 );
 		level2Registration->SetMinimumStepLength( minimumStepLength );
 		level2Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
-		level2Registration->SetRotationScale( rotationScale );
-		level2Registration->SetTranslationScale( translationScale );
-		level2Registration->SetScalingScale( scalingScale );
+		level2Registration->SetRotationScale( rotationScale/2.0 );
+		level2Registration->SetTranslationScale( translationScale/2.0 );
+		level2Registration->SetScalingScale( scalingScale/2.0 );
 
 		if( observe ){ level2Registration->ObserveOn(); }
 		try
@@ -510,9 +541,9 @@ int main( int argc, char * argv[] )
 		level3Registration->SetMaximumStepLength( maximumStepLength/4.0 );
 		level3Registration->SetMinimumStepLength( minimumStepLength );
 		level3Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
-		level3Registration->SetRotationScale( rotationScale );
-		level3Registration->SetTranslationScale( translationScale );
-		level3Registration->SetScalingScale( scalingScale );
+		level3Registration->SetRotationScale( rotationScale/4.0 );
+		level3Registration->SetTranslationScale( translationScale/4.0 );
+		level3Registration->SetScalingScale( scalingScale/4.0 );
 		if( observe ){ level3Registration->ObserveOn(); }
 		try
 		{

@@ -179,6 +179,8 @@ typename TransformType::Pointer ReadInTransform( const char * transformFilename)
 		}
 	}
 
+	std::cout << "Transform read in." << std::endl;
+
 	return transform;
 }
 
