@@ -105,6 +105,18 @@ namespace itk
 		return;
 	}
 
+	void InitializationFilter::Update( AffineTransformType::Pointer transform )
+	{
+		std::cout << transform << std::endl;
+		AffineTransformType::MatrixType affineMatrix = transform->GetMatrix();
+		std::cout << m_Transform << std::endl;
+		std::cout << affineMatrix[0][0] << std::endl;
+		this->m_Transform->SetMatrix( affineMatrix );
+		std::cout << this->m_Transform << std::endl;
+	
+		return;
+	}
+
 	// obtain the proper range to translate the moving image for metric alignment depending on the given axis
 	void InitializationFilter::GetRange( int axis )
 	{

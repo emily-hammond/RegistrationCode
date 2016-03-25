@@ -15,7 +15,7 @@ INSERT COMMENTS HERE
 // monitoring
 #include "itkTimeProbesCollectorBase.h"
 #include "itkMemoryProbesCollectorBase.h"
-#include <time.h>"Read
+#include <time.h>
 #include <stdio.h>
 
 #include <windows.h>
@@ -160,6 +160,7 @@ int main( int argc, char * argv[] )
 	typedef itk::Image< short, 3 >	ImageType;
 	typedef itk::Image< unsigned char, 3 >	MaskImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
+	typedef itk::AffineTransform< double >	AffineTransformType;
 
 	// check inputs
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
@@ -228,6 +229,7 @@ int main( int argc, char * argv[] )
 
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
 	TransformType::Pointer initialTransform = TransformType::New();
+	
 	if( !manualInitialTransformFilename )
 	{
 		initialize->SetFixedImage( fixedImage );
@@ -238,13 +240,14 @@ int main( int argc, char * argv[] )
 		if( metricY ){ initialize->MetricAlignmentOn( 1 ); }
 		if( metricZ ){ initialize->MetricAlignmentOn( 2 ); }
 		initialize->Update();
-
-		// insert into initial transform
 		initialTransform = initialize->GetTransform();
 	}
 	else
 	{
-		initialTransform = ReadInTransform< TransformType >( manualInitialTransformFilename );
+		initialize->Update( ReadInTransform< AffineTransformType >( manualInitialTransformFilename ) );
+		std::cout << "Manual initial transform via previously saved file." << std::endl;
+		std::cout << "Initial Transform: " << manualInitialTransformFilename << std::endl;
+		initialTransform = initialize->GetTransform();
 	}
 
 	std::cout << "\nFinal Parameters" << std::endl;

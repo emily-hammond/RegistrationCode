@@ -17,6 +17,7 @@ Remaining to implement:
 
 // include files not defined in itkRegistrationFramework.h
 #include "itkCenteredTransformInitializer.h"
+#include "itkAffineTransform.h"
 
 namespace itk
 {
@@ -33,6 +34,7 @@ public:
 	// definitions
 	typedef itk::Image< short, 3 >			ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
+	typedef itk::AffineTransform< double >			AffineTransformType;
 	
 	// method for creation
 	itkNewMacro(Self);
@@ -66,6 +68,7 @@ public:
 
 	// perform function
 	void Update();
+	void Update( AffineTransformType::Pointer transform );
 
 	// get result
 	itkGetObjectMacro( Transform, TransformType );

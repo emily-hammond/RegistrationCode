@@ -173,6 +173,10 @@ typename TransformType::Pointer ReadInTransform( const char * transformFilename)
 		{
 			transform = static_cast< TransformType * >( (*it).GetPointer() );
 		}
+		else if( !strcmp( (*it)->GetNameOfClass(), "AffineTransform" ) )
+		{
+			transform = static_cast< TransformType * >( (*it).GetPointer() );
+		}
 		else
 		{
 			std::cout << "Transform is not compatible." << std::endl;
