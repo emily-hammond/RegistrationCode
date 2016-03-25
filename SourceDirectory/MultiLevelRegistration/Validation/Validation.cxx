@@ -24,6 +24,8 @@ int main( int argc, char * argv[] )
 	char * level3TransformFilename = '\0';
 	char * level2ROIFilename = '\0';
 	char * level3ROIFilename = '\0';
+	char * initialFixedTransformFilename = '\0';
+	char * referenceImageFilename = '\0';
 	if( argc > 6 )
 	{
 		level1TransformFilename = argv[6];
@@ -38,6 +40,11 @@ int main( int argc, char * argv[] )
 		level3TransformFilename = argv[9];
 		level3ROIFilename = argv[10];
 	}
+	if( argc > 11 )
+	{
+		initialFixedTransformFilename = argv[11];
+		referenceImageFilename = argv[12];
+	}
 
 	typedef itk::Image< short, 3 >	ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
@@ -47,15 +54,40 @@ int main( int argc, char * argv[] )
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	std::cout << "Moving validation mask: " << movingMaskFilename << std::endl;
 
+	// check inputs
+	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+	ImageType::Pointer fixedImage = ImageType::New();
+	ImageType::Pointer fixedMask = ImageType::New();
+
+	// apply fixed initial transform if given
+	if( argc > 11 )
+	{
+		// apply transform to fixed image
+		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( initialFixedTransformFilename );
+		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >( fixedImageFilename );
+		transforms->SetFixedImage( ReadInImage< ImageType >( referenceImageFilename ) );
+		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
+
+		// apply transform to fixed validation mask
+		transforms->NearestNeighborInterpolateOn();
+		ImageType::Pointer fixedMaskTemp = ReadInImage< ImageType >( fixedMaskFilename );
+		fixedMask = transforms->ResampleImage( fixedMaskTemp, initialFixedTransform );
+		transforms->NearestNeighborInterpolateOff();
+		
+		std::cout << "Initial transform applied to fixed image." << std::endl;
+	}
+	else
+	{
+		fixedImage = ReadInImage< ImageType >( fixedImageFilename );
+		fixedMask = ReadInImage< ImageType >( fixedMaskFilename );
+	}
+
 	// read in necessary images
-	ImageType::Pointer fixedImage = ReadInImage< ImageType >( fixedImageFilename );
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	ImageType::Pointer fixedMask = ReadInImage< ImageType >( fixedMaskFilename );
 	ImageType::Pointer movingMask = ReadInImage< ImageType >( movingMaskFilename );
 	TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 	
 	// transforms filter
-	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
 	transforms->SetFixedImage( fixedImage );
 	transforms->SetFixedLabelMap( fixedMask );
 	transforms->SetMovingImage( movingImage );
