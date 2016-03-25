@@ -82,6 +82,7 @@ int main( int argc, char * argv[] )
 	int debug = 0;
 	char * initialFixedTransformFilename = '\0';
 	char * referenceImageFilename = '\0';
+	char * manualInitialTransformFilename = '\0';
 
 	// minimum input
 	if( argc < 6 )
@@ -148,7 +149,8 @@ int main( int argc, char * argv[] )
 		initialFixedTransformFilename = argv[24];
 		referenceImageFilename = argv[25];
 	}
-	if( argc > 26 )
+	if( argc > 26 ){ manualInitialTransformFilename = argv[26]; }
+	if( argc > 27 )
 	{ 
 		std::cout << "Too many inputs" << std::endl;
 		return EXIT_FAILURE;
@@ -225,24 +227,35 @@ int main( int argc, char * argv[] )
 	std::cout << "*********************************************\n" << std::endl;
 
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
-	initialize->SetFixedImage( fixedImage );
-	initialize->SetMovingImage( movingImage );
-	if( observe ){ initialize->ObserveOn(); }
-	if( center ){ initialize->CenteredOnGeometryOn(); }
-	if( metricX ){ initialize->MetricAlignmentOn( 0 ); }
-	if( metricY ){ initialize->MetricAlignmentOn( 1 ); }
-	if( metricZ ){ initialize->MetricAlignmentOn( 2 ); }
-	initialize->Update();
+	TransformType::Pointer initialTransform = TransformType::New();
+	if( !manualInitialTransformFilename )
+	{
+		initialize->SetFixedImage( fixedImage );
+		initialize->SetMovingImage( movingImage );
+		if( observe ){ initialize->ObserveOn(); }
+		if( center ){ initialize->CenteredOnGeometryOn(); }
+		if( metricX ){ initialize->MetricAlignmentOn( 0 ); }
+		if( metricY ){ initialize->MetricAlignmentOn( 1 ); }
+		if( metricZ ){ initialize->MetricAlignmentOn( 2 ); }
+		initialize->Update();
+
+		// insert into initial transform
+		initialTransform = initialize->GetTransform();
+	}
+	else
+	{
+		initialTransform = ReadInTransform< TransformType >( manualInitialTransformFilename );
+	}
 
 	std::cout << "\nFinal Parameters" << std::endl;
 	std::cout << "Transform" << std::endl;
-	std::cout << "  Translation   : " << initialize->GetTransform()->GetTranslation() << std::endl;
+	std::cout << "  Translation   : " << initialTransform->GetTranslation() << std::endl;
 	std::cout << std::endl;
 
 	// set up transforms class and insert fixed image (will not change)
 	//transforms->AddTransform( initialize->GetTransform() );
 	std::cout << "\n -> Transforms\n" << std::endl;
-	transforms->SetInitialTransform( initialize->GetTransform() );
+	transforms->SetInitialTransform( initialTransform );
 	transforms->SetFixedImage( fixedImage );
 	transforms->SetFixedLabelMap( fixedValidationMask );
 
@@ -257,9 +270,9 @@ int main( int argc, char * argv[] )
 	transforms->SetMovingLabelMap( movingValidationMask );
 	
 	// perform validation
-	validation->SetImage2( transforms->ResampleImage( movingImage, initialize->GetTransform() ) );
+	validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
 	transforms->NearestNeighborInterpolateOn();
-	validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialize->GetTransform() ) );
+	validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialTransform ) );
 	transforms->NearestNeighborInterpolateOff();
 	validation->LabelOverlapMeasuresOn();
 	try
@@ -275,7 +288,7 @@ int main( int argc, char * argv[] )
 
 	// write out initial transform
 	std::string initialTransformFilename = outputDirectory + "_InitialTransform.tfm";
-	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialize->GetTransform() );
+	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialTransform );
 
 	// initialization
 	chronometer.Stop( "Initialization" );
@@ -300,7 +313,7 @@ int main( int argc, char * argv[] )
 			// create registration class
 			level1Registration->SetFixedImage( fixedImage );
 			level1Registration->SetMovingImage( movingImage );
-			level1Registration->SetInitialTransform( initialize->GetTransform() );
+			level1Registration->SetInitialTransform( initialTransform );
 			level1Registration->SetNumberOfIterations( numberOfIterations );
 			level1Registration->SetRelaxationFactor( relaxationFactor );
 			level1Registration->SetMaximumStepLength( maximumStepLength );
@@ -328,7 +341,7 @@ int main( int argc, char * argv[] )
 		}
 		else
 		{
-			transforms->AddTransform( initialize->GetTransform() );
+			transforms->AddTransform( initialTransform );
 			std::cout << "Level 1 registration skipped" << std::endl;
 		}
 		transforms->ResampleImageOn();
