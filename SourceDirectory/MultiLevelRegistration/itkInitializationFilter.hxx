@@ -130,7 +130,6 @@ namespace itk
 
 		//this->m_Transform->SetMatrix( matrix ); METHOD NOT SUPPORTED WITH ITKv4.8.0
 		this->m_Transform->SetParameters( parameters );
-		std::cout << this->m_Transform << std::endl;
 	
 		return;
 	}
