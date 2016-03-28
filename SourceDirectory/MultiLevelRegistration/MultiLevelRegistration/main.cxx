@@ -229,11 +229,11 @@ int main( int argc, char * argv[] )
 
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
 	TransformType::Pointer initialTransform = TransformType::New();
+	initialize->SetFixedImage( fixedImage );
+	initialize->SetMovingImage( movingImage );
 	
 	if( !manualInitialTransformFilename )
 	{
-		initialize->SetFixedImage( fixedImage );
-		initialize->SetMovingImage( movingImage );
 		if( observe ){ initialize->ObserveOn(); }
 		if( center ){ initialize->CenteredOnGeometryOn(); }
 		if( metricX ){ initialize->MetricAlignmentOn( 0 ); }
@@ -244,9 +244,9 @@ int main( int argc, char * argv[] )
 	}
 	else
 	{
-		initialize->Update( ReadInTransform< AffineTransformType >( manualInitialTransformFilename ) );
 		std::cout << "Manual initial transform via previously saved file." << std::endl;
 		std::cout << "Initial Transform: " << manualInitialTransformFilename << std::endl;
+		initialize->Update( ReadInTransform< AffineTransformType >( manualInitialTransformFilename ) );
 		initialTransform = initialize->GetTransform();
 	}
 
@@ -292,6 +292,17 @@ int main( int argc, char * argv[] )
 	// write out initial transform
 	std::string initialTransformFilename = outputDirectory + "_InitialTransform.tfm";
 	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialTransform );
+	if( debug )
+	{
+		// write out images
+		std::string InitResampledImageFilename = debugDirectory + "_InitResampledImage.mhd";
+		WriteOutImage< ImageType, ImageType >( InitResampledImageFilename.c_str(), transforms->ResampleImage( movingImage, initialTransform ) );
+		// write out label map
+		std::string InitResampledLabelMapFilename = debugDirectory + "_InitResampledLabelMap.mhd";
+		transforms->NearestNeighborInterpolateOn();
+		WriteOutImage< ImageType, ImageType >( InitResampledLabelMapFilename.c_str(), transforms->ResampleImage( movingValidationMask, initialTransform ) );
+		transforms->NearestNeighborInterpolateOff();
+	}
 
 	// initialization
 	chronometer.Stop( "Initialization" );

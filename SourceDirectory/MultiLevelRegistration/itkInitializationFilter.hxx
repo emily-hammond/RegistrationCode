@@ -107,11 +107,29 @@ namespace itk
 
 	void InitializationFilter::Update( AffineTransformType::Pointer transform )
 	{
-		std::cout << transform << std::endl;
-		AffineTransformType::MatrixType affineMatrix = transform->GetMatrix();
-		std::cout << m_Transform << std::endl;
-		std::cout << affineMatrix[0][0] << std::endl;
-		this->m_Transform->SetMatrix( affineMatrix );
+		// transfer parameters
+		TransformType::ParametersType parameters = this->m_Transform->GetParameters();
+
+		// versor
+		TransformType::VersorType versor;
+		versor.Set( transform->GetMatrix() );
+		parameters[0] = versor.GetX();
+		parameters[1] = versor.GetY();
+		parameters[2] = versor.GetZ();
+
+		// translation
+		AffineTransformType::TranslationType affineTranslation = transform->GetTranslation();
+		parameters[3] = affineTranslation[0];
+		parameters[4] = affineTranslation[1];
+		parameters[5] = affineTranslation[2];
+
+		// DO NOT ALLOW SCALING ON AN INITIAL TRANSFORM
+		parameters[6] = 1.0;
+		parameters[7] = 1.0;
+		parameters[8] = 1.0;
+
+		//this->m_Transform->SetMatrix( matrix ); METHOD NOT SUPPORTED WITH ITKv4.8.0
+		this->m_Transform->SetParameters( parameters );
 		std::cout << this->m_Transform << std::endl;
 	
 		return;
