@@ -14,11 +14,25 @@
 int main( int argc, char * argv[] )
 {
 	// inputs
-	char * fixedImageFilename = argv[1];
-	char * fixedMaskFilename = argv[2];
-	char * movingImageFilename = argv[3];
-	char * movingMaskFilename = argv[4];
-	char * initialTransformFilename = argv[5];
+	char * fixedImageFilename = '\0';
+	char * fixedMaskFilename = '\0';
+	char * movingImageFilename = '\0';
+	char * movingMaskFilename = '\0';
+	char * initialTransformFilename = '\0';
+	if( argc < 6 )
+	{
+		std::cout << ".exe fixedImage fixedMask movingImage movingMask initialTransform [level1Transform]";
+		std::cout << "      [level2Transform level2ROI] [level3Transform level3ROI] [initialFixedTransform referenceImage]" << std::endl;;
+		return EXIT_FAILURE;
+	}
+	else
+	{
+		char * fixedImageFilename = argv[1];
+		char * fixedMaskFilename = argv[2];
+		char * movingImageFilename = argv[3];
+		char * movingMaskFilename = argv[4];
+		char * initialTransformFilename = argv[5];
+	}
 	char * level1TransformFilename = '\0';
 	char * level2TransformFilename = '\0';
 	char * level3TransformFilename = '\0';
@@ -26,21 +40,21 @@ int main( int argc, char * argv[] )
 	char * level3ROIFilename = '\0';
 	char * initialFixedTransformFilename = '\0';
 	char * referenceImageFilename = '\0';
-	if( argc > 6 )
+	if( argc > 6 && strcmp(argv[6],"[]") != 0 )
 	{
 		level1TransformFilename = argv[6];
 	}
-	if( argc > 7 )
+	if( argc > 7 && strcmp(argv[7],"[]") != 0 )
 	{
 		level2TransformFilename = argv[7];
 		level2ROIFilename = argv[8];
 	}
-	if( argc > 9 )
+	if( argc > 9 && strcmp(argv[9],"[]") != 0 )
 	{
 		level3TransformFilename = argv[9];
 		level3ROIFilename = argv[10];
 	}
-	if( argc > 11 )
+	if( argc > 11 && strcmp(argv[11],"[]") != 0 )
 	{
 		initialFixedTransformFilename = argv[11];
 		referenceImageFilename = argv[12];
