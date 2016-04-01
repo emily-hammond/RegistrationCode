@@ -9,10 +9,24 @@
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkValidationFilter.h"
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkManageTransformsFilter.h"
+#include <time.h>
 
 // ***********************Main function********************************
+void Timestamp();
 int main( int argc, char * argv[] )
 {
+	std::cout << "-----------------------------------------------------------------------------" << std::endl;
+	std::cout << "      MULTI-LEVEL REGISTRATION VALIDATION ";
+	Timestamp();
+	std::cout << "-----------------------------------------------------------------------------" << std::endl;
+	std::cout << std::endl;
+
+	/*std::cout << "Number of inputs: " << argc << std::endl;
+	for( int i = 0; i < argc; ++i )
+	{
+		std::cout << i << ": " << argv[i] << std::endl;
+	}*/
+
 	// inputs
 	char * fixedImageFilename = '\0';
 	char * fixedMaskFilename = '\0';
@@ -27,11 +41,11 @@ int main( int argc, char * argv[] )
 	}
 	else
 	{
-		char * fixedImageFilename = argv[1];
-		char * fixedMaskFilename = argv[2];
-		char * movingImageFilename = argv[3];
-		char * movingMaskFilename = argv[4];
-		char * initialTransformFilename = argv[5];
+		fixedImageFilename = argv[1];
+		fixedMaskFilename = argv[2];
+		movingImageFilename = argv[3];
+		movingMaskFilename = argv[4];
+		initialTransformFilename = argv[5];
 	}
 	char * level1TransformFilename = '\0';
 	char * level2TransformFilename = '\0';
@@ -58,6 +72,11 @@ int main( int argc, char * argv[] )
 	{
 		initialFixedTransformFilename = argv[11];
 		referenceImageFilename = argv[12];
+	}
+	if( argc > 13 )
+	{
+		std::cout << "Too many inputs." << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	typedef itk::Image< short, 3 >	ImageType;
@@ -240,4 +259,12 @@ int main( int argc, char * argv[] )
 	}
 
     return EXIT_SUCCESS;
+}
+
+void Timestamp()
+{
+	time_t ltime;
+	ltime = time( NULL );
+	printf("%s",asctime( localtime( &ltime ) ) );
+	return;
 }
