@@ -93,7 +93,7 @@ int main( int argc, char * argv[] )
 	ImageType::Pointer fixedMask = ImageType::New();
 
 	// apply fixed initial transform if given
-	if( argc > 11 )
+	if( argc > 11 && strcmp(argv[11],"[]") != 0 )
 	{
 		// apply transform to fixed image
 		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( initialFixedTransformFilename );
@@ -135,6 +135,7 @@ int main( int argc, char * argv[] )
 	validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
 	transforms->NearestNeighborInterpolateOn();
 	validation->SetLabelMap2( transforms->ResampleImage( movingMask, initialTransform ) );
+	transforms->NearestNeighborInterpolateOff();
 	validation->LabelOverlapMeasuresOn();
 	try
 	{
@@ -147,7 +148,7 @@ int main( int argc, char * argv[] )
 		std::cerr << std::endl;
 	}
 
-	if( argc > 6 )
+	if( argc > 6 && strcmp(argv[6],"[]") != 0 )
 	{
 		TransformType::Pointer level1Transform = ReadInTransform< TransformType >( level1TransformFilename );
 		std::cout << "\nTransform: " << level1TransformFilename << std::endl;
@@ -155,6 +156,7 @@ int main( int argc, char * argv[] )
 		validation->SetImage2( transforms->ResampleImage( movingImage, level1Transform ) );
 		transforms->NearestNeighborInterpolateOn();
 		validation->SetLabelMap2( transforms->ResampleImage( movingMask, level1Transform ) );
+		transforms->NearestNeighborInterpolateOff();
 		validation->LabelOverlapMeasuresOn();
 		try
 		{
@@ -168,7 +170,7 @@ int main( int argc, char * argv[] )
 		}
 	}
 
-	if( argc > 7 )
+	if( argc > 7 && strcmp(argv[7],"[]") != 0 )
 	{
 		TransformType::Pointer level2Transform = ReadInTransform< TransformType >( level2TransformFilename );
 
@@ -213,7 +215,7 @@ int main( int argc, char * argv[] )
 		}
 	}
 
-	if( argc > 9 )
+	if( argc > 9 && strcmp(argv[9],"[]") != 0 )
 	{
 		TransformType::Pointer level3Transform = ReadInTransform< TransformType >( level3TransformFilename );
 

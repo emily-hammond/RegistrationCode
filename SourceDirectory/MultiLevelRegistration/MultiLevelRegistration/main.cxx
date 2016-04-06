@@ -50,6 +50,7 @@ int main( int argc, char * argv[] )
 	char * fixedValidationMaskFilename = '\0';
 	char * movingValidationMaskFilename = '\0';
 	std::string outputDirectory = "\0";
+	int val = 1;
 
 	// multi-level
 	int numberOfLevels = 0;
@@ -92,8 +93,25 @@ int main( int argc, char * argv[] )
 		outputDirectory = argv[1];
 		fixedImageFilename = argv[2];
 		movingImageFilename = argv[3];
+	}
+	
+	// validation masks
+	if( argc > 4 && strcmp(argv[4],"[]") != 0 && strcmp(argv[5],"[]") != 0 )
+	{
 		fixedValidationMaskFilename = argv[4];
-		movingValidationMaskFilename = argv[5];
+		if( argc < 6 )
+		{
+			std::cout << "Please insert filename for moving mask" << std::endl;
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			movingValidationMaskFilename = argv[5];
+		}
+	}
+	else
+	{
+		val = 0;
 	}
 
 	// number of levels
@@ -202,28 +220,38 @@ int main( int argc, char * argv[] )
 		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
 
 		// apply transform to fixed validation mask
-		transforms->NearestNeighborInterpolateOn();
-		ImageType::Pointer fixedValidationMaskTemp = ReadInImage< ImageType >( fixedValidationMaskFilename );
-		fixedValidationMask = transforms->ResampleImage( fixedValidationMaskTemp, initialFixedTransform );
-		transforms->NearestNeighborInterpolateOff();
+		if( val )
+		{
+			transforms->NearestNeighborInterpolateOn();
+			ImageType::Pointer fixedValidationMaskTemp = ReadInImage< ImageType >( fixedValidationMaskFilename );
+			fixedValidationMask = transforms->ResampleImage( fixedValidationMaskTemp, initialFixedTransform );
+			transforms->NearestNeighborInterpolateOff();
+		}
 		
 		std::cout << "Initial transform applied to fixed image." << std::endl;
 	}
 	else
 	{
 		fixedImage = ReadInImage< ImageType >( fixedImageFilename );
-		fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
+		if( val )
+		{
+			fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
+		}
 	}
 
 	// read in necessary images
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
-	ImageType::Pointer movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
+	ImageType::Pointer movingValidationMask = ImageType::New();
+	if( val )
+	{
+		movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
+	}
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	std::cout << "\nFixed image           : " << fixedImageFilename << std::endl;
-	std::cout << "Fixed validation mask : " << fixedValidationMaskFilename << std::endl;
+	if( val) { std::cout << "Fixed validation mask : " << fixedValidationMaskFilename << std::endl; }
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
-	std::cout << "Moving validation mask: " << movingValidationMaskFilename << std::endl;
+	if( val) { std::cout << "Moving validation mask: " << movingValidationMaskFilename << std::endl; }
 	if( argc > 7 && numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << level2ROIFilename << std::endl; }
 	if( argc > 8 && numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl; }
 
@@ -274,33 +302,36 @@ int main( int argc, char * argv[] )
 	std::cout << "\n -> Transforms\n" << std::endl;
 	transforms->SetInitialTransform( initialTransform );
 	transforms->SetFixedImage( fixedImage );
-	transforms->SetFixedLabelMap( fixedValidationMask );
+	if( val) { transforms->SetFixedLabelMap( fixedValidationMask ); }
 
 	// set up validation class and insert fixed image as image set 1 (will not change)
 	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
 	// insert image set 1 (this is the fixed image and will not change)
 	validation->SetImage1( fixedImage );
-	validation->SetLabelMap1( fixedValidationMask );
+	if( val) { validation->SetLabelMap1( fixedValidationMask ); }
 
 	// apply initial transform to the moving image and mask
 	transforms->SetMovingImage( movingImage );
-	transforms->SetMovingLabelMap( movingValidationMask );
+	if( val) { transforms->SetMovingLabelMap( movingValidationMask ); }
 	
 	// perform validation
 	validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
-	transforms->NearestNeighborInterpolateOn();
-	validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialTransform ) );
-	transforms->NearestNeighborInterpolateOff();
-	validation->LabelOverlapMeasuresOn();
-	try
+	if( val )
 	{
-		validation->Update();
-	}
-	catch(itk::ExceptionObject & err)
-	{
-		std::cerr << "Exception Object Caught!" << std::endl;
-		std::cerr << err << std::endl;
-		std::cerr << std::endl;
+		transforms->NearestNeighborInterpolateOn();
+		validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialTransform ) );
+		transforms->NearestNeighborInterpolateOff();
+		validation->LabelOverlapMeasuresOn();
+		try
+		{
+			validation->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
 	}
 
 	// write out initial transform
@@ -312,10 +343,13 @@ int main( int argc, char * argv[] )
 		std::string InitResampledImageFilename = debugDirectory + "_InitResampledImage.mhd";
 		WriteOutImage< ImageType, ImageType >( InitResampledImageFilename.c_str(), transforms->ResampleImage( movingImage, initialTransform ) );
 		// write out label map
-		std::string InitResampledLabelMapFilename = debugDirectory + "_InitResampledLabelMap.mhd";
-		transforms->NearestNeighborInterpolateOn();
-		WriteOutImage< ImageType, ImageType >( InitResampledLabelMapFilename.c_str(), transforms->ResampleImage( movingValidationMask, initialTransform ) );
-		transforms->NearestNeighborInterpolateOff();
+		if( val) 
+		{ 
+			std::string InitResampledLabelMapFilename = debugDirectory + "_InitResampledLabelMap.mhd";
+			transforms->NearestNeighborInterpolateOn();
+			WriteOutImage< ImageType, ImageType >( InitResampledLabelMapFilename.c_str(), transforms->ResampleImage( movingValidationMask, initialTransform ) );
+			transforms->NearestNeighborInterpolateOff();
+		}
 	}
 
 	// initialization
@@ -384,20 +418,23 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		std::cout << "\n -> Validation\n" << std::endl;
-		// perform validation
-		validation->SetImage2( transforms->GetTransformedImage() );
-		validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
-		validation->LabelOverlapMeasuresOn();
-		try
+		if( val )
 		{
-			validation->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
+			std::cout << "\n -> Validation\n" << std::endl;
+			// perform validation
+			validation->SetImage2( transforms->GetTransformedImage() );
+			validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
+			validation->LabelOverlapMeasuresOn();
+			try
+			{
+				validation->Update();
+			}
+			catch(itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
 		}
 
 		if( debug )
@@ -406,11 +443,14 @@ int main( int argc, char * argv[] )
 			std::string level1ResampledImageFilename = debugDirectory + "_Level1ResampledImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), transforms->GetTransformedImage() );
 			// write out label map
-			std::string level1ResampledLabelMapFilename = debugDirectory + "_Level1ResampledLabelMap.mhd";
-			WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
-			// write out composite transform
+			if( val) 
+			{ 
+				std::string level1ResampledLabelMapFilename = debugDirectory + "_Level1ResampledLabelMap.mhd";
+				WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
+			}
 		}
 
+		// write out composite transform
 		std::string level1CompositeTransformFilename = outputDirectory + "_Level1CompositeTransform.tfm";
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
 
@@ -499,22 +539,25 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		std::cout << "\n -> Validation\n" << std::endl;
-		// perform validation
-		validation->SetImage1( transforms->GetFixedCroppedImage() );
-		validation->SetLabelMap1( transforms->GetFixedCroppedLabelMap() );
-		validation->SetImage2( transforms->GetMovingCroppedImage());
-		validation->SetLabelMap2( transforms->GetMovingCroppedLabelMap() );
-		validation->LabelOverlapMeasuresOn();
-		try
-		{
-			validation->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
+		if( val) 
+		{ 
+			std::cout << "\n -> Validation\n" << std::endl;
+			// perform validation
+			validation->SetImage1( transforms->GetFixedCroppedImage() );
+			validation->SetLabelMap1( transforms->GetFixedCroppedLabelMap() );
+			validation->SetImage2( transforms->GetMovingCroppedImage());
+			validation->SetLabelMap2( transforms->GetMovingCroppedLabelMap() );
+			validation->LabelOverlapMeasuresOn();
+			try
+			{
+				validation->Update();
+			}
+			catch(itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
 		}
 
 		if( debug )
@@ -522,10 +565,13 @@ int main( int argc, char * argv[] )
 			// write out image
 			std::string level2MovingCroppedImageFilename = debugDirectory + "_Level2MovingCroppedImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level2MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-			std::string level2FixedCroppedImageFilename = debugDirectory + "_Level2FixedLabelMap.mhd";
-			WriteOutImage< ImageType, ImageType >( level2FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
-			std::string level2ResampledLabelMapFilename = debugDirectory + "_Level2ResampledLabelMap.mhd";
-			WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
+			if( val) 
+			{ 
+				std::string level2FixedCroppedImageFilename = debugDirectory + "_Level2FixedLabelMap.mhd";
+				WriteOutImage< ImageType, ImageType >( level2FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
+				std::string level2ResampledLabelMapFilename = debugDirectory + "_Level2ResampledLabelMap.mhd";
+				WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
+			}
 		}
 
 		// final composite transform
@@ -615,22 +661,25 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		std::cout << "\n -> Validation\n" << std::endl;
-		// perform validation
-		validation->SetImage1( transforms->GetFixedCroppedImage() );
-		validation->SetLabelMap1( transforms->GetFixedCroppedLabelMap() );
-		validation->SetImage2( transforms->GetMovingCroppedImage());
-		validation->SetLabelMap2( transforms->GetMovingCroppedLabelMap() );
-		validation->LabelOverlapMeasuresOn();
-		try
+		if( val )
 		{
-			validation->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
+			std::cout << "\n -> Validation\n" << std::endl;
+			// perform validation
+			validation->SetImage1( transforms->GetFixedCroppedImage() );
+			validation->SetLabelMap1( transforms->GetFixedCroppedLabelMap() );
+			validation->SetImage2( transforms->GetMovingCroppedImage());
+			validation->SetLabelMap2( transforms->GetMovingCroppedLabelMap() );
+			validation->LabelOverlapMeasuresOn();
+			try
+			{
+				validation->Update();
+			}
+			catch(itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
 		}
 
 		if( debug )
@@ -638,10 +687,13 @@ int main( int argc, char * argv[] )
 			// write out image
 			std::string level3MovingCroppedImageFilename = debugDirectory + "_Level3MovingCroppedImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level3MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-			std::string level3FixedCroppedImageFilename = debugDirectory + "_Level3FixedLabelMap.mhd";
-			WriteOutImage< ImageType, ImageType >( level3FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
-			std::string level3ResampledLabelMapFilename = debugDirectory + "_Level3ResampledLabelMap.mhd";
-			WriteOutImage< ImageType, ImageType >( level3ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
+			if( val) 
+			{ 
+				std::string level3FixedCroppedImageFilename = debugDirectory + "_Level3FixedLabelMap.mhd";
+				WriteOutImage< ImageType, ImageType >( level3FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
+				std::string level3ResampledLabelMapFilename = debugDirectory + "_Level3ResampledLabelMap.mhd";
+				WriteOutImage< ImageType, ImageType >( level3ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
+			}
 		}
 
 		// write out final composite transform
@@ -677,13 +729,13 @@ void PrintOutManual()
 	std::cout << "                           **** USER MANUAL ****                             " << std::endl;
 	std::cout << std::endl;
 
-	std::cout << " REQUIRED: " << std::endl;
+	std::cout << " IMAGES: " << std::endl;
 	std::cout << "  outputDirectory: path of the directory to save the results | required" << std::endl;
 	std::cout << "  fixedImageFilename: path to the fixed image | required" << std::endl;
 	std::cout << "  movingImageFilename: path to the moving image | required" << std::endl;
-	std::cout << "  fixedValidationMaskFilename: path to the label map corresponding to \n";
+	std::cout << "  [fixedValidationMaskFilename]: path to the label map corresponding to \n";
 	std::cout << "                               the fixed image for validation | required" << std::endl;
-	std::cout << "  movingValidationMaskFilename: path to the label map corresponding to \n";
+	std::cout << "  [movingValidationMaskFilename]: path to the label map corresponding to \n";
 	std::cout << "                                the moving image for validation | required" << std::endl;
 	std::cout << std::endl;
 
