@@ -66,10 +66,24 @@ namespace itk
 				itkExceptionMacro( << "ROI filename not present" );
 			}
 			this->m_MovingCroppedImage = CropImage( this->m_TransformedImage );
-			if( m_MovingLabelMap ) { this->m_MovingCroppedLabelMap = CropImage( this->m_TransformedLabelMap ); }
+			if( m_MovingLabelMap ) 
+			{ 
+				this->m_MovingCroppedLabelMap = CropImage( this->m_TransformedLabelMap ); 
+			} 
+			else 
+			{ 
+				std::cout << "Moving label map not present" << std::endl; 
+			}
 			this->m_FixedCroppedImage = CropImage( this->m_FixedImage );
-			if( m_FixedLabelMap ) { this->m_FixedCroppedLabelMap = CropImage( this->m_FixedLabelMap ); }
-			std::cout << "Image cropped." << std::endl;
+			if( m_FixedLabelMap ) 
+			{ 
+				this->m_FixedCroppedLabelMap = CropImage( this->m_FixedLabelMap ); 
+			}
+			else 
+			{ 
+				std::cout << "Fixed label map not present" << std::endl; 
+			}
+			std::cout << "Images cropped." << std::endl;
 		}
 
 		return;

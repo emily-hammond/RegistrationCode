@@ -183,6 +183,7 @@ int main( int argc, char * argv[] )
 
 		transforms2->AddTransform( level2Transform );
 		transforms2->SetROIFilename( level2ROIFilename );
+		std::cout << "ROI2: " << level2ROIFilename << std::endl;
 		transforms2->ResampleImageOn();
 		transforms2->CropImageOn();
 		try
