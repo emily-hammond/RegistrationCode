@@ -21,19 +21,14 @@ REM create output directory if it does not exist
 if not exist "%txtDir%\NUL" mkdir %txtDir%
 if not exist "%txtDir%\NUL" mkdir %transformDir%
 
-REM ROIs
-set ROI2=H:\Results\Data\MaskFiles\5_Lungs\ROIs\Lung_rect\%UID%_TP%FTP%_CAP_Lung.acsv
-set ROI3=H:\Results\Data\MaskFiles\5_Lungs\ROIs\UpperRightLung_rect\%UID%_TP%FTP%_CAP_UpperRightLung.acsv
-
-REM defaults
 set NoOfLevels=3
-REM initialization
+
 set center=1
 set metricX=0
 set metricY=0
 set metricZ=1
 set manualTransform=[]
-REM registration parameters
+
 set rotationScale=0.001
 set translationScale=10.0
 set scalingScale=0.001
@@ -42,143 +37,120 @@ set maximumStepLength=4
 set minimumStepLength=0.001
 set relaxationFactor=0.5
 set gradientMagnitudeTolerance=0.001
-REM other
+
 set observe=0
 set skipWB=0
 set debug=0
 
-REM perform registrations for AP20373
-set UID=AP20373
-set fixedCTImage=%CTImageDir%\%UID%_TP%FTP%_CAP_30_B35f.mhd
-set fixedCTMask=[]
-set movingMask=[]
+REM Animal
+REM set UID=AP20373 AP20374 AP20375 
+FOR %%U in (AP20376 AP20377 AP20415) do (
+	echo _
+	echo %%U
 
-REM iterate through all potential TPs and perform CT-CT registration
-FOR /l %%T in (1,1,7) do (
-	echo MOVING TP = %%T
-	IF NOT %%T==%FTP% ( 
-		IF EXIST %fixedCTImage% (
-			REM perform registration if the moving image exists
-			set movingImage=%CTImageDir%\%UID%_TP%%T_CAP_30_B35f.mhd
-			IF EXIST !movingImage! (
-				REM "%RegExDir%\MultiLevelRegistration.exe" %transformDir%\%UID%_TP!TP!_CAP!TP!-F%FTP% %fixedCTImage% !movingImage! !fixedCTMask! !movingMask! %NoOfLevels% %ROI2% %ROI3% %observe% %manualTransform% %center% %metricX% %metricY% %metricZ% %rotationScale% %translationScale% %scalingScale% %numberOfIterations% %maximumStepLength% %minimumStepLength% %relaxationFactor% %gradientMagnitudeTolerance% %skipWB% %debug% > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_registration.txt" 2>&1
-				echo CT-CT REGISTRATION PERFORMED
-				)
-			REM validation
-			REM label 5
-			set label=5
-			set fixedCTMask=%CTMaskDir5%\%UID%_TP%FTP%_CAP_30_B35f-!label!-label.mhd
-			set movingMask=%CTMaskDir5%\%UID%_TP%%T_CAP_30_B35f-!label!-label.mhd
-			set initialTransform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_InitialTransform.tfm
-			set level1Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level1CompositeTransform.tfm
-			set level2Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level2CompositeTransform.tfm
-			set level3Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level3CompositeTransform.tfm
-			IF EXIST !fixedCTMask! ( 
-				IF EXIST !movingMask! ( 
-					IF EXIST !initialTransform! ( 
-						IF EXIST !level3Transform! ( 
-							IF EXIST !level2Transform! ( 
-								IF EXIST !level1Transform! ( 
-									REM "%ValExDir%\Validation.exe" %fixedCTImage% !fixedCTMask! %movingImage% !movingMask! !initialTransform! !level1Transform! !level2Transform! %ROI2% !level3Transform! %ROI3% > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
-									echo VALIDATION WITH LEVEL 3 TRANSFORM for label !label!
-									set trans=3
-									)
-								)
-							)
-						IF NOT EXIST !level3Transform! (
-							IF EXIST !level2Transform! (
-								IF EXIST !level1Transform! (
-									REM "%ValExDir%\Validation.exe" %fixedCTImage% !fixedCTMask! %movingImage% !movingMask! !initialTransform! !level1Transform! !level2Transform! %ROI2%> "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
-									echo VALIDATION WITH LEVEL 2 TRANSFORM for label !label!
-									set trans=2
-									)
-								)
-							)
-						IF NOT EXIST !level3Transform (
-							IF NOT EXIST !level2Transform! (
-								IF EXIST !level1Transform! (
-									REM "%ValExDir%\Validation.exe" %fixedCTImage% !fixedCTMask! %movingImage% !movingMask! !initialTransform! !level1Transform! > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
-									echo VALIDATION WITH LEVEL 1 TRANSFORM for label !label!
-									set trans=1
-									)
-								)
-							)
-						)	
+	set ROI2=H:\Results\Data\MaskFiles\5_Lungs\ROIs\Lung_rect\%%U_TP%FTP%_CAP_Lung.acsv
+	set ROI3=H:\Results\Data\MaskFiles\5_Lungs\ROIs\UpperRightLung_rect\%%U_TP%FTP%_CAP_UpperRightLung.acsv
+
+	set fixedCTImage=%CTImageDir%\%%U_TP%FTP%_CAP_30_B35f.mhd
+
+	echo _
+	echo *******************
+	echo CT-CT Registrations
+	FOR /l %%T in (1,1,7) do (
+		echo MOVING TP = %%T
+		IF NOT %%T==%FTP% ( 
+			IF EXIST !fixedCTImage! (
+				set fixedCTMask=[]
+				set movingMask=[]
+
+				IF %%T==7 (
+					set movingImage=%CTImageDir%\%%U_TP%%T_CAP_30_Qr40.mhd
 					)
-				)
-			REM label 6
-			set label=6
-			set fixedCTMask=%CTMaskDir6%\%UID%_TP%FTP%_CAP_30_B35f-!label!-label.mhd
-			set movingMask=%CTMaskDir6%\%UID%_TP%%T_CAP_30_B35f-!label!-label.mhd
-			set initialTransform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_InitialTransform.tfm
-			set level1Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level1CompositeTransform.tfm
-			set level2Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level2CompositeTransform.tfm
-			set level3Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level3CompositeTransform.tfm
-			IF EXIST !fixedCTMask! ( 
-				IF EXIST !movingMask! ( 
-					IF EXIST !initialTransform! ( 
-						IF EXIST !level3Transform! ( 
-							IF EXIST !level2Transform! ( 
-								IF EXIST !level1Transform! ( 
-									REM "%ValExDir%\Validation.exe" %fixedCTImage% !fixedCTMask! %movingImage% !movingMask! !initialTransform! !level1Transform! !level2Transform! %ROI2% !level3Transform! %ROI3% > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
-									echo VALIDATION WITH LEVEL 3 TRANSFORM for label !label!
-									)
-								)
-							)
-						IF NOT EXIST !level3Transform! (
-							IF EXIST !level2Transform! (
-								IF EXIST !level1Transform! (
-									REM "%ValExDir%\Validation.exe" %fixedCTImage% !fixedCTMask! %movingImage% !movingMask! !initialTransform! !level1Transform! !level2Transform! %ROI2%> "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
-									echo VALIDATION WITH LEVEL 2 TRANSFORM for label !label!
-									)
-								)
-							)
-						IF NOT EXIST !level3Transform (
-							IF NOT EXIST !level2Transform! (
-								IF EXIST !level1Transform! (
-									REM "%ValExDir%\Validation.exe" %fixedCTImage% !fixedCTMask! %movingImage% !movingMask! !initialTransform! !level1Transform! > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
-									echo VALIDATION WITH LEVEL 1 TRANSFORM for label !label!
-									)
-								)
-							)
-						)	
+				IF NOT %%T==7 (
+					set movingImage=%CTImageDir%\%%U_TP%%T_CAP_30_B35f.mhd
 					)
-				)
-			)
-		)
-	echo COMPLETE
-	)
-	
-REM repeat for MR-CT registrations
-FOR /l %%T in (1,1,7) do (
-	echo MOVING TP = %%T
-	set fixedImage=%CTImageDir%\%UID%_TP%%T_CAP_30_B35f.mhd
-	set initialFixedTransform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level!trans!CompositeTransform.tfm
-	IF NOT %%T==%FTP% ( 
-		IF EXIST !fixedImage! (
-			IF EXIST !initialFixedTransform! (
-				REM perform registration if the moving image exists
-				set movingImage=%MRImageDir%\%UID%_TP%%T_VIBE_BH_Chest.mhd
+				IF NOT EXIST !movingImage! (
+					set movingImage=%CTImageDir%\%%U_TP%%T_CAP_30_B35f.mhd
+					)
+				echo !movingImage!
 				IF EXIST !movingImage! (
-					REM "%RegExDir%\MultiLevelRegistration.exe" %transformDir%\%UID%_TP!TP!_CAP!TP!-F%FTP% !fixedImage! !movingImage! !fixedCTMask! !movingMask! %NoOfLevels% %ROI2% %ROI3% %observe% %manualTransform% %center% %metricX% %metricY% %metricZ% %rotationScale% %translationScale% %scalingScale% %numberOfIterations% %maximumStepLength% %minimumStepLength% %relaxationFactor% %gradientMagnitudeTolerance% %skipWB% %debug% !initialFixedTransform! %fixedCTImage% > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_registration.txt" 2>&1
-					echo CT-MR REGISTRATION PERFORMED
+					"%RegExDir%\MultiLevelRegistration.exe" %transformDir%\%%U_TP%%T_CAP%%T-F%FTP% !fixedCTImage! !movingImage! !fixedCTMask! !movingMask! %NoOfLevels% !ROI2! !ROI3! %observe% %manualTransform% %center% %metricX% %metricY% %metricZ% %rotationScale% %translationScale% %scalingScale% %numberOfIterations% %maximumStepLength% %minimumStepLength% %relaxationFactor% %gradientMagnitudeTolerance% %skipWB% %debug% > "%txtDir%\%%U_TP%%T_CAP%%T-F%FTP%_%mydate%_registration.txt" 2>&1
+					echo CT-CT REGISTRATION PERFORMED
+					) ELSE ( echo !movingImage! does not exist )
+
+				set label=5
+				set fixedCTMask5=%CTMaskDir5%\%%U_TP%FTP%_CAP_30_B35f-!label!-label.mhd
+				IF %%T==7 (
+					set movingMask5=%CTMaskDir5%\%%U_TP%%T_CAP_30_Qr40-!label!-label.mhd
 					)
-				REM validation
-				REM label 6
-				set label=6
-				set fixedMask=%CTMaskDir6%\%UID%_TP%FTP%_CAP_30_B35f-!label!-label.mhd
-				set movingMask=%MRMaskDir%\%UID%_TP%%T_CAP_30_B35f-!label!-label.mhd
-				set initialTransform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_InitialTransform.tfm
-				set level1Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level1CompositeTransform.tfm
-				set level2Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level2CompositeTransform.tfm
-				set level3Transform=%transformDir%\%UID%_TP%%T_CAP%%T-F%FTP%_Level3CompositeTransform.tfm
-				IF EXIST !fixedCTMask! ( 
-					IF EXIST !movingMask! ( 
+				IF NOT %%T==7 (
+					set movingMask5=%CTMaskDir5%\%%U_TP%%T_CAP_30_B35f-!label!-label.mhd
+					)
+				IF NOT EXIST !movingMask5! (
+					set movingMask5=%CTMaskDir5%\%%U_TP%%T_CAP_30_B35f-!label!-label.mhd
+					)
+				echo !movingMask5!
+				set initialTransform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_InitialTransform.tfm
+				set level1Transform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_Level1CompositeTransform.tfm
+				set level2Transform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_Level2CompositeTransform.tfm
+				set level3Transform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_Level3CompositeTransform.tfm
+				IF EXIST !fixedCTMask5! ( 
+					IF EXIST !movingMask5! ( 
 						IF EXIST !initialTransform! ( 
 							IF EXIST !level3Transform! ( 
 								IF EXIST !level2Transform! ( 
 									IF EXIST !level1Transform! ( 
-										REM "%ValExDir%\Validation.exe" !fixedImage! !fixedMask! %movingImage% !movingMask! !initialTransform! !level1Transform! !level2Transform! %ROI2% !level3Transform! %ROI3% %initialFixedTransform% %fixedCTImage% > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										"%ValExDir%\Validation.exe" !fixedCTImage! !fixedCTMask5! !movingImage! !movingMask5! !initialTransform! !level1Transform! !level2Transform! !ROI2! !level3Transform! !ROI3! > "%txtDir%\%%U_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										echo VALIDATION WITH LEVEL 3 TRANSFORM for label !label!
+										set trans=3
+										)
+									)
+								)
+							IF NOT EXIST !level3Transform! (
+								IF EXIST !level2Transform! (
+									IF EXIST !level1Transform! (
+										"%ValExDir%\Validation.exe" !fixedCTImage! !fixedCTMask5! !movingImage! !movingMask5! !initialTransform! !level1Transform! !level2Transform! !ROI2! > "%txtDir%\%%U_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										echo VALIDATION WITH LEVEL 2 TRANSFORM for label !label!
+										set trans=2
+										)
+									)
+								)
+							IF NOT EXIST !level3Transform (
+								IF NOT EXIST !level2Transform! (
+									IF EXIST !level1Transform! (
+										"%ValExDir%\Validation.exe" !fixedCTImage! !fixedCTMask5! !movingImage! !movingMask5! !initialTransform! !level1Transform! > "%txtDir%\%%U_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										echo VALIDATION WITH LEVEL 1 TRANSFORM for label !label!
+										set trans=1
+										)
+									)
+								)
+							) ELSE ( echo !initialTransform! does not exist )
+						) ELSE ( echo !movingMask5! does not exist )
+					) ELSE ( echo !fixedCTMask5! does not exist )
+
+				set label=6
+				set fixedCTMask6=%CTMaskDir6%\%%U_TP%FTP%_CAP_30_B35f-!label!-label.mhd
+				IF %%T==7 (
+					set movingMask6=%CTMaskDir6%\%%U_TP%%T_CAP_30_Qr40-!label!-label.mhd
+					)
+				IF NOT %%T==7 (
+					set movingMask6=%CTMaskDir6%\%%U_TP%%T_CAP_30_B35f-!label!-label.mhd
+					)
+				IF NOT EXIST !movingMask6! (
+					set movingMask6=%CTMaskDir6%\%%U_TP%%T_CAP_30_B35f-!label!-label.mhd
+					)
+				echo !movingMask6!
+				set initialTransform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_InitialTransform.tfm
+				set level1Transform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_Level1CompositeTransform.tfm
+				set level2Transform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_Level2CompositeTransform.tfm
+				set level3Transform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_Level3CompositeTransform.tfm
+				IF EXIST !fixedCTMask6! ( 
+					IF EXIST !movingMask6! ( 
+						IF EXIST !initialTransform! ( 
+							IF EXIST !level3Transform! ( 
+								IF EXIST !level2Transform! ( 
+									IF EXIST !level1Transform! ( 
+										"%ValExDir%\Validation.exe" !fixedCTImage! !fixedCTMask6! !movingImage! !movingMask6! !initialTransform! !level1Transform! !level2Transform! !ROI2! !level3Transform! !ROI3! > "%txtDir%\%%U_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
 										echo VALIDATION WITH LEVEL 3 TRANSFORM for label !label!
 										)
 									)
@@ -186,7 +158,7 @@ FOR /l %%T in (1,1,7) do (
 							IF NOT EXIST !level3Transform! (
 								IF EXIST !level2Transform! (
 									IF EXIST !level1Transform! (
-										REM "%ValExDir%\Validation.exe" !fixedImage! !fixedMask! %movingImage% !movingMask! !initialTransform! !level1Transform! !level2Transform! %ROI2% [] [] %initialFixedTransform% %fixedCTImage% > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										"%ValExDir%\Validation.exe" !fixedCTImage! !fixedCTMask6! !movingImage! !movingMask6! !initialTransform! !level1Transform! !level2Transform! !ROI2! > "%txtDir%\%%U_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
 										echo VALIDATION WITH LEVEL 2 TRANSFORM for label !label!
 										)
 									)
@@ -194,19 +166,84 @@ FOR /l %%T in (1,1,7) do (
 							IF NOT EXIST !level3Transform (
 								IF NOT EXIST !level2Transform! (
 									IF EXIST !level1Transform! (
-										REM "%ValExDir%\Validation.exe" !fixedImage! !fixedMask! %movingImage% !movingMask! !initialTransform! !level1Transform! [] [] [] [] %initialFixedTransform% %fixedCTImage% > "%txtDir%\%UID%_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										"%ValExDir%\Validation.exe" !fixedCTImage! !fixedCTMask6! !movingImage! !movingMask6! !initialTransform! !level1Transform! > "%txtDir%\%%U_TP%%T_CAP%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
 										echo VALIDATION WITH LEVEL 1 TRANSFORM for label !label!
 										)
 									)
 								)
-							)	
-						)
-					)
-				)
+							) ELSE ( echo !initialTransform! does not exist )
+						) ELSE ( echo !movingMask6! does not exist )
+					) ELSE ( echo !fixedCTMask6! does not exist )
+				) ELSE ( echo !fixedCTImage! does not exist )
 			)
+		echo COMPLETE
 		)
-	echo COMPLETE
-	)
-	
+		
+	echo _
+	echo *******************
+	echo CT-MR Registrations
+	FOR /l %%T in (1,1,7) do (
+		set fixedMask=[]
+		set movingMask=[]
+		echo MOVING TP = %%T
+		set fixedImage=%CTImageDir%\%%U_TP%%T_CAP_30_B35f.mhd
+		IF EXIST !fixedImage! (
+			IF NOT %%T==%FTP% (
+				set initialFixedTransform=%transformDir%\%%U_TP%%T_CAP%%T-F%FTP%_Level!trans!CompositeTransform.tfm
+				) ELSE ( set initialFixedTransform=C:\ITK\InsightToolkit-4.8.0\Examples\Data\IdentityTransform.tfm )
+			IF EXIST !initialFixedTransform! (
+
+				set movingImage=%MRImageDir%\%%U_TP%%T_Vibe3D_BH_Chest.mhd
+				IF EXIST !movingImage! (
+					"%RegExDir%\MultiLevelRegistration.exe" %transformDir%\%%U_TP%%T_VIBE%%T-F%FTP% !fixedImage! !movingImage! !fixedMask! !movingMask! %NoOfLevels% !ROI2! !ROI3! %observe% %manualTransform% %center% %metricX% %metricY% %metricZ% %rotationScale% %translationScale% %scalingScale% %numberOfIterations% %maximumStepLength% %minimumStepLength% %relaxationFactor% %gradientMagnitudeTolerance% %skipWB% %debug% !initialFixedTransform! !fixedCTImage! > "%txtDir%\%%U_TP%%T_VIBE%%T-F%FTP%_%mydate%_registration.txt" 2>&1
+					echo CT-MR REGISTRATION PERFORMED
+					) ELSE ( echo !movingImage! does not exist )
+
+				set label=6
+				set fixedMask=%CTMaskDir6%\%%U_TP%%T_CAP_30_B35f-!label!-label.mhd
+				set movingMask=%MRMaskDir%\%%U_TP%%T_Vibe3D_BH_Chest-!label!-label.mhd
+				set initialTransform=%transformDir%\%%U_TP%%T_VIBE%%T-F%FTP%_InitialTransform.tfm
+				set level1Transform=%transformDir%\%%U_TP%%T_VIBE%%T-F%FTP%_Level1CompositeTransform.tfm
+				set level2Transform=%transformDir%\%%U_TP%%T_VIBE%%T-F%FTP%_Level2CompositeTransform.tfm
+				set level3Transform=%transformDir%\%%U_TP%%T_VIBE%%T-F%FTP%_Level3CompositeTransform.tfm
+				IF EXIST !fixedMask! ( 
+					IF EXIST !movingMask! ( 
+						IF EXIST !initialTransform! ( 
+							IF EXIST !level3Transform! ( 
+								IF EXIST !level2Transform! ( 
+									IF EXIST !level1Transform! ( 
+										"%ValExDir%\Validation.exe" !fixedImage! !fixedMask! !movingImage! !movingMask! !initialTransform! !level1Transform! !level2Transform! !ROI2! !level3Transform! !ROI3! !initialFixedTransform! !fixedCTImage! > "%txtDir%\%%U_TP%%T_VIBE%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										echo VALIDATION WITH LEVEL 3 TRANSFORM for label !label!
+										)
+									)
+								)
+							IF NOT EXIST !level3Transform! (
+								IF EXIST !level2Transform! (
+									IF EXIST !level1Transform! (
+										"%ValExDir%\Validation.exe" !fixedImage! !fixedMask! !movingImage! !movingMask! !initialTransform! !level1Transform! !level2Transform! !ROI2! [] [] !initialFixedTransform! !fixedCTImage! > "%txtDir%\%%U_TP%%T_VIBE%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										echo VALIDATION WITH LEVEL 2 TRANSFORM for label !label!
+										)
+									)
+								)
+							IF NOT EXIST !level3Transform (
+								IF NOT EXIST !level2Transform! (
+									IF EXIST !level1Transform! (
+										"%ValExDir%\Validation.exe" !fixedImage! !fixedMask! !movingImage! !movingMask! !initialTransform! !level1Transform! [] [] [] [] !initialFixedTransform! !fixedCTImage! > "%txtDir%\%%U_TP%%T_VIBE%%T-F%FTP%_%mydate%_validation-!label!.txt" 2>&1
+										echo VALIDATION WITH LEVEL 1 TRANSFORM for label !label!
+										)
+									)
+								)
+							) ELSE ( echo !initialTransform! does not exist )
+						) ELSE ( echo !movingMask! does not exist )
+					) ELSE ( echo !fixedCTMask! does not exist )
+				) ELSE ( echo !initialFixedTransform! does not exist )
+			) ELSE ( echo !fixedImage! does not exist )
+		echo COMPLETE
+		)
+)
+
+echo _
+echo **********************
+echo DONE WITH BATCH SCRIPT
 	
 	
