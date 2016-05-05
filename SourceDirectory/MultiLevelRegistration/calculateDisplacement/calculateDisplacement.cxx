@@ -3,25 +3,25 @@
  * 05/05/16
  *
  * The purpose of this code is to calculate the displacement of points from a text file
- * with a given transform
+ * with a given transform -> very specific code for specific testing. Not universal
  *
  */
 
-#include "itkImage.h"
-#include "itkImageFileReader.h"
 #include "itkCompositeTransform.h"
 #include "itkAffineTransform.h"
 #include "itkTransformToDisplacementFieldFilter.h"
+#include "itkSubtractImageFilter.h"
+#include "itkStatisticsImageFilter.h"
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
 
 
-template< typename TransformType >
-int calculateDisplacement( char * pointsFilename, std::string transformFilename, char * outputFilename, char * imageFilename )
+template< typename TransformType, typename ImageType >
+typename ImageType::Pointer calculateDisplacementField( std::string transformFilename, char * imageFilename )
 {
 	// read in transform
 	TransformType::Pointer transform = ReadInTransform< TransformType >( transformFilename.c_str() );
 	
-	// read in points from csv file and transform with input transform
+	/*// read in points from csv file and transform with input transform
 	// write results out to file
 	std::ifstream infile( pointsFilename );
 	std::ofstream outfile( outputFilename, std::ios::app );
@@ -68,13 +68,9 @@ int calculateDisplacement( char * pointsFilename, std::string transformFilename,
 	// close file
 	infile.close();
 	outfile.close();
+	*/
 
 	// read in fixed image
-	typedef itk::Image< short, 3 > ImageType;
-
-	// obtain deformation field
-	typedef itk::Vector< float, 3 > VectorPixelType;
-	typedef itk::Image< VectorPixelType, 3 > DisplacementImageType;
 	typedef itk::TransformToDisplacementFieldFilter< DisplacementImageType, double > DisplacementFieldGenType;
 
 	DisplacementFieldGenType::Pointer dispFieldGen = DisplacementFieldGenType::New();
@@ -96,25 +92,23 @@ int calculateDisplacement( char * pointsFilename, std::string transformFilename,
 	}
 
 	size_t pos = transformFilename.rfind( '.' );
-	std::string displacementFilename = transformFilename.substr(0,pos) + "-deformationField.mhd";
-	WriteOutImage< DisplacementImageType, DisplacementImageType >( displacementFilename.c_str(), dispFieldGen->GetOutput() );
+	//std::string displacementFilename = transformFilename.substr(0,pos) + "-deformationField.mhd";
+	//WriteOutImage< DisplacementImageType, DisplacementImageType >( displacementFilename.c_str(), dispFieldGen->GetOutput() );
 	
-	return EXIT_SUCCESS;
+	return dispFielGen->GetOutput();
 }
 
 int main( int argc, char * argv[] )
 {
     // obtain inputs
-    char * pointsFilename = argv[1];
-	char * outputFilename = argv[2];
-    std::string transformFilename = argv[3];
-	std::string transformType = argv[4];
-	char * imageFilename = argv[5];
+    //char * pointsFilename = argv[1];
+	//char * outputFilename = argv[2];
+    std::string appliedTransformFilename = argv[1];
+	std::string registeredTransformFilename = argv[2]
+	char * referenceImageFilename = argv[3];
+	char * outputFilename = argv[4];
 
 	// read in transform
-	
-	itk::AffineTransform< double >::Pointer affineTransform = itk::AffineTransform< double >::New();
-
 	if( transformType.compare("composite") == 0 )
 	{
 		calculateDisplacement< itk::CompositeTransform< double > >( pointsFilename, transformFilename, outputFilename, imageFilename );
@@ -127,6 +121,52 @@ int main( int argc, char * argv[] )
 	{
 		std::cout << "Incorrect transform type: composite or affine only" << std::endl;
 	}
+
+	// define transforms
+	typedef itk::CompositeTransform< double > CompositeTransformType;
+	typedef itk::AffineTransform< double > AffineTransformType;
+
+	// define deformation field
+	typedef itk::Vector< float, 3 > VectorPixelType;
+	typedef itk::Image< VectorPixelType, 3 > DisplacementImageType;
+
+	DisplacementImageType::Pointer def1 = calculateDisplacementField< AffineTransformType, DisplacementImageType >( appliedTransformFilename, referenceImageFilename );
+	DisplacementImageType::Pointer def2 = calculateDisplacementField< CompositeTransformType, DisplacementImageType >( compositeTransformFilename, referenceImageFilename );
+
+	// subtract the two deformation fields
+	typedef itk::SubtractImageFilter< DisplacementImageType, DisplacementImageType, DisplacementImageType > SubtractImageType;
+	SubtractImageType::Pointer subtractor = SubtractImageType::New();
+	subtractor->SetInput1( def1 );
+	subtractor->SetInput2( def2 );
+	
+	// acquire statistics
+	typedef itk::StatisticsImageFilter< DeformationImageType > StatisticsFilterType;
+	StatisticsFilterType::Pointer stats = StatisticsFilterType::New();
+	stats->SetInput( subtractor->GetOutput() );
+
+	// update for statistics
+	try
+	{
+		stats->Update();
+	}
+	catch(itk::ExceptionObject & err)
+	{
+		std::cerr << "Exception Object Caught!" << std::endl;
+		std::cerr << err << std::endl;
+		std::cerr << std::endl;
+	}
+
+	// write results to file
+	outFile << std::endl;
+	std::ofstream outFile( outputFilename, std::ios::app );
+	outFile << "Applied Transform   : " << appliedTransformFilename << std::endl;
+	outFile << "Registered Transform: " << registeredTransformFilename << std::endl;
+	outFile << std::endl;
+	outFile << "Mean  : " << stats->GetMean() << std::endl;
+	outFile << "Std   : " << stats->GetSigma() << std::endl;
+	outFile << "Min   : " << stats->GetMinimum() << std::endl;
+	outFile << "Max   : " << stats->GetMaximum() << std::endl;
+	outFile << std::endl;
 
     return EXIT_SUCCESS;
 }
