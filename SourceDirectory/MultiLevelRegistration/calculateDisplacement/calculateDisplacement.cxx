@@ -12,7 +12,7 @@
 #include "itkTransformToDisplacementFieldFilter.h"
 #include "itkSubtractImageFilter.h"
 #include "itkStatisticsImageFilter.h"
-#include "itkVectorMagnitudeImageFilter.h"
+#include "itkVectorIndexSelectionCastImageFilter.h"
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
 
 
@@ -117,48 +117,62 @@ int main( int argc, char * argv[] )
 	// define deformation field
 	typedef itk::Vector< float, 3 > VectorPixelType;
 	typedef itk::Image< VectorPixelType, 3 > DisplacementImageType;
+	typedef itk::Image< short, 3 > ImageType;
 
 	DisplacementImageType::Pointer def1 = calculateDisplacementField< AffineTransformType, DisplacementImageType >( appliedTransformFilename, referenceImageFilename );
 	DisplacementImageType::Pointer def2 = calculateDisplacementField< CompositeTransformType, DisplacementImageType >( registeredTransformFilename, referenceImageFilename );
-
-	// subtract the two deformation fields
-	typedef itk::SubtractImageFilter< DisplacementImageType, DisplacementImageType, DisplacementImageType > SubtractImageType;
-	SubtractImageType::Pointer subtractor = SubtractImageType::New();
-	subtractor->SetInput1( def1 );
-	subtractor->SetInput2( def2 );
-
-	typedef itk::VectorMagnitudeImageFilter< DisplacementImageType, itk::Image< short, 3 > > MagnitudeImageType;
-	MagnitudeImageType::Pointer magImage = MagnitudeImageType::New();
-	magImage->SetInput( subtractor->GetOutput() );
-	
-	// acquire statistics
-	typedef itk::StatisticsImageFilter< itk::Image< short, 3 > > StatisticsFilterType;
-	StatisticsFilterType::Pointer stats = StatisticsFilterType::New();
-	stats->SetInput( magImage->GetOutput() );
-
-	// update for statistics
-	try
-	{
-		stats->Update();
-	}
-	catch(itk::ExceptionObject & err)
-	{
-		std::cerr << "Exception Object Caught!" << std::endl;
-		std::cerr << err << std::endl;
-		std::cerr << std::endl;
-	}
 
 	// write results to file
 	std::ofstream outFile( outputFilename, std::ios::app );
 	outFile << std::endl;
 	outFile << "Applied Transform   : " << appliedTransformFilename << std::endl;
 	outFile << "Registered Transform: " << registeredTransformFilename << std::endl;
-	outFile << std::endl;
-	outFile << "Mean  : " << stats->GetMean() << std::endl;
-	outFile << "Std   : " << stats->GetSigma() << std::endl;
-	outFile << "Min   : " << stats->GetMinimum() << std::endl;
-	outFile << "Max   : " << stats->GetMaximum() << std::endl;
-	outFile << std::endl;
+
+	// for each index in the vector images
+	for( int i = 0; i < 3; ++i )
+	{
+		// extract scalar image from index (def1)
+		typedef itk::VectorIndexSelectionCastImageFilter< DisplacementImageType, ImageType > IndexSelectionType;
+		IndexSelectionType::Pointer selection1 = IndexSelectionType::New();
+		selection1->SetIndex( i );
+		selection1->SetInput( def1 );
+		// (def2)
+		IndexSelectionType::Pointer selection2 = IndexSelectionType::New();
+		selection2->SetIndex( i );
+		selection2->SetInput( def2 );
+
+		// subtract the two deformation fields
+		typedef itk::SubtractImageFilter< ImageType, ImageType, ImageType > SubtractImageType;
+		SubtractImageType::Pointer subtractor = SubtractImageType::New();
+		subtractor->SetInput1( selection1->GetOutput() );
+		subtractor->SetInput2( selection2->GetOutput() );
+		
+		// acquire statistics
+		typedef itk::StatisticsImageFilter< ImageType > StatisticsFilterType;
+		StatisticsFilterType::Pointer stats = StatisticsFilterType::New();
+		stats->SetInput( subtractor->GetOutput() );
+
+		// update for statistics
+		try
+		{
+			stats->Update();
+		}
+		catch(itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		// write results to file
+		outFile << std::endl;
+		outFile << "INDEX: " << i << std::endl;
+		outFile << "  Mean  : " << stats->GetMean() << std::endl;
+		outFile << "  Std   : " << stats->GetSigma() << std::endl;
+		outFile << "  Min   : " << stats->GetMinimum() << std::endl;
+		outFile << "  Max   : " << stats->GetMaximum() << std::endl;
+		outFile << std::endl;
+	}
 
     return EXIT_SUCCESS;
 }
