@@ -12,6 +12,7 @@
 #include "itkTransformToDisplacementFieldFilter.h"
 #include "itkSubtractImageFilter.h"
 #include "itkStatisticsImageFilter.h"
+#include "itkVectorMagnitudeImageFilter.h"
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
 
 
@@ -71,12 +72,13 @@ typename ImageType::Pointer calculateDisplacementField( std::string transformFil
 	*/
 
 	// read in fixed image
-	typedef itk::TransformToDisplacementFieldFilter< DisplacementImageType, double > DisplacementFieldGenType;
+	typedef itk::TransformToDisplacementFieldFilter< ImageType, double > DisplacementFieldGenType;
+	typedef itk::Image< short, 3 > ReferenceImageType;
 
 	DisplacementFieldGenType::Pointer dispFieldGen = DisplacementFieldGenType::New();
 
 	dispFieldGen->UseReferenceImageOn();
-	dispFieldGen->SetReferenceImage( ReadInImage< ImageType >( imageFilename ) );
+	dispFieldGen->SetReferenceImage( ReadInImage< ReferenceImageType >( imageFilename ) );
 	dispFieldGen->SetTransform( transform );
 	
 	// update displacement field generator
@@ -95,7 +97,7 @@ typename ImageType::Pointer calculateDisplacementField( std::string transformFil
 	//std::string displacementFilename = transformFilename.substr(0,pos) + "-deformationField.mhd";
 	//WriteOutImage< DisplacementImageType, DisplacementImageType >( displacementFilename.c_str(), dispFieldGen->GetOutput() );
 	
-	return dispFielGen->GetOutput();
+	return dispFieldGen->GetOutput();
 }
 
 int main( int argc, char * argv[] )
@@ -104,23 +106,9 @@ int main( int argc, char * argv[] )
     //char * pointsFilename = argv[1];
 	//char * outputFilename = argv[2];
     std::string appliedTransformFilename = argv[1];
-	std::string registeredTransformFilename = argv[2]
+	std::string registeredTransformFilename = argv[2];
 	char * referenceImageFilename = argv[3];
 	char * outputFilename = argv[4];
-
-	// read in transform
-	if( transformType.compare("composite") == 0 )
-	{
-		calculateDisplacement< itk::CompositeTransform< double > >( pointsFilename, transformFilename, outputFilename, imageFilename );
-	}
-	else if( transformType.compare("affine") == 0 )
-	{
-		calculateDisplacement< itk::AffineTransform< double > >( pointsFilename, transformFilename, outputFilename, imageFilename );
-	}
-	else
-	{
-		std::cout << "Incorrect transform type: composite or affine only" << std::endl;
-	}
 
 	// define transforms
 	typedef itk::CompositeTransform< double > CompositeTransformType;
@@ -131,18 +119,22 @@ int main( int argc, char * argv[] )
 	typedef itk::Image< VectorPixelType, 3 > DisplacementImageType;
 
 	DisplacementImageType::Pointer def1 = calculateDisplacementField< AffineTransformType, DisplacementImageType >( appliedTransformFilename, referenceImageFilename );
-	DisplacementImageType::Pointer def2 = calculateDisplacementField< CompositeTransformType, DisplacementImageType >( compositeTransformFilename, referenceImageFilename );
+	DisplacementImageType::Pointer def2 = calculateDisplacementField< CompositeTransformType, DisplacementImageType >( registeredTransformFilename, referenceImageFilename );
 
 	// subtract the two deformation fields
 	typedef itk::SubtractImageFilter< DisplacementImageType, DisplacementImageType, DisplacementImageType > SubtractImageType;
 	SubtractImageType::Pointer subtractor = SubtractImageType::New();
 	subtractor->SetInput1( def1 );
 	subtractor->SetInput2( def2 );
+
+	typedef itk::VectorMagnitudeImageFilter< DisplacementImageType, itk::Image< short, 3 > > MagnitudeImageType;
+	MagnitudeImageType::Pointer magImage = MagnitudeImageType::New();
+	magImage->SetInput( subtractor->GetOutput() );
 	
 	// acquire statistics
-	typedef itk::StatisticsImageFilter< DeformationImageType > StatisticsFilterType;
+	typedef itk::StatisticsImageFilter< itk::Image< short, 3 > > StatisticsFilterType;
 	StatisticsFilterType::Pointer stats = StatisticsFilterType::New();
-	stats->SetInput( subtractor->GetOutput() );
+	stats->SetInput( magImage->GetOutput() );
 
 	// update for statistics
 	try
@@ -157,8 +149,8 @@ int main( int argc, char * argv[] )
 	}
 
 	// write results to file
-	outFile << std::endl;
 	std::ofstream outFile( outputFilename, std::ios::app );
+	outFile << std::endl;
 	outFile << "Applied Transform   : " << appliedTransformFilename << std::endl;
 	outFile << "Registered Transform: " << registeredTransformFilename << std::endl;
 	outFile << std::endl;
