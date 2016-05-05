@@ -196,10 +196,11 @@ namespace itk
 
 		// final transform
 		std::cout << "Transform " << std::endl;
-		std::cout << "  Angle         : " << this->m_FinalTransform->GetVersor().GetAngle() << std::endl;
-		//std::cout << "  Axis          : " << this->m_FinalTransform->GetVersor().GetAxis() << std::endl;
+		std::cout << "  Angle         : " << (this->m_FinalTransform->GetVersor().GetAngle())*180.0/3.141592653589793238463 << std::endl;
+		std::cout << "  Axis          : " << this->m_FinalTransform->GetVersor().GetAxis() << std::endl;
 		std::cout << "  Translation   : " << this->m_FinalTransform->GetTranslation() << std::endl;
 		std::cout << "  Scaling       : " << this->m_FinalTransform->GetScale() << std::endl;
+		std::cout << "  Matrix        : " << this->m_FinalTransform->GetMatrix() << std::endl;
 		std::cout << std::endl;
 
 		return;

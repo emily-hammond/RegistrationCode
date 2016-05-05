@@ -404,7 +404,7 @@ int main( int argc, char * argv[] )
 		else
 		{
 			transforms->AddTransform( initialTransform );
-			std::cout << "Level 1 registration skipped" << std::endl;
+			std::cout << "Level 1 registration skipped." << std::endl;
 		}
 		transforms->ResampleImageOn();
 		try
@@ -437,7 +437,7 @@ int main( int argc, char * argv[] )
 			}
 		}
 
-		if( debug )
+		if( debug && !skipWB )
 		{
 			// write out images
 			std::string level1ResampledImageFilename = debugDirectory + "_Level1ResampledImage.mhd";
@@ -450,9 +450,12 @@ int main( int argc, char * argv[] )
 			}
 		}
 
-		// write out composite transform
-		std::string level1CompositeTransformFilename = outputDirectory + "_Level1CompositeTransform.tfm";
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+		if( !skipWB )
+		{
+			// write out composite transform
+			std::string level1CompositeTransformFilename = outputDirectory + "_Level1CompositeTransform.tfm";
+			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+		}
 
 		// Registration level 1
 		chronometer.Stop( "Level 1" );
@@ -508,6 +511,7 @@ int main( int argc, char * argv[] )
 		level2Registration->SetRotationScale( rotationScale/2.0 );
 		level2Registration->SetTranslationScale( translationScale/2.0 );
 		level2Registration->SetScalingScale( scalingScale/2.0 );
+
 
 		if( observe ){ level2Registration->ObserveOn(); }
 		try
