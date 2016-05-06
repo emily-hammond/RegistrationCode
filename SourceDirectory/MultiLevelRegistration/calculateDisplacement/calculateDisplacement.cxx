@@ -10,14 +10,14 @@
 #include "itkCompositeTransform.h"
 #include "itkAffineTransform.h"
 #include "itkTransformToDisplacementFieldFilter.h"
-#include "itkSubtractImageFilter.h"
+#include "itkAddImageFilter.h"
 #include "itkStatisticsImageFilter.h"
 #include "itkVectorIndexSelectionCastImageFilter.h"
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
-
+#include <string>
 
 template< typename TransformType, typename ImageType >
-typename ImageType::Pointer calculateDisplacementField( std::string transformFilename, char * imageFilename )
+typename ImageType::Pointer calculateDisplacementField( std::string transformFilename, std::string imageFilename )
 {
 	// read in transform
 	TransformType::Pointer transform = ReadInTransform< TransformType >( transformFilename.c_str() );
@@ -78,7 +78,7 @@ typename ImageType::Pointer calculateDisplacementField( std::string transformFil
 	DisplacementFieldGenType::Pointer dispFieldGen = DisplacementFieldGenType::New();
 
 	dispFieldGen->UseReferenceImageOn();
-	dispFieldGen->SetReferenceImage( ReadInImage< ReferenceImageType >( imageFilename ) );
+	dispFieldGen->SetReferenceImage( ReadInImage< ReferenceImageType >( imageFilename.c_str() ) );
 	dispFieldGen->SetTransform( transform );
 	
 	// update displacement field generator
@@ -94,8 +94,8 @@ typename ImageType::Pointer calculateDisplacementField( std::string transformFil
 	}
 
 	size_t pos = transformFilename.rfind( '.' );
-	//std::string displacementFilename = transformFilename.substr(0,pos) + "-deformationField.mhd";
-	//WriteOutImage< DisplacementImageType, DisplacementImageType >( displacementFilename.c_str(), dispFieldGen->GetOutput() );
+	std::string displacementFilename = transformFilename.substr(0,pos) + "-deformationField.mhd";
+	WriteOutImage< ImageType, ImageType >( displacementFilename.c_str(), dispFieldGen->GetOutput() );
 	
 	return dispFieldGen->GetOutput();
 }
@@ -107,7 +107,7 @@ int main( int argc, char * argv[] )
 	//char * outputFilename = argv[2];
     std::string appliedTransformFilename = argv[1];
 	std::string registeredTransformFilename = argv[2];
-	char * referenceImageFilename = argv[3];
+	std::string referenceImageFilename = argv[3];
 	char * outputFilename = argv[4];
 
 	// define transforms
@@ -142,15 +142,15 @@ int main( int argc, char * argv[] )
 		selection2->SetInput( def2 );
 
 		// subtract the two deformation fields
-		typedef itk::SubtractImageFilter< ImageType, ImageType, ImageType > SubtractImageType;
-		SubtractImageType::Pointer subtractor = SubtractImageType::New();
-		subtractor->SetInput1( selection1->GetOutput() );
-		subtractor->SetInput2( selection2->GetOutput() );
+		typedef itk::AddImageFilter< ImageType, ImageType, ImageType > AddImageType;
+		AddImageType::Pointer add = AddImageType::New();
+		add->SetInput1( selection1->GetOutput() );
+		add->SetInput2( selection2->GetOutput() );
 		
 		// acquire statistics
 		typedef itk::StatisticsImageFilter< ImageType > StatisticsFilterType;
 		StatisticsFilterType::Pointer stats = StatisticsFilterType::New();
-		stats->SetInput( subtractor->GetOutput() );
+		stats->SetInput( add->GetOutput() );
 
 		// update for statistics
 		try
@@ -163,6 +163,11 @@ int main( int argc, char * argv[] )
 			std::cerr << err << std::endl;
 			std::cerr << std::endl;
 		}
+
+		/*size_t pos = referenceImageFilename.rfind( '.' );
+		char index[1];
+		std::string filename = appliedTransformFilename.substr(0,pos) + "-" + itoa(i,index,10) + "-deformationField.mhd";
+		WriteOutImage< ImageType, ImageType >( filename.c_str(), add->GetOutput() );*/
 
 		// write results to file
 		outFile << std::endl;
