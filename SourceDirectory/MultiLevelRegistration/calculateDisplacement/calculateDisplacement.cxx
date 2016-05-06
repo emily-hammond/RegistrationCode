@@ -117,7 +117,7 @@ int main( int argc, char * argv[] )
 	// define deformation field
 	typedef itk::Vector< float, 3 > VectorPixelType;
 	typedef itk::Image< VectorPixelType, 3 > DisplacementImageType;
-	typedef itk::Image< short, 3 > ImageType;
+	typedef itk::Image< float, 3 > ImageType;
 
 	DisplacementImageType::Pointer def1 = calculateDisplacementField< AffineTransformType, DisplacementImageType >( appliedTransformFilename, referenceImageFilename );
 	DisplacementImageType::Pointer def2 = calculateDisplacementField< CompositeTransformType, DisplacementImageType >( registeredTransformFilename, referenceImageFilename );
@@ -127,6 +127,16 @@ int main( int argc, char * argv[] )
 	outFile << std::endl;
 	outFile << "Applied Transform   : " << appliedTransformFilename << std::endl;
 	outFile << "Registered Transform: " << registeredTransformFilename << std::endl;
+
+	typedef itk::AddImageFilter< DisplacementImageType, DisplacementImageType, DisplacementImageType > AddDisplacementImageType;
+	AddDisplacementImageType::Pointer addDisp = AddDisplacementImageType::New();
+	addDisp->SetInput1( def1 );
+	addDisp->SetInput2( def2 );
+	addDisp->Update();
+
+	size_t pos = referenceImageFilename.rfind( '.' );
+	std::string filename = appliedTransformFilename.substr(0,pos) + "-deformationFieldDifference.mhd";
+	WriteOutImage< DisplacementImageType, DisplacementImageType >( filename.c_str(), addDisp->GetOutput() );
 
 	// for each index in the vector images
 	for( int i = 0; i < 3; ++i )
@@ -164,10 +174,10 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		/*size_t pos = referenceImageFilename.rfind( '.' );
+		pos = referenceImageFilename.rfind( '.' );
 		char index[1];
-		std::string filename = appliedTransformFilename.substr(0,pos) + "-" + itoa(i,index,10) + "-deformationField.mhd";
-		WriteOutImage< ImageType, ImageType >( filename.c_str(), add->GetOutput() );*/
+		filename = appliedTransformFilename.substr(0,pos) + "-" + itoa(i,index,10) + "-deformationField.mhd";
+		WriteOutImage< ImageType, ImageType >( filename.c_str(), add->GetOutput() );
 
 		// write results to file
 		outFile << std::endl;
