@@ -13,6 +13,7 @@
 #include "itkAddImageFilter.h"
 #include "itkStatisticsImageFilter.h"
 #include "itkVectorIndexSelectionCastImageFilter.h"
+#include "itkVectorMagnitudeImageFilter.h"
 #include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
 #include <string>
 
@@ -138,6 +139,10 @@ int main( int argc, char * argv[] )
 	std::string filename = appliedTransformFilename.substr(0,pos) + "-deformationFieldDifference.mhd";
 	WriteOutImage< DisplacementImageType, DisplacementImageType >( filename.c_str(), addDisp->GetOutput() );
 
+	typedef itk::AddImageFilter< ImageType, ImageType, ImageType > AddImageType;
+	AddImageType::Pointer add = AddImageType::New();
+	typedef itk::StatisticsImageFilter< ImageType > StatisticsFilterType;
+	StatisticsFilterType::Pointer stats = StatisticsFilterType::New();
 	// for each index in the vector images
 	for( int i = 0; i < 3; ++i )
 	{
@@ -152,14 +157,10 @@ int main( int argc, char * argv[] )
 		selection2->SetInput( def2 );
 
 		// subtract the two deformation fields
-		typedef itk::AddImageFilter< ImageType, ImageType, ImageType > AddImageType;
-		AddImageType::Pointer add = AddImageType::New();
 		add->SetInput1( selection1->GetOutput() );
 		add->SetInput2( selection2->GetOutput() );
 		
 		// acquire statistics
-		typedef itk::StatisticsImageFilter< ImageType > StatisticsFilterType;
-		StatisticsFilterType::Pointer stats = StatisticsFilterType::New();
 		stats->SetInput( add->GetOutput() );
 
 		// update for statistics
@@ -188,6 +189,26 @@ int main( int argc, char * argv[] )
 		outFile << "  Max   : " << stats->GetMaximum() << std::endl;
 		outFile << std::endl;
 	}
+
+	// obtain magnitudes and calculate deformation differences
+	typedef itk::VectorMagnitudeImageFilter< DisplacementImageType, ImageType > MagnitudeFilterType;
+	MagnitudeFilterType::Pointer magImage = MagnitudeFilterType::New();
+	magImage->SetInput( def1 );
+	magImage->Update();
+	add->SetInput1( magImage->GetOutput() );
+	magImage->SetInput( def2 );
+	magImage->Update();
+	add->SetInput2( magImage->GetOutput() );
+	stats->SetInput( add->GetOutput() );
+	stats->Update();
+	outFile << std::endl;
+	outFile << "MAGNITUDE: " << std::endl;
+	outFile << "  Mean  : " << stats->GetMean() << std::endl;
+	outFile << "  Std   : " << stats->GetSigma() << std::endl;
+	outFile << "  Min   : " << stats->GetMinimum() << std::endl;
+	outFile << "  Max   : " << stats->GetMaximum() << std::endl;
+	outFile << std::endl;
+	
 
     return EXIT_SUCCESS;
 }
