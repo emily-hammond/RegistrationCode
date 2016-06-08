@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+<category>Registration</category>
+<title>Multi-level registration</title>
+<description>Registration at a defined number of levels corresponding to the decreasing in size regions of interest</description>
+<version>1.0</version>
+<contributor>Emily Hammond | Date:2016-June-8</contributor>
+
+<parameters>
+	<label>InputImages</label>
+	<description>Input/Output parameters</description>
+	<image>
+		<name>fixedImage</name>
+		<description>The fixed image for registration</description>
+		<label>Fixed image volume</label>
+		<longflag>fixedImage</longflag>
+		<channel>input</channel>
+	</image>
+	<image>
+		<name>movingImage</name>
+		<description>The moving image for registration</description>
+		<label>Moving image volume</label>
+		<longflag>movingImage</longflag>
+		<channel>input</channel>
+	</image>
+</parameters>
+
+<parameters>
+	<label>Number of levels</label>
+	<integer>
+		<name>noOfLevels</name>
+		<description>The number of levels at which registration will be performed</description>
+		<label>Number of levels</label>
+		<longflag>noOfLevels</longflag>
+		<channel>input</channel>
+		<default>0</default>
+		<minimum>0</minimum>
+		<maximum>3</maximum>
+	</integer>
+	<region [multiple="false"]>
+		<name>ROI1</name>
+		<description>Region of interest corresponding to level 1</description>
+		<label>Level 1 region</label>
+		<longflag>ROI1</longflag>
+		<channel>input</channel>
+	</region>
+	<region [multiple="false"]>
+		<name>ROI2</name>
+		<description>Region of interest corresponding to level 2</description>
+		<label>Level 2 region</label>
+		<longflag>ROI2</longflag>
+		<channel>input</channel>
+	</region>
+	<region [multiple="false"]>
+		<name>ROI3</name>
+		<description>Region of interest corresponding to level 3</description>
+		<label>Level 3 region</label>
+		<longflag>ROI3</longflag>
+		<channel>input</channel>
+	</region>
+	
+		
+</parameters>
