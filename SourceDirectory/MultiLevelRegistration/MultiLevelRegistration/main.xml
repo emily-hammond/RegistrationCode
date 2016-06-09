@@ -10,7 +10,7 @@
 	<label>InputImages</label>
 	<description>Input/Output parameters</description>
 	<image>
-		<name>fixedImage</name>
+		<name>fixedImageFilename</name>
 		<description>The fixed image for registration</description>
 		<label>Fixed image volume</label>
 		<longflag>fixedImage</longflag>
@@ -24,7 +24,7 @@
 		<channel>input</channel>
 	</image>
 	<image>
-		<name>movingImage</name>
+		<name>movingImageFilename</name>
 		<description>The moving image for registration</description>
 		<label>Moving image volume</label>
 		<longflag>movingImage</longflag>
@@ -38,7 +38,7 @@
 		<channel>input</channel>
 	</image>
 	<boolean>
-		<name>validation</name>
+		<name>performValidation</name>
 		<description>Perform validation with the defined masks</description>
 		<label>Peform validation</label>
 		<longflag>validation</longflag>
@@ -98,7 +98,7 @@
 		<channel>input</channel>
 	</image>
 	<transform fileExtentions=".txt">
-		<name>initialTransform</name>
+		<name>manualInitialTransformFilename</name>
 		<description>Manually defined initial transform</description>
 		<label>Initial transform</label>
 		<longflag>initialTranform</longflag>

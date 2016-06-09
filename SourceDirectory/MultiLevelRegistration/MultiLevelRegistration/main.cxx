@@ -19,6 +19,7 @@ INSERT COMMENTS HERE
 #include <stdio.h>
 
 #include <windows.h>
+#include "mainCLP.h"
 
 // declare function
 void PrintOutManual();
@@ -26,6 +27,8 @@ void Timestamp();
 
 int main( int argc, char * argv[] )
 {
+	PARSE_ARGS;
+
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 	std::cout << "             MULTI-LEVEL REGISTRATION ";
 	Timestamp();
@@ -45,7 +48,7 @@ int main( int argc, char * argv[] )
 	memorymeter.Start( "Inputs" );
 
 	// required inputs
-	char * fixedImageFilename = '\0';
+	/*char * fixedImageFilename = '\0';
 	char * movingImageFilename = '\0';
 	char * fixedValidationMaskFilename = '\0';
 	char * movingValidationMaskFilename = '\0';
@@ -176,7 +179,7 @@ int main( int argc, char * argv[] )
 		std::cout << "Too many inputs" << std::endl;
 		return EXIT_FAILURE;
 	}
-
+*/
 	std::string debugDirectory = "\0";
 	if( debug )
 	{
@@ -214,16 +217,16 @@ int main( int argc, char * argv[] )
 	if( initialFixedTransformFilename )
 	{
 		// apply transform to fixed image
-		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( initialFixedTransformFilename );
+		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( fixedImageInitialTransform );
 		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >( fixedImageFilename );
-		transforms->SetFixedImage( ReadInImage< ImageType >( referenceImageFilename ) );
+		transforms->SetFixedImage( ReadInImage< ImageType >( referenceImage ) );
 		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
 
 		// apply transform to fixed validation mask
-		if( val )
+		if( performValidation )
 		{
 			transforms->NearestNeighborInterpolateOn();
-			ImageType::Pointer fixedValidationMaskTemp = ReadInImage< ImageType >( fixedValidationMaskFilename );
+			ImageType::Pointer fixedValidationMaskTemp = ReadInImage< ImageType >( fixedImageMask );
 			fixedValidationMask = transforms->ResampleImage( fixedValidationMaskTemp, initialFixedTransform );
 			transforms->NearestNeighborInterpolateOff();
 		}
@@ -233,27 +236,27 @@ int main( int argc, char * argv[] )
 	else
 	{
 		fixedImage = ReadInImage< ImageType >( fixedImageFilename );
-		if( val )
+		if( performValidation )
 		{
-			fixedValidationMask = ReadInImage< ImageType >( fixedValidationMaskFilename );
+			fixedValidationMask = ReadInImage< ImageType >( fixedImageMask );
 		}
 	}
 
 	// read in necessary images
 	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
 	ImageType::Pointer movingValidationMask = ImageType::New();
-	if( val )
+	if( performValidation )
 	{
-		movingValidationMask = ReadInImage< ImageType >( movingValidationMaskFilename );
+		movingValidationMask = ReadInImage< ImageType >( movingImageMask );
 	}
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
 	std::cout << "\nFixed image           : " << fixedImageFilename << std::endl;
-	if( val) { std::cout << "Fixed validation mask : " << fixedValidationMaskFilename << std::endl; }
+	if( performValidation ) { std::cout << "Fixed validation mask : " << fixedImageMask << std::endl; }
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
-	if( val) { std::cout << "Moving validation mask: " << movingValidationMaskFilename << std::endl; }
-	if( argc > 7 && numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << level2ROIFilename << std::endl; }
-	if( argc > 8 && numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << level3ROIFilename << std::endl; }
+	if( performValidation ) { std::cout << "Moving validation mask: " << movingImageMask << std::endl; }
+	if( argc > 7 && numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
+	if( argc > 8 && numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
 
 	// inputs
 	chronometer.Stop( "Inputs" );
@@ -302,21 +305,21 @@ int main( int argc, char * argv[] )
 	std::cout << "\n -> Transforms\n" << std::endl;
 	transforms->SetInitialTransform( initialTransform );
 	transforms->SetFixedImage( fixedImage );
-	if( val) { transforms->SetFixedLabelMap( fixedValidationMask ); }
+	if( performValidation ) { transforms->SetFixedLabelMap( fixedValidationMask ); }
 
 	// set up validation class and insert fixed image as image set 1 (will not change)
 	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
 	// insert image set 1 (this is the fixed image and will not change)
 	validation->SetImage1( fixedImage );
-	if( val) { validation->SetLabelMap1( fixedValidationMask ); }
+	if( performValidation ) { validation->SetLabelMap1( fixedValidationMask ); }
 
 	// apply initial transform to the moving image and mask
 	transforms->SetMovingImage( movingImage );
-	if( val) { transforms->SetMovingLabelMap( movingValidationMask ); }
+	if( performValidation ) { transforms->SetMovingLabelMap( movingValidationMask ); }
 	
 	// perform validation
 	validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
-	if( val )
+	if( performValidation )
 	{
 		transforms->NearestNeighborInterpolateOn();
 		validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialTransform ) );
@@ -343,7 +346,7 @@ int main( int argc, char * argv[] )
 		std::string InitResampledImageFilename = debugDirectory + "_InitResampledImage.mhd";
 		WriteOutImage< ImageType, ImageType >( InitResampledImageFilename.c_str(), transforms->ResampleImage( movingImage, initialTransform ) );
 		// write out label map
-		if( val) 
+		if( performValidation ) 
 		{ 
 			std::string InitResampledLabelMapFilename = debugDirectory + "_InitResampledLabelMap.mhd";
 			transforms->NearestNeighborInterpolateOn();
@@ -418,7 +421,7 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		if( val )
+		if( performValidation )
 		{
 			std::cout << "\n -> Validation\n" << std::endl;
 			// perform validation
@@ -477,7 +480,7 @@ int main( int argc, char * argv[] )
 		// crop images
 		transforms->CropImageOn();
 		transforms->ResampleImageOff();
-		transforms->SetROIFilename( level2ROIFilename );
+		transforms->SetROIFilename( ROI2 );
 		try
 		{
 			transforms->Update();
@@ -543,7 +546,7 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		if( val) 
+		if( performValidation ) 
 		{ 
 			std::cout << "\n -> Validation\n" << std::endl;
 			// perform validation
@@ -601,7 +604,7 @@ int main( int argc, char * argv[] )
 		// crop images
 		transforms->CropImageOn();
 		transforms->ResampleImageOff();
-		transforms->SetROIFilename( level3ROIFilename );
+		transforms->SetROIFilename( ROI3 );
 		try
 		{
 			transforms->Update();
@@ -665,7 +668,7 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		if( val )
+		if( performValidation )
 		{
 			std::cout << "\n -> Validation\n" << std::endl;
 			// perform validation
