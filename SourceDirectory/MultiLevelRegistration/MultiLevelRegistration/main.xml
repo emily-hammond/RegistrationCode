@@ -56,34 +56,34 @@
 <parameters>
 	<label>Number of levels</label>
 	<integer>
-		<name>noOfLevels</name>
+		<name>numberOfLevels</name>
 		<description>The number of levels at which registration will be performed</description>
 		<label>Number of levels</label>
-		<longflag>noOfLevels</longflag>
+		<longflag>numberOfLevels</longflag>
 		<channel>input</channel>
 		<default>0</default>
 		<minimum>0</minimum>
 		<maximum>3</maximum>
 	</integer>
-	<region [multiple="false"]>
+	<file fileExtensions=".acsv">
 		<name>ROI2</name>
 		<description>Region of interest corresponding to level 2</description>
 		<label>Level 2 region</label>
 		<longflag>ROI2</longflag>
 		<channel>input</channel>
-	</region>
-	<region [multiple="false"]>
+	</file>
+	<file fileExtensions=".acsv">
 		<name>ROI3</name>
 		<description>Region of interest corresponding to level 3</description>
 		<label>Level 3 region</label>
 		<longflag>ROI3</longflag>
 		<channel>input</channel>
-	</region>
+	</file>
 </parameters>
 
 <parameters>
 	<label>Initialization</label>
-	<transform fileExtentions=".txt">
+	<transform fileExtensions=".txt">
 		<name>fixedImageInitialTransform</name>
 		<description>Manually defined initial transform for the fixed image to define the desired image space</description>
 		<label>Fixed image initial transform</label>
@@ -97,7 +97,7 @@
 		<longflag>referenceImage</longflag>
 		<channel>input</channel>
 	</image>
-	<transform fileExtentions=".txt">
+	<transform fileExtensions=".txt">
 		<name>manualInitialTransformFilename</name>
 		<description>Manually defined initial transform</description>
 		<label>Initial transform</label>
@@ -218,3 +218,5 @@
 		<default>false</default>
 	</boolean>
 </parameters>
+
+</executable>

@@ -53,7 +53,7 @@ public:
 	itkSetObjectMacro( FixedLabelMap, ImageType );
 	itkSetObjectMacro( MovingImage, ImageType );
 	itkSetObjectMacro( MovingLabelMap, ImageType );
-	void SetROIFilename( char * filename )
+	void SetROIFilename( const char * filename )
 	{
 		this->m_ROIFilename = filename;
 	}
@@ -148,7 +148,7 @@ private:
 	ImageType::RegionType m_CropRegion;
 
 	// ROI
-	char * m_ROIFilename;
+	const char * m_ROIFilename;
 	ImageType::Pointer CropImage( ImageType::Pointer image );
 	double * ExtractROIPoints();
 
