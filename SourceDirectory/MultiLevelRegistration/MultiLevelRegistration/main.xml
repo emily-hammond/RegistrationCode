@@ -16,6 +16,13 @@
 		<longflag>fixedImage</longflag>
 		<channel>input</channel>
 	</image>
+	<image type="label">
+		<name>fixedImageMask</name>
+		<description>The fixed image mask for validation</description>
+		<label>Fixed image mask</label>
+		<longflag>fixedImageMask</longflag>
+		<channel>input</channel>
+	</image>
 	<image>
 		<name>movingImage</name>
 		<description>The moving image for registration</description>
@@ -23,6 +30,27 @@
 		<longflag>movingImage</longflag>
 		<channel>input</channel>
 	</image>
+	<image type="label">
+		<name>movingImageMask</name>
+		<description>The moving image mask for validation</description>
+		<label>Moving image mask</label>
+		<longflag>movingImageMask</longflag>
+		<channel>input</channel>
+	</image>
+	<boolean>
+		<name>validation</name>
+		<description>Perform validation with the defined masks</description>
+		<label>Peform validation</label>
+		<longflag>validation</longflag>
+		<default>false</default>
+	</boolean>
+	<string>
+		<name>outputDirectory</name>
+		<description>The directory where the transforms will be saved</description>
+		<label>Output Directory</label>
+		<longflag>outputDirectory</longflag>
+		<channel>output</channel>
+	</string>
 </parameters>
 
 <parameters>
@@ -38,13 +66,6 @@
 		<maximum>3</maximum>
 	</integer>
 	<region [multiple="false"]>
-		<name>ROI1</name>
-		<description>Region of interest corresponding to level 1</description>
-		<label>Level 1 region</label>
-		<longflag>ROI1</longflag>
-		<channel>input</channel>
-	</region>
-	<region [multiple="false"]>
 		<name>ROI2</name>
 		<description>Region of interest corresponding to level 2</description>
 		<label>Level 2 region</label>
@@ -58,6 +79,142 @@
 		<longflag>ROI3</longflag>
 		<channel>input</channel>
 	</region>
-	
-		
+</parameters>
+
+<parameters>
+	<label>Initialization</label>
+	<transform fileExtentions=".txt">
+		<name>fixedImageInitialTransform</name>
+		<description>Manually defined initial transform for the fixed image to define the desired image space</description>
+		<label>Fixed image initial transform</label>
+		<longflag>fixedImageInitialTranform</longflag>
+		<channel>input</channel>
+	</transform>
+	<image>
+		<name>referenceImage</name>
+		<description>The reference image for the fixed image initial transform</description>
+		<label>Reference image volume</label>
+		<longflag>referenceImage</longflag>
+		<channel>input</channel>
+	</image>
+	<transform fileExtentions=".txt">
+		<name>initialTransform</name>
+		<description>Manually defined initial transform</description>
+		<label>Initial transform</label>
+		<longflag>initialTranform</longflag>
+		<channel>input</channel>
+	</transform>
+	<boolean>
+		<name>centerOfGeometry</name>
+		<description>Perform center of geometry initialization</description>
+		<label>Center of geometry</label>
+		<longflag>centerOfGeometry</longflag>
+		<default>true</default>
+	</boolean>
+	<boolean>
+		<name>metricX</name>
+		<description>Perform metric initialization in X direction</description>
+		<label>Metric X</label>
+		<longflag>metricX</longflag>
+		<default>false</default>
+	</boolean>
+	<boolean>
+		<name>metricY</name>
+		<description>Perform metric initialization in Y direction</description>
+		<label>Metric Y</label>
+		<longflag>metricY</longflag>
+		<default>false</default>
+	</boolean>
+	<boolean>
+		<name>metricZ</name>
+		<description>Perform metric initialization in Z direction</description>
+		<label>Metric Z</label>
+		<longflag>metricZ</longflag>
+		<default>false</default>
+	</boolean>
+</parameters>
+
+<parameters>
+	<label>Registration parameters (expert)</label>
+	<float>
+		<name>rotationScale</name>
+		<description>Expected amount of rotation to occur</description>
+		<label>Rotation scale</label>
+		<longflag>rotationScale</longflag>
+		<default>0.001</default>
+	</float>
+	<float>
+		<name>translationScale</name>
+		<description>Expected amount of translation to occur</description>
+		<label>Translation scale</label>
+		<longflag>translationScale</longflag>
+		<default>10</default>
+	</float>
+	<float>
+		<name>scalingScale</name>
+		<description>Expected amount of scaling to occur</description>
+		<label>Scaling scale</label>
+		<longflag>scalingScale</longflag>
+		<default>0.001</default>
+	</float>
+	<integer>
+		<name>numberOfIterations</name>
+		<description>Number of iterations allowed at each level</description>
+		<label>Number of iterations</label>
+		<longflag>numberOfIterations</longflag>
+		<default>500</default>
+	</integer>
+	<float>
+		<name>maximumStepLength</name>
+		<description>Maximum step length allowed at level 1</description>
+		<label>Maximum step length</label>
+		<longflag>maximumStepLength</longflag>
+		<default>1</default>
+	</float>
+	<float>
+		<name>minimumStepLength</name>
+		<description>Minimum step length allowed</description>
+		<label>Minimum step length</label>
+		<longflag>minimumStepLength</longflag>
+		<default>0.001</default>
+	</float>
+	<float>
+		<name>relaxationFactor</name>
+		<description>Amount by which the step length decreases during optimization</description>
+		<label>Relaxation factor</label>
+		<longflag>relaxationFactor</longflag>
+		<default>0.5</default>
+	</float>
+	<float>
+		<name>gradientMagnitudeTolerance</name>
+		<description>The minimum gradient magnitude</description>
+		<label>Gradient magnitude tolerance</label>
+		<longflag>gradientMagnitudeTolerance</longflag>
+		<default>0.001</default>
+	</float>
+</parameters>
+
+<parameters>
+	<label>Debugging parameters</label>
+	<boolean>
+		<name>observe</name>
+		<description>Output values from optimizer</description>
+		<label>Observe optimizer</label>
+		<longflag>observe</longflag>
+		<default>false</default>
+	</boolean>
+	<boolean>
+		<name>debug</name>
+		<description>Output results at every level</description>
+		<label>Debug</label>
+		<longflag>debug</longflag>
+		<default>false</default>
+	</boolean>
+	<boolean>
+		<name>skipWB</name>
+		<description>Skip level 1 registration</description>
+		<label>Skip level 1</label>
+		<longflag>skipWB</longflag>
+		<default>false</default>
+	</boolean>
 </parameters>
