@@ -1,0 +1,33 @@
+set(MultiLevelRegistration_SRC MultiLevelRegistration.cxx)
+generateclp(MultiLevelRegistration_SRC MultiLevelRegistration.xml)
+
+## Build Slicer3 Shared Library module
+add_library(MultiLevelRegistrationLib SHARED ${MultiLevelRegistration_SRC})
+set_target_properties (MultiLevelRegistrationLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint")
+target_link_libraries (MultiLevelRegistrationLib ${ITK_LIBRARIES})
+
+## Build stand-alone command line module.
+add_executable(MultiLevelRegistration ${MultiLevelRegistration_SRC})
+target_link_libraries(MultiLevelRegistration ${ITK_LIBRARIES})
+
+
+# set(MultiLevelRegistration_SRC MultiLevelRegistration.cxx)
+# GENERATECLP(MultiLevelRegistration_SRC MultiLevelRegistration.xml)
+
+# SEMMacroBuildCLI(
+   # NAME MultiLevelRegistration
+   # LOGO_HEADER ${Slicer_SOURCE_DIR}/Resources/NAMICLogo.h
+   # TARGET_LIBRARIES ModuleDescriptionParser ${ITK_LIBRARIES} vtkTeem MRMLCore SlicerBaseCLI ${VTK_LIBRARIES}
+   # INCLUDE_DIRECTORIES
+     # ${vtkTeem_INCLUDE_DIRS}
+     # ${MRMLCore_INCLUDE_DIRS}
+     # ${vtkITK_INCLUDE_DIRS}
+     # ${SlicerBaseCLI_SOURCE_DIR} ${SlicerBaseCLI_BINARY_DIR}
+   # )
+
+# add_library(MultiLevelRegistrationLib SHARED ${MultiLevelRegistration_SRC})
+# set_target_properties(MultiLevelRegistrationLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint")
+# target_link_libraries(MultiLevelRegistrationLib ${ITK_LIBRARIES})
+
+# add_executable(MultiLevelRegistration ${MultiLevelRegistration_SRC})
+# target_link_libraries(MultiLevelRegistration ${ITK_LIBRARIES})

@@ -3,11 +3,11 @@ INSERT COMMENTS HERE
 */
 
 // include files
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkRegistrationFramework.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkInitializationFilter.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkValidationFilter.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkManageTransformsFilter.h"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkRegistrationFramework.h"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkInitializationFilter.h"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkValidationFilter.h"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkManageTransformsFilter.h"
 
 // rescale images
 #include "itkRescaleIntensityImageFilter.h"
@@ -19,7 +19,7 @@ INSERT COMMENTS HERE
 #include <stdio.h>
 
 #include <windows.h>
-#include "mainCLP.h"
+#include "MultiLevelRegistrationCLP.h"
 
 // declare function
 void PrintOutManual();
