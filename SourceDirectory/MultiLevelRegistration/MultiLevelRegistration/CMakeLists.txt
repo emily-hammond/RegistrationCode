@@ -1,11 +1,11 @@
-set(MultiLevelRegistration_SRC main.cxx)
-GENERATECLP(MultiLevelRegistration_SRC main.xml)
+set(MultiLevelRegistration_SRC MultiLevelRegistration.cxx)
+GENERATECLP(MultiLevelRegistration_SRC MultiLevelRegistration.xml)
 
 SEMMacroBuildCLI(
-   NAME main
+   NAME MultiLevelRegistration
    LOGO_HEADER ${Slicer_SOURCE_DIR}/Resources/NAMICLogo.h
    ADDITIONAL_SRCS
-     main.cxx
+     MultiLevelRegistration.cxx
    TARGET_LIBRARIES ModuleDescriptionParser ${ITK_LIBRARIES} vtkTeem MRMLCore SlicerBaseCLI ${VTK_LIBRARIES}
    INCLUDE_DIRECTORIES
      ${vtkTeem_INCLUDE_DIRS}
