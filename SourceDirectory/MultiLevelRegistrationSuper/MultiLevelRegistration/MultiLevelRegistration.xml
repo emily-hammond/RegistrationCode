@@ -44,13 +44,13 @@
 		<longflag>validation</longflag>
 		<default>false</default>
 	</boolean>
-	<string>
+	<directory>
 		<name>outputDirectory</name>
 		<description>The directory where the transforms will be saved</description>
 		<label>Output Directory</label>
 		<longflag>outputDirectory</longflag>
 		<channel>output</channel>
-	</string>
+	</directory>
 </parameters>
 
 <parameters>
