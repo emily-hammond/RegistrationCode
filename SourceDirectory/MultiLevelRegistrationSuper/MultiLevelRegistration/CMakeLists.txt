@@ -14,14 +14,52 @@
 # add_executable(MultiLevelRegistration ${MultiLevelRegistration_SRC})
 # target_link_libraries(MultiLevelRegistration ${ITK_LIBRARIES})
 
-set(MultiLevelRegistration_SRC MultiLevelRegistration.cxx)
-generateclp(MultiLevelRegistration_SRC MultiLevelRegistration.xml)
+#-----------------------------------------------------------------------------
+# set(MultiLevelRegistration_SRC MultiLevelRegistration.cxx)
+# generateclp(MultiLevelRegistration_SRC MultiLevelRegistration.xml)
 
-## Build Slicer3 Shared Library module
-add_library(MultiLevelRegistrationLib SHARED ${MultiLevelRegistration_SRC})
-set_target_properties (MultiLevelRegistrationLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint")
-target_link_libraries (MultiLevelRegistrationLib ${ITK_LIBRARIES})
+# Build Slicer3 Shared Library module
+# add_library(MultiLevelRegistrationLib SHARED ${MultiLevelRegistration_SRC})
+# set_target_properties (MultiLevelRegistrationLib PROPERTIES COMPILE_FLAGS "-Dmain=ModuleEntryPoint")
+# target_link_libraries (MultiLevelRegistrationLib ${ITK_LIBRARIES})
 
-## Build stand-alone command line module.
-add_executable(MultiLevelRegistration ${MultiLevelRegistration_SRC})
-target_link_libraries(MultiLevelRegistration ${ITK_LIBRARIES})
+# Build stand-alone command line module.
+# add_executable(MultiLevelRegistration ${MultiLevelRegistration_SRC})
+# target_link_libraries(MultiLevelRegistration ${ITK_LIBRARIES})
+
+#-----------------------------------------------------------------------------
+set(MODULE_NAME MultiLevelRegistration)
+
+#
+# SlicerExecutionModel
+#
+find_package(SlicerExecutionModel REQUIRED)
+include(${SlicerExecutionModel_USE_FILE})
+
+#
+# ITK
+#
+set(${PROJECT_NAME}_ITK_COMPONENTS
+  ITKCommon
+  ITKIOImageBase
+  ITKIOTransformBase
+  ITKImageFunction
+  ITKImageGrid
+  ITKImageIntensity
+  ITKOptimizers
+  ITKRegistrationCommon
+  ITKSpatialObjects
+  ITKStatistics
+  ITKTestKernel
+  ITKTransform
+  )
+find_package(ITK 4.6 COMPONENTS ${${PROJECT_NAME}_ITK_COMPONENTS} REQUIRED)
+set(ITK_NO_IO_FACTORY_REGISTER_MANAGER 1) # See Libs/ITKFactoryRegistration/CMakeLists.txt
+include(${ITK_USE_FILE})
+
+#-----------------------------------------------------------------------------
+SEMMacroBuildCLI(
+  NAME ${MODULE_NAME}
+  LOGO_HEADER ${Slicer_SOURCE_DIR}/Resources/ITKLogo.h
+  TARGET_LIBRARIES ${ITK_LIBRARIES}
+  )

@@ -11,6 +11,7 @@ INSERT COMMENTS HERE
 
 // rescale images
 #include "itkRescaleIntensityImageFilter.h"
+#include "itkPluginUtilities.h"
 
 // monitoring
 #include "itkTimeProbesCollectorBase.h"
