@@ -16,7 +16,7 @@
 		<longflag>fixedImage</longflag>
 		<channel>input</channel>
 	</image>
-	<image type="label">
+	<image type="label" reference="fixedImageFilename">
 		<name>fixedImageMask</name>
 		<description>The fixed image mask for validation</description>
 		<label>Fixed image mask</label>
@@ -30,7 +30,7 @@
 		<longflag>movingImage</longflag>
 		<channel>input</channel>
 	</image>
-	<image type="label">
+	<image type="label" reference="movingImageFilename">
 		<name>movingImageMask</name>
 		<description>The moving image mask for validation</description>
 		<label>Moving image mask</label>
@@ -44,13 +44,13 @@
 		<longflag>validation</longflag>
 		<default>false</default>
 	</boolean>
-	<directory>
+	<string>
 		<name>outputDirectory</name>
 		<description>The directory where the transforms will be saved</description>
 		<label>Output Directory</label>
 		<longflag>outputDirectory</longflag>
 		<channel>output</channel>
-	</directory>
+	</string>
 </parameters>
 
 <parameters>

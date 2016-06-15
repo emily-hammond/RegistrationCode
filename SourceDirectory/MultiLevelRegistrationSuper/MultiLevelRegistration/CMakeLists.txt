@@ -28,17 +28,23 @@
 # target_link_libraries(MultiLevelRegistration ${ITK_LIBRARIES})
 
 #-----------------------------------------------------------------------------
-set(MODULE_NAME MultiLevelRegistration)
+# set(MODULE_NAME MultiLevelRegistration)
 
-#
+
 # SlicerExecutionModel
-#
-find_package(SlicerExecutionModel REQUIRED)
-include(${SlicerExecutionModel_USE_FILE})
 
-#
-# ITK
-#
+find_package(SlicerExecutionModel REQUIRED)
+include(${GenerateCLP_USE_FILE})
+
+# set(MultiLevelRegistration_SOURCE MultiLevelRegistration.cxx)
+# GENERATECLP(MultiLevelRegistration_SOURCE MultiLevelRegistration.xml)
+ 
+# add_executable(MultiLevelRegistration ${MultiLevelRegistration_SOURCE})
+# target_link_libraries(MultiLevelRegistration ${ITK_LIBRARIES})
+
+
+#ITK
+
 set(${PROJECT_NAME}_ITK_COMPONENTS
   ITKCommon
   ITKIOImageBase
@@ -57,9 +63,9 @@ find_package(ITK 4.6 COMPONENTS ${${PROJECT_NAME}_ITK_COMPONENTS} REQUIRED)
 set(ITK_NO_IO_FACTORY_REGISTER_MANAGER 1) # See Libs/ITKFactoryRegistration/CMakeLists.txt
 include(${ITK_USE_FILE})
 
-#-----------------------------------------------------------------------------
+# #-----------------------------------------------------------------------------
 SEMMacroBuildCLI(
-  NAME ${MODULE_NAME}
-  LOGO_HEADER ${Slicer_SOURCE_DIR}/Resources/ITKLogo.h
+  NAME MultiLevelRegistration
+  LOGO_HEADER C:/Slicer/Slicer/Resources/ITKLogo.h
   TARGET_LIBRARIES ${ITK_LIBRARIES}
   )
