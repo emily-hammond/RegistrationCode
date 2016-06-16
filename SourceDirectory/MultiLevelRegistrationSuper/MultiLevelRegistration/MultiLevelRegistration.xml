@@ -47,10 +47,17 @@
 	<string>
 		<name>outputDirectory</name>
 		<description>The directory where the transforms will be saved</description>
-		<label>Output Directory</label>
+		<label>Output Directory (.txt)</label>
 		<longflag>outputDirectory</longflag>
 		<channel>output</channel>
 	</string>
+  <transform fileExtensions=".txt">
+    <name>finalTransform</name>
+    <description>Final transformation to transform the moving image into fixed image space (composite transform)</description>
+    <label>Final transform</label>
+    <longflag>finalTransform</longflag>
+    <channel>output</channel>
+  </transform>
 </parameters>
 
 <parameters>
@@ -65,20 +72,20 @@
 		<minimum>0</minimum>
 		<maximum>3</maximum>
 	</integer>
-	<file fileExtensions=".acsv">
-		<name>ROI2</name>
-		<description>Region of interest corresponding to level 2</description>
-		<label>Level 2 region</label>
-		<longflag>ROI2</longflag>
-		<channel>input</channel>
-	</file>
-	<file fileExtensions=".acsv">
-		<name>ROI3</name>
-		<description>Region of interest corresponding to level 3</description>
-		<label>Level 3 region</label>
-		<longflag>ROI3</longflag>
-		<channel>input</channel>
-	</file>
+  <region multiple="false" coordinateSystem="lps">
+    <name>ROI2a</name>
+    <description>Region of interest corresponding to level 2</description>
+    <label>Level 2 region</label>
+    <longflag>ROI2a</longflag>
+    <channel>input</channel>
+  </region>
+  <region multiple="false" coordinateSystem="lps">
+    <name>ROI3a</name>
+    <description>Region of interest corresponding to level 3</description>
+    <label>Level 3 region</label>
+    <longflag>ROI3a</longflag>
+    <channel>input</channel>
+  </region>
 </parameters>
 
 <parameters>
@@ -100,7 +107,7 @@
 	<transform fileExtensions=".txt">
 		<name>manualInitialTransformFilename</name>
 		<description>Manually defined initial transform</description>
-		<label>Initial transform</label>
+		<label>Moving image initial transform</label>
 		<longflag>initialTranform</longflag>
 		<channel>input</channel>
 	</transform>

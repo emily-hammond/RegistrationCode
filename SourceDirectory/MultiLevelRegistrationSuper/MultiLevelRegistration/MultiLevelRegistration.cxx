@@ -256,8 +256,8 @@ int main( int argc, char * argv[] )
 	if( performValidation ) { std::cout << "Fixed validation mask : " << fixedImageMask << std::endl; }
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	if( performValidation ) { std::cout << "Moving validation mask: " << movingImageMask << std::endl; }
-	if( numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
-	if( numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
+	//if( numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
+	//if( numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
 
 	// inputs
 	chronometer.Stop( "Inputs" );
@@ -339,8 +339,9 @@ int main( int argc, char * argv[] )
 	}
 
 	// write out initial transform
-	std::string initialTransformFilename = outputDirectory + "_InitialTransform.tfm";
-	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialTransform );
+	//std::string initialTransformFilename = outputDirectory + "_InitialTransform.tfm";
+	//WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialTransform );
+	WriteOutTransform< TransformType >(finalTransform.c_str(), initialTransform);
 	if( debug )
 	{
 		// write out images
@@ -359,7 +360,7 @@ int main( int argc, char * argv[] )
 	// initialization
 	chronometer.Stop( "Initialization" );
 	memorymeter.Stop( "Initialization" );
-
+	
 	if( numberOfLevels > 0 )
 	{
 		// Registration level 1
@@ -465,7 +466,7 @@ int main( int argc, char * argv[] )
 		chronometer.Stop( "Level 1" );
 		memorymeter.Stop( "Level 1" );
 	}
-
+	
 	if( numberOfLevels > 1 )
 	{
 		// Registration level 2
