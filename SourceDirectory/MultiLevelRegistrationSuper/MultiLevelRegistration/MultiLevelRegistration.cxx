@@ -259,17 +259,6 @@ int main( int argc, char * argv[] )
 	if( performValidation ) { std::cout << "Moving validation mask: " << movingImageMask << std::endl; }
 	//if( numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
 	//if( numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
-	
-	std::vector< float >::iterator jt;
-	for (jt = ROI2.begin(); jt != ROI2.end(); ++jt)
-	{
-		//for (jt = it->begin(); jt != it->end(); ++jt)
-		//{
-			std::cout << *jt;
-		//}
-		//std::cout << std::endl;
-	}
-	std::cout << std::endl;
 
 	// inputs
 	chronometer.Stop( "Inputs" );
@@ -331,9 +320,9 @@ int main( int argc, char * argv[] )
 	if( performValidation ) { transforms->SetMovingLabelMap( movingValidationMask ); }
 	
 	// perform validation
-	validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
 	if( performValidation )
 	{
+		validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
 		transforms->NearestNeighborInterpolateOn();
 		validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialTransform ) );
 		transforms->NearestNeighborInterpolateOff();
@@ -471,7 +460,7 @@ int main( int argc, char * argv[] )
 		{
 			// write out composite transform
 			std::string level1CompositeTransformFilename = outputDirectory + "_Level1CompositeTransform.tfm";
-			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 		}
 
 		// Registration level 1
@@ -597,7 +586,7 @@ int main( int argc, char * argv[] )
 
 		// final composite transform
 		std::string level2CompositeTransformFilename = outputDirectory + "_Level2CompositeTransform.tfm";
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level2CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 	
 		// Registration level 2
 		chronometer.Stop( "Level 2" );
@@ -719,7 +708,7 @@ int main( int argc, char * argv[] )
 
 		// write out final composite transform
 		std::string level3CompositeTransformFilename = outputDirectory + "_Level3CompositeTransform.tfm";
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level3CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 		
 		// Registration level 3
 		chronometer.Stop( "Level 3" );
