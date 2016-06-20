@@ -16,13 +16,6 @@
 		<longflag>fixedImage</longflag>
 		<channel>input</channel>
 	</image>
-	<image type="label" reference="fixedImageFilename">
-		<name>fixedImageMask</name>
-		<description>The fixed image mask for validation</description>
-		<label>Fixed image mask</label>
-		<longflag>fixedImageMask</longflag>
-		<channel>input</channel>
-	</image>
 	<image>
 		<name>movingImageFilename</name>
 		<description>The moving image for registration</description>
@@ -30,20 +23,6 @@
 		<longflag>movingImage</longflag>
 		<channel>input</channel>
 	</image>
-	<image type="label" reference="movingImageFilename">
-		<name>movingImageMask</name>
-		<description>The moving image mask for validation</description>
-		<label>Moving image mask</label>
-		<longflag>movingImageMask</longflag>
-		<channel>input</channel>
-	</image>
-	<boolean>
-		<name>performValidation</name>
-		<description>Perform validation with the defined masks</description>
-		<label>Peform validation</label>
-		<longflag>validation</longflag>
-		<default>false</default>
-	</boolean>
 	<string>
 		<name>outputDirectory</name>
 		<description>The directory where the transforms will be saved</description>
@@ -72,20 +51,20 @@
 		<minimum>0</minimum>
 		<maximum>3</maximum>
 	</integer>
-  <region multiple="false" coordinateSystem="lps">
-    <name>ROI2a</name>
+  <region multiple="false" coordinateSystem="ras">
+    <name>ROI2</name>
     <description>Region of interest corresponding to level 2</description>
     <label>Level 2 region</label>
-    <longflag>ROI2a</longflag>
+    <longflag>ROI2</longflag>
     <channel>input</channel>
   </region>
-  <region multiple="false" coordinateSystem="lps">
-    <name>ROI3a</name>
+  <region multiple="false" coordinateSystem="ras">
+    <name>ROI3</name>
     <description>Region of interest corresponding to level 3</description>
     <label>Level 3 region</label>
-    <longflag>ROI3a</longflag>
+    <longflag>ROI3</longflag>
     <channel>input</channel>
-  </region>
+  </region>  
 </parameters>
 
 <parameters>
@@ -199,6 +178,31 @@
 		<longflag>gradientMagnitudeTolerance</longflag>
 		<default>0.001</default>
 	</float>
+</parameters>
+
+<parameters>
+  <label>Validation</label>
+  <boolean>
+    <name>performValidation</name>
+    <description>Perform validation with the defined masks</description>
+    <label>Peform validation</label>
+    <longflag>validation</longflag>
+    <default>false</default>
+  </boolean>
+  <image type="label" reference="fixedImageFilename">
+    <name>fixedImageMask</name>
+    <description>The fixed image mask for validation</description>
+    <label>Fixed image mask</label>
+    <longflag>fixedImageMask</longflag>
+    <channel>input</channel>
+  </image>
+  <image type="label" reference="movingImageFilename">
+    <name>movingImageMask</name>
+    <description>The moving image mask for validation</description>
+    <label>Moving image mask</label>
+    <longflag>movingImageMask</longflag>
+    <channel>input</channel>
+  </image>
 </parameters>
 
 <parameters>

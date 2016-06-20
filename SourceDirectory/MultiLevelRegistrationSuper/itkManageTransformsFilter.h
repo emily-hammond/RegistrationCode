@@ -53,10 +53,8 @@ public:
 	itkSetObjectMacro( FixedLabelMap, ImageType );
 	itkSetObjectMacro( MovingImage, ImageType );
 	itkSetObjectMacro( MovingLabelMap, ImageType );
-	void SetROIFilename( const char * filename )
-	{
-		this->m_ROIFilename = filename;
-	}
+	void SetROIFilename(const char * filename);
+	void SetROI(std::vector<float> roi);
 
 	// get results
 	itkGetObjectMacro( TransformedImage, ImageType );
@@ -149,9 +147,11 @@ private:
 
 	// ROI
 	const char * m_ROIFilename;
-	ImageType::Pointer CropImage( ImageType::Pointer image );
-	double * ExtractROIPoints();
+	std::vector<float> m_ROI;
+	ImageType::Pointer CropImage( ImageType::Pointer image );	// used with reading in ROI from *.ascv file
+	void ExtractROIPoints();	// used with reading in ROI from *.ascv file
 
+	ImageType::Pointer CropImage(ImageType::Pointer image, std::vector<float> roi);
 
 	// applying transform
 	void HardenTransform();

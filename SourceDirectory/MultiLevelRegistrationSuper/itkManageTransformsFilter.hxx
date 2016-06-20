@@ -21,6 +21,20 @@ namespace itk
 		m_CompositeTransform = CompositeTransformType::New();
 		m_FixedCroppedImage = ImageType::New();
 		m_MovingCroppedImage = ImageType::New();
+		m_ROI.assign(6, 0.0);
+	}
+
+	void ManageTransformsFilter::SetROIFilename(const char * filename)
+	{
+		m_ROIFilename = filename;
+		ExtractROIPoints();
+		return;
+	}
+
+	void ManageTransformsFilter::SetROI(std::vector<float> roi)
+	{
+		m_ROI = roi;
+		return;
 	}
 
 	void ManageTransformsFilter::AddTransform( TransformType::Pointer transform )
@@ -231,11 +245,11 @@ namespace itk
 	// create the mask given an ROI filename
 	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::CropImage( ImageType::Pointer image )
 	{
-		double * roi = ExtractROIPoints();
-
+		std::vector<float>::iterator it = m_ROI.begin();
+	
 		// extract center and radius
-		double c[3] = {-*(roi),-*(roi+1),*(roi+2)};
-		double r[3] = {*(roi+3),*(roi+4),*(roi+5)};
+		double c[3] = {-*(it),-*(it+1),*(it+2)};
+		double r[3] = {*(it+3),*(it+4),*(it+5)};
 		
 		// create size of mask according to the roi array
 		// set start index of mask according to the roi array
@@ -287,10 +301,10 @@ namespace itk
 	}
 
 	// extract point values from the slicer ROI file
-	double * ManageTransformsFilter::ExtractROIPoints()
+	void ManageTransformsFilter::ExtractROIPoints()
 	{
 		// instantiate ROI array
-		static double roi[] = {0.0,0.0,0.0,0.0,0.0,0.0};
+		std::vector<float>::iterator it = m_ROI.begin();
 		bool fullROI = false; // denotes that ROI array is full
 		int numberOfPoints = 0;
 
@@ -329,11 +343,12 @@ namespace itk
 				// extract each point and place into ROI array
 				for( int i = 0; i < 3; ++i )
 				{
-					roi[numberOfPoints] = atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() );
+					m_ROI.insert(it,atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() ));
 					++numberOfPoints;
+					++it;
 
 					// set flag to false if the roi array is filled
-					if( numberOfPoints > 5 )
+					if( it == m_ROI.end() )
 					{
 						fullROI = true;
 					}
@@ -342,7 +357,7 @@ namespace itk
 		}
 
 		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
-		return roi;
+		return;
 	}
 
 } // end namespace

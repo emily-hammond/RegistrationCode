@@ -18,6 +18,7 @@ INSERT COMMENTS HERE
 #include "itkMemoryProbesCollectorBase.h"
 #include <time.h>
 #include <stdio.h>
+#include <vector>
 
 #include <windows.h>
 #include "MultiLevelRegistrationCLP.h"
@@ -258,6 +259,17 @@ int main( int argc, char * argv[] )
 	if( performValidation ) { std::cout << "Moving validation mask: " << movingImageMask << std::endl; }
 	//if( numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
 	//if( numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
+	
+	std::vector< float >::iterator jt;
+	for (jt = ROI2.begin(); jt != ROI2.end(); ++jt)
+	{
+		//for (jt = it->begin(); jt != it->end(); ++jt)
+		//{
+			std::cout << *jt;
+		//}
+		//std::cout << std::endl;
+	}
+	std::cout << std::endl;
 
 	// inputs
 	chronometer.Stop( "Inputs" );
@@ -482,7 +494,7 @@ int main( int argc, char * argv[] )
 		// crop images
 		transforms->CropImageOn();
 		transforms->ResampleImageOff();
-		transforms->SetROIFilename( ROI2.c_str() );
+		transforms->SetROI( ROI2 );
 		try
 		{
 			transforms->Update();
@@ -606,7 +618,7 @@ int main( int argc, char * argv[] )
 		// crop images
 		transforms->CropImageOn();
 		transforms->ResampleImageOff();
-		transforms->SetROIFilename( ROI3.c_str() );
+		transforms->SetROI( ROI3 );
 		try
 		{
 			transforms->Update();
