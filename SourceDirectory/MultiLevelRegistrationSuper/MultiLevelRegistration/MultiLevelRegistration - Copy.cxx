@@ -87,6 +87,7 @@ int main( int argc, char * argv[] )
 	std::cout << "              INITIALIZATION                 " << std::endl;
 	std::cout << "*********************************************\n" << std::endl;
 
+	// perform initialization class
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
 	TransformType::Pointer initialTransform = TransformType::New();
 	initialize->SetFixedImage( fixedImage );
@@ -94,6 +95,7 @@ int main( int argc, char * argv[] )
 	
 	if( manualInitialTransformFilename.empty() )
 	{
+		// turn on flags if no predefined transform
 		if( observe ){ initialize->ObserveOn(); }
 		if( centerOfGeometry ){ initialize->CenteredOnGeometryOn(); }
 		if( metricX ){ initialize->MetricAlignmentOn( 0 ); }
@@ -101,13 +103,13 @@ int main( int argc, char * argv[] )
 		if( metricZ ){ initialize->MetricAlignmentOn( 2 ); }
 		initialize->Update();
 		initialTransform = initialize->GetTransform();
+		std::cout << "Initialization complete." << std::endl;
 	}
 	else
 	{
-		std::cout << "Manual initial transform via previously saved file." << std::endl;
-		std::cout << "Initial Transform: " << manualInitialTransformFilename << std::endl;
 		initialize->Update( ReadInTransform< AffineTransformType >( manualInitialTransformFilename.c_str() ) );
 		initialTransform = initialize->GetTransform();
+		std::cout << "Initialization complete via predefined transform." << std::endl;
 	}
 
 	std::cout << "\nFinal Parameters" << std::endl;
@@ -121,56 +123,10 @@ int main( int argc, char * argv[] )
 	std::cout << "\n -> Transforms\n" << std::endl;
 	transforms->SetInitialTransform( initialTransform );
 	transforms->SetFixedImage( fixedImage );
-	if( performValidation ) { transforms->SetFixedLabelMap( fixedValidationMask ); }
-
-	// set up validation class and insert fixed image as image set 1 (will not change)
-	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
-	// insert image set 1 (this is the fixed image and will not change)
-	validation->SetImage1( fixedImage );
-	if( performValidation ) { validation->SetLabelMap1( fixedValidationMask ); }
-
-	// apply initial transform to the moving image and mask
 	transforms->SetMovingImage( movingImage );
-	if( performValidation ) { transforms->SetMovingLabelMap( movingValidationMask ); }
-	
-	// perform validation
-	if( performValidation )
-	{
-		validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
-		transforms->NearestNeighborInterpolateOn();
-		validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialTransform ) );
-		transforms->NearestNeighborInterpolateOff();
-		validation->LabelOverlapMeasuresOn();
-		try
-		{
-			validation->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-	}
 
 	// write out initial transform
-	//std::string initialTransformFilename = outputDirectory + "_InitialTransform.tfm";
-	//WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialTransform );
 	WriteOutTransform< TransformType >(finalTransform.c_str(), initialTransform);
-	if( debug )
-	{
-		// write out images
-		std::string InitResampledImageFilename = debugDirectory + "_InitResampledImage.mhd";
-		WriteOutImage< ImageType, ImageType >( InitResampledImageFilename.c_str(), transforms->ResampleImage( movingImage, initialTransform ) );
-		// write out label map
-		if( performValidation ) 
-		{ 
-			std::string InitResampledLabelMapFilename = debugDirectory + "_InitResampledLabelMap.mhd";
-			transforms->NearestNeighborInterpolateOn();
-			WriteOutImage< ImageType, ImageType >( InitResampledLabelMapFilename.c_str(), transforms->ResampleImage( movingValidationMask, initialTransform ) );
-			transforms->NearestNeighborInterpolateOff();
-		}
-	}
 
 	// initialization
 	chronometer.Stop( "Initialization" );
