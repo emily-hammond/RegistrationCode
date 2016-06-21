@@ -75,10 +75,6 @@ namespace itk
 		}
 		if( this->m_CropImage )
 		{
-			if( m_ROIFilename == '\0' )
-			{
-				itkExceptionMacro( << "ROI filename not present" );
-			}
 			this->m_MovingCroppedImage = CropImage( this->m_TransformedImage );
 			if( m_MovingLabelMap ) 
 			{ 
