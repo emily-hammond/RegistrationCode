@@ -29,191 +29,36 @@ void Timestamp();
 
 int main( int argc, char * argv[] )
 {
+	// parse through inputs 
 	PARSE_ARGS;
 
+	// print out start
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 	std::cout << "             MULTI-LEVEL REGISTRATION ";
 	Timestamp();
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 	std::cout << std::endl;
 
-	// probes
+	// probes (time/memory)
 	itk::TimeProbesCollectorBase	chronometer;
 	itk::MemoryProbesCollectorBase	memorymeter;
 
 	// full program
 	chronometer.Start( "Full program" );
 	memorymeter.Start( "Full program" );
-
-	// inputs
-	chronometer.Start( "Inputs" );
-	memorymeter.Start( "Inputs" );
-
-	// required inputs
-	/*char * fixedImageFilename = '\0';
-	char * movingImageFilename = '\0';
-	char * fixedValidationMaskFilename = '\0';
-	char * movingValidationMaskFilename = '\0';
-	std::string outputDirectory = "\0";
-	int val = 1;
-
-	// multi-level
-	int numberOfLevels = 0;
-	char * level2ROIFilename = '\0';
-	char * level3ROIFilename = '\0';
-	int observe = 0;
-
-	// initialization
-	int center = 1;
-	int metricX = 0;
-	int metricY = 0;
-	int metricZ = 0;
-
-	// other inputs instantiation defaults
-	int numberOfIterations = 500;
-	float maximumStepLength = 1;
-	float relaxationFactor = 0.5;
-	float gradientMagnitudeTolerance = 0.001; 
-	float rotationScale = 0.001; 
-	float translationScale = 10;
-	float scalingScale = 0.001;
-	float minimumStepLength = 0.001;
-
-	// special inputs
-	int skipWB = 0;
-	int debug = 0;
-	char * initialFixedTransformFilename = '\0';
-	char * referenceImageFilename = '\0';
-	char * manualInitialTransformFilename = '\0';
-
-	// minimum input
-	if( argc < 6 )
-	{
-		PrintOutManual();
-		return EXIT_FAILURE;
-	}
-	else
-	{
-		//desired inputs
-		outputDirectory = argv[1];
-		fixedImageFilename = argv[2];
-		movingImageFilename = argv[3];
-	}
 	
-	// validation masks
-	if( argc > 4 && strcmp(argv[4],"[]") != 0 && strcmp(argv[5],"[]") != 0 )
-	{
-		fixedValidationMaskFilename = argv[4];
-		if( argc < 6 )
-		{
-			std::cout << "Please insert filename for moving mask" << std::endl;
-			return EXIT_FAILURE;
-		}
-		else
-		{
-			movingValidationMaskFilename = argv[5];
-		}
-	}
-	else
-	{
-		val = 0;
-	}
-
-	// number of levels
-	if( argc > 6 && atoi(argv[6]) > 0 && strcmp(argv[6],"[]") != 0 )
-	{
-		numberOfLevels = atoi( argv[6] );
-		if( argc < 8 )
-		{
-			std::cout << "Please insert a region of interest filename." << std::endl;
-			return EXIT_FAILURE;
-		}
-		else
-		{
-			level2ROIFilename = argv[7];
-		}
-	}
-	if( argc > 8 && numberOfLevels > 2 && strcmp(argv[8],"[]") != 0 )
-	{
-		level3ROIFilename = argv[8];
-	}
-	if( numberOfLevels > 3 )
-	{
-		std::cout << "Maximum number of levels is 3" << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	// observation
-	if( argc > 9 && strcmp(argv[9],"[]") != 0 ){ observe = atoi( argv[9] ); }
-
-	// initialization
-	if( argc > 10 && strcmp(argv[10],"[]") != 0 ){ manualInitialTransformFilename = argv[10]; }
-	if( argc > 11 && strcmp(argv[11],"[]") != 0 ){ center = atoi( argv[11] ); }
-	if( argc > 12 && strcmp(argv[12],"[]") != 0 ){ metricX = atoi( argv[12] ); }
-	if( argc > 13 && strcmp(argv[13],"[]") != 0 ){ metricY = atoi( argv[13] ); }
-	if( argc > 14 && strcmp(argv[14],"[]") != 0 ){ metricZ = atoi( argv[14] ); }
-
-	// registration parameters
-	if( argc > 15 && strcmp(argv[15],"[]") != 0 ){ rotationScale = atof( argv[15] ); }
-	if( argc > 16 && strcmp(argv[16],"[]") != 0 ){ translationScale = atof( argv[16] ); }
-	if( argc > 17 && strcmp(argv[17],"[]") != 0 ){ scalingScale = atof( argv[17] ); }
-	if( argc > 18 && strcmp(argv[18],"[]") != 0 ){ numberOfIterations = atoi( argv[18] ); }
-	if( argc > 19 && strcmp(argv[19],"[]") != 0 ){ maximumStepLength = atof( argv[19] ); }
-	if( argc > 20 && strcmp(argv[20],"[]") != 0 ){ minimumStepLength = atof( argv[20] ); }
-	if( argc > 21 && strcmp(argv[21],"[]") != 0 ){ relaxationFactor = atof( argv[21] ); }
-	if( argc > 22 && strcmp(argv[22],"[]") != 0 ){ gradientMagnitudeTolerance = atof( argv[22] ); }
-	if( argc > 23 && strcmp(argv[23],"[]") != 0 ){ skipWB = atoi( argv[23] ); }
-	if( argc > 24 && strcmp(argv[24],"[]") != 0 ){ debug = atoi( argv[24] ); }
-	if( argc > 25 && strcmp(argv[25],"[]") != 0 )
-	{ 
-		initialFixedTransformFilename = argv[25];
-		if( argc < 27 )
-		{
-			std::cout << "Please define a reference image for resampling." << std::endl;
-		}
-		else
-		{
-			referenceImageFilename = argv[26];
-		}
-	}
-	if( argc > 27 )
-	{ 
-		std::cout << "Too many inputs" << std::endl;
-		return EXIT_FAILURE;
-	}
-*/
-	std::string debugDirectory = "\0";
-	if( debug )
-	{
-		// create debug directory if desired
-		debugDirectory = outputDirectory + "debug\\";
-		if( !CreateDirectory( debugDirectory.c_str(), NULL ) ) {}
-		else
-		{
-			CreateDirectory( debugDirectory.c_str(), NULL );
-		}
-
-		std::cout << "Debug directory: " << debugDirectory << std::endl;
-		std::cout << std::endl;
-
-		std::cout << "Number of inputs: " << argc << std::endl;
-		for( int i = 0; i < argc; ++i )
-		{
-			std::cout << i << ": " << argv[i] << std::endl;
-		}
-		std::cout << std::endl;
-	}
-
-	// instantiate image type
+	// instantiate image and transform types
 	typedef itk::Image< short, 3 >	ImageType;
 	typedef itk::Image< unsigned char, 3 >	MaskImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	typedef itk::AffineTransform< double >	AffineTransformType;
 
-	// check inputs
+	// manage transforms/cropping/applying class
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+
+	// fixed and moving images
 	ImageType::Pointer fixedImage = ImageType::New();
-	ImageType::Pointer fixedValidationMask = ImageType::New();
+	ImageType::Pointer movingImage = ReadInImage< ImageType >(movingImageFilename.c_str());
 
 	// apply fixed initial transform if given
 	if( !fixedImageInitialTransform.empty() )
@@ -221,48 +66,17 @@ int main( int argc, char * argv[] )
 		// apply transform to fixed image
 		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( fixedImageInitialTransform.c_str() );
 		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >( fixedImageFilename.c_str() );
-		transforms->SetFixedImage(ReadInImage< ImageType >(referenceImage.c_str()));
+		transforms->SetFixedImage( ReadInImage< ImageType >(referenceImage.c_str()) );
 		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
-
-		// apply transform to fixed validation mask
-		if( performValidation )
-		{
-			transforms->NearestNeighborInterpolateOn();
-			ImageType::Pointer fixedValidationMaskTemp = ReadInImage< ImageType >(fixedImageMask.c_str());
-			fixedValidationMask = transforms->ResampleImage( fixedValidationMaskTemp, initialFixedTransform );
-			transforms->NearestNeighborInterpolateOff();
-		}
-		
 		std::cout << "Initial transform applied to fixed image." << std::endl;
+		std::cout << "Moving image read in." << std::endl;
 	}
 	else
 	{
-		fixedImage = ReadInImage< ImageType >(fixedImageFilename.c_str());
-		if( performValidation )
-		{
-			fixedValidationMask = ReadInImage< ImageType >(fixedImageMask.c_str());
-		}
+		fixedImage = ReadInImage< ImageType >( fixedImageFilename.c_str() );
+		std::cout << "Fixed image read in." << std::endl;
+		std::cout << "Moving image read in." << std::endl;
 	}
-
-	// read in necessary images
-	ImageType::Pointer movingImage = ReadInImage< ImageType >(movingImageFilename.c_str());
-	ImageType::Pointer movingValidationMask = ImageType::New();
-	if( performValidation )
-	{
-		movingValidationMask = ReadInImage< ImageType >(movingImageMask.c_str());
-	}
-	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
-
-	std::cout << "\nFixed image           : " << fixedImageFilename << std::endl;
-	if( performValidation ) { std::cout << "Fixed validation mask : " << fixedImageMask << std::endl; }
-	std::cout << "Moving image          : " << movingImageFilename << std::endl;
-	if( performValidation ) { std::cout << "Moving validation mask: " << movingImageMask << std::endl; }
-	//if( numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
-	//if( numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
-
-	// inputs
-	chronometer.Stop( "Inputs" );
-	memorymeter.Stop( "Inputs" );
 
 	// initialization
 	chronometer.Start( "Initialization" );
