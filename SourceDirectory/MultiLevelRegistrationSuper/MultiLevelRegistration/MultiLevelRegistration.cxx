@@ -268,6 +268,7 @@ int main( int argc, char * argv[] )
 		{
 			std::cout << *jt << std::endl;
 		}
+		std::cout << std::endl;
 	}
 
 	// inputs

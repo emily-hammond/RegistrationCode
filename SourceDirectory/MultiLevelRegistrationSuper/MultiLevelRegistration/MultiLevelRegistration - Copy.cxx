@@ -159,6 +159,7 @@ int main( int argc, char * argv[] )
 		level1Registration->SetTranslationScale( translationScale );
 		level1Registration->SetScalingScale( scalingScale );
 		if( observe ){ level1Registration->ObserveOn(); }
+		
 		try
 		{
 			level1Registration->Update();
@@ -169,6 +170,7 @@ int main( int argc, char * argv[] )
 			std::cerr << err << std::endl;
 			std::cerr << std::endl;
 		}
+		
 		level1Registration->Print();
 
 		// add transform to composite transform in transforms class and apply to moving image
