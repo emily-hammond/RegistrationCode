@@ -138,50 +138,42 @@ int main( int argc, char * argv[] )
 		chronometer.Start( "Level 1" );
 		memorymeter.Start( "Level 1" );
 
-		if( !skipWB )
+		// perform registration class
+		itk::RegistrationFramework::Pointer level1Registration = itk::RegistrationFramework::New();
+
+		// test functionality of itkRegistrationFramework.h
+		std::cout << "\n*********************************************" << std::endl;
+		std::cout << "            REGISTRATION LEVEL 1               " << std::endl;
+		std::cout << "*********************************************\n" << std::endl;
+
+		std::cout << "\n -> Registration\n" << std::endl;
+		// create registration class
+		level1Registration->SetFixedImage( fixedImage );
+		level1Registration->SetMovingImage( movingImage );
+		level1Registration->SetInitialTransform( initialTransform );
+		level1Registration->SetNumberOfIterations( numberOfIterations );
+		level1Registration->SetRelaxationFactor( relaxationFactor );
+		level1Registration->SetMaximumStepLength( maximumStepLength );
+		level1Registration->SetMinimumStepLength( minimumStepLength );
+		level1Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
+		level1Registration->SetRotationScale( rotationScale );
+		level1Registration->SetTranslationScale( translationScale );
+		level1Registration->SetScalingScale( scalingScale );
+		if( observe ){ level1Registration->ObserveOn(); }
+		try
 		{
-			itk::RegistrationFramework::Pointer level1Registration = itk::RegistrationFramework::New();
-
-			// test functionality of itkRegistrationFramework.h
-			std::cout << "\n*********************************************" << std::endl;
-			std::cout << "            REGISTRATION LEVEL 1               " << std::endl;
-			std::cout << "*********************************************\n" << std::endl;
-
-			std::cout << "\n -> Registration\n" << std::endl;
-			// create registration class
-			level1Registration->SetFixedImage( fixedImage );
-			level1Registration->SetMovingImage( movingImage );
-			level1Registration->SetInitialTransform( initialTransform );
-			level1Registration->SetNumberOfIterations( numberOfIterations );
-			level1Registration->SetRelaxationFactor( relaxationFactor );
-			level1Registration->SetMaximumStepLength( maximumStepLength );
-			level1Registration->SetMinimumStepLength( minimumStepLength );
-			level1Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
-			level1Registration->SetRotationScale( rotationScale );
-			level1Registration->SetTranslationScale( translationScale );
-			level1Registration->SetScalingScale( scalingScale );
-			if( observe ){ level1Registration->ObserveOn(); }
-			try
-			{
-				level1Registration->Update();
-			}
-			catch(itk::ExceptionObject & err)
-			{
-				std::cerr << "Exception Object Caught!" << std::endl;
-				std::cerr << err << std::endl;
-				std::cerr << std::endl;
-			}
-			level1Registration->Print();
-
-			std::cout << "\n -> Transforms\n" << std::endl;
-			// add transform to composite transform in transforms class and apply to moving image
-			transforms->AddTransform( level1Registration->GetFinalTransform() );
+			level1Registration->Update();
 		}
-		else
+		catch(itk::ExceptionObject & err)
 		{
-			transforms->AddTransform( initialTransform );
-			std::cout << "Level 1 registration skipped." << std::endl;
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
 		}
+		level1Registration->Print();
+
+		// add transform to composite transform in transforms class and apply to moving image
+		transforms->AddTransform( level1Registration->GetFinalTransform() );
 		transforms->ResampleImageOn();
 		try
 		{
@@ -194,44 +186,8 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		if( performValidation )
-		{
-			std::cout << "\n -> Validation\n" << std::endl;
-			// perform validation
-			validation->SetImage2( transforms->GetTransformedImage() );
-			validation->SetLabelMap2( transforms->GetTransformedLabelMap() );
-			validation->LabelOverlapMeasuresOn();
-			try
-			{
-				validation->Update();
-			}
-			catch(itk::ExceptionObject & err)
-			{
-				std::cerr << "Exception Object Caught!" << std::endl;
-				std::cerr << err << std::endl;
-				std::cerr << std::endl;
-			}
-		}
-
-		if( debug && !skipWB )
-		{
-			// write out images
-			std::string level1ResampledImageFilename = debugDirectory + "_Level1ResampledImage.mhd";
-			WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), transforms->GetTransformedImage() );
-			// write out label map
-			if( performValidation ) 
-			{ 
-				std::string level1ResampledLabelMapFilename = debugDirectory + "_Level1ResampledLabelMap.mhd";
-				WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
-			}
-		}
-
-		if( !skipWB )
-		{
-			// write out composite transform
-			std::string level1CompositeTransformFilename = outputDirectory + "_Level1CompositeTransform.tfm";
-			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
-		}
+		// write out composite transform
+		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 
 		// Registration level 1
 		chronometer.Stop( "Level 1" );
