@@ -173,17 +173,6 @@ int main( int argc, char * argv[] )
 
 		// add transform to composite transform in transforms class and apply to moving image
 		transforms->AddTransform( level1Registration->GetFinalTransform() );
-		transforms->ResampleImageOn();
-		try
-		{
-			transforms->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
 
 		// write out composite transform
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
@@ -207,7 +196,7 @@ int main( int argc, char * argv[] )
 
 		// crop images
 		transforms->CropImageOn();
-		transforms->ResampleImageOff();
+		transforms->ResampleImageOn();
 		transforms->SetROI( ROI2 );
 		try
 		{
@@ -252,18 +241,6 @@ int main( int argc, char * argv[] )
 		// add transform to composite transform in transforms class and apply to moving image/label map image
 		// don't update images here. Apply composite transform to the original moving image and label map
 		transforms->AddTransform( level2Registration->GetFinalTransform() );
-		transforms->ResampleImageOn();
-		transforms->CropImageOn();
-		try
-		{
-			transforms->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
 
 		// final composite transform
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
@@ -286,7 +263,7 @@ int main( int argc, char * argv[] )
 
 		// crop images
 		transforms->CropImageOn();
-		transforms->ResampleImageOff();
+		transforms->ResampleImageOn();
 		transforms->SetROI( ROI3 );
 		try
 		{
