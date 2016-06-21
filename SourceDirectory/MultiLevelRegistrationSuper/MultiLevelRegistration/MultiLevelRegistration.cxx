@@ -260,6 +260,16 @@ int main( int argc, char * argv[] )
 	//if( numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
 	//if( numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
 
+	std::vector< std::vector< float> >::iterator it = ROI2.begin();
+	for (it; it != ROI2.end(); it++)
+	{
+		std::vector<float>::iterator jt = (*it).begin();
+		for (jt; jt != (*it).end(); jt++)
+		{
+			std::cout << *jt << std::endl;
+		}
+	}
+
 	// inputs
 	chronometer.Stop( "Inputs" );
 	memorymeter.Stop( "Inputs" );
@@ -467,7 +477,7 @@ int main( int argc, char * argv[] )
 		chronometer.Stop( "Level 1" );
 		memorymeter.Stop( "Level 1" );
 	}
-	
+	/*
 	if( numberOfLevels > 1 )
 	{
 		// Registration level 2
@@ -722,7 +732,7 @@ int main( int argc, char * argv[] )
 	// print out time/memory results
 	chronometer.Report( std::cout );
 	memorymeter.Report( std::cout );
-
+	*/
 	return EXIT_SUCCESS;
 }
 

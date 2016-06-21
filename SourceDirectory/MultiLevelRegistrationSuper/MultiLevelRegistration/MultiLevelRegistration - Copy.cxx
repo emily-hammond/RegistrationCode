@@ -146,7 +146,6 @@ int main( int argc, char * argv[] )
 		std::cout << "            REGISTRATION LEVEL 1               " << std::endl;
 		std::cout << "*********************************************\n" << std::endl;
 
-		std::cout << "\n -> Registration\n" << std::endl;
 		// create registration class
 		level1Registration->SetFixedImage( fixedImage );
 		level1Registration->SetMovingImage( movingImage );
@@ -221,16 +220,6 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		// write out inputs
-		if( debug )
-		{
-			std::string level2InputMovingImage = debugDirectory + "_Level2InputMovingImage.mhd";
-			WriteOutImage< ImageType, ImageType >( level2InputMovingImage.c_str(), transforms->GetMovingCroppedImage() );
-			std::string level2InputFixedImage = debugDirectory + "_Level2InputFixedImage.mhd";
-			WriteOutImage< ImageType, ImageType >( level2InputFixedImage.c_str(), transforms->GetFixedCroppedImage() );
-		}
-
-		std::cout << "\n -> Registration\n" << std::endl;
 		// create new registration class
 		itk::RegistrationFramework::Pointer level2Registration = itk::RegistrationFramework::New();
 		level2Registration->SetFixedImage( transforms->GetFixedCroppedImage() );
@@ -246,6 +235,7 @@ int main( int argc, char * argv[] )
 
 
 		if( observe ){ level2Registration->ObserveOn(); }
+
 		try
 		{
 			level2Registration->Update();
@@ -275,43 +265,7 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		if( performValidation ) 
-		{ 
-			std::cout << "\n -> Validation\n" << std::endl;
-			// perform validation
-			validation->SetImage1( transforms->GetFixedCroppedImage() );
-			validation->SetLabelMap1( transforms->GetFixedCroppedLabelMap() );
-			validation->SetImage2( transforms->GetMovingCroppedImage());
-			validation->SetLabelMap2( transforms->GetMovingCroppedLabelMap() );
-			validation->LabelOverlapMeasuresOn();
-			try
-			{
-				validation->Update();
-			}
-			catch(itk::ExceptionObject & err)
-			{
-				std::cerr << "Exception Object Caught!" << std::endl;
-				std::cerr << err << std::endl;
-				std::cerr << std::endl;
-			}
-		}
-
-		if( debug )
-		{
-			// write out image
-			std::string level2MovingCroppedImageFilename = debugDirectory + "_Level2MovingCroppedImage.mhd";
-			WriteOutImage< ImageType, ImageType >( level2MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-			if( performValidation ) 
-			{ 
-				std::string level2FixedCroppedImageFilename = debugDirectory + "_Level2FixedLabelMap.mhd";
-				WriteOutImage< ImageType, ImageType >( level2FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
-				std::string level2ResampledLabelMapFilename = debugDirectory + "_Level2ResampledLabelMap.mhd";
-				WriteOutImage< ImageType, ImageType >( level2ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
-			}
-		}
-
 		// final composite transform
-		std::string level2CompositeTransformFilename = outputDirectory + "_Level2CompositeTransform.tfm";
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 	
 		// Registration level 2
@@ -345,16 +299,6 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		// write out inputs
-		if( debug )
-		{
-			std::string level3InputMovingImage = debugDirectory + "_Level3InputMovingImage.mhd";
-			WriteOutImage< ImageType, ImageType >( level3InputMovingImage.c_str(), transforms->GetMovingCroppedImage() );
-			std::string level3InputFixedImage = debugDirectory + "_Level3InputFixedImage.mhd";
-			WriteOutImage< ImageType, ImageType >( level3InputFixedImage.c_str(), transforms->GetFixedCroppedImage() );
-		}
-
-		std::cout << "\n -> Registration\n" << std::endl;
 		// create new registration class
 		itk::RegistrationFramework::Pointer level3Registration = itk::RegistrationFramework::New();
 		level3Registration->SetFixedImage( transforms->GetFixedCroppedImage() );
@@ -367,7 +311,9 @@ int main( int argc, char * argv[] )
 		level3Registration->SetRotationScale( rotationScale/4.0 );
 		level3Registration->SetTranslationScale( translationScale/4.0 );
 		level3Registration->SetScalingScale( scalingScale/4.0 );
+
 		if( observe ){ level3Registration->ObserveOn(); }
+
 		try
 		{
 			level3Registration->Update();
@@ -397,43 +343,7 @@ int main( int argc, char * argv[] )
 			std::cerr << std::endl;
 		}
 
-		if( performValidation )
-		{
-			std::cout << "\n -> Validation\n" << std::endl;
-			// perform validation
-			validation->SetImage1( transforms->GetFixedCroppedImage() );
-			validation->SetLabelMap1( transforms->GetFixedCroppedLabelMap() );
-			validation->SetImage2( transforms->GetMovingCroppedImage());
-			validation->SetLabelMap2( transforms->GetMovingCroppedLabelMap() );
-			validation->LabelOverlapMeasuresOn();
-			try
-			{
-				validation->Update();
-			}
-			catch(itk::ExceptionObject & err)
-			{
-				std::cerr << "Exception Object Caught!" << std::endl;
-				std::cerr << err << std::endl;
-				std::cerr << std::endl;
-			}
-		}
-
-		if( debug )
-		{
-			// write out image
-			std::string level3MovingCroppedImageFilename = debugDirectory + "_Level3MovingCroppedImage.mhd";
-			WriteOutImage< ImageType, ImageType >( level3MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-			if( performValidation ) 
-			{ 
-				std::string level3FixedCroppedImageFilename = debugDirectory + "_Level3FixedLabelMap.mhd";
-				WriteOutImage< ImageType, ImageType >( level3FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
-				std::string level3ResampledLabelMapFilename = debugDirectory + "_Level3ResampledLabelMap.mhd";
-				WriteOutImage< ImageType, ImageType >( level3ResampledLabelMapFilename.c_str(), transforms->GetMovingCroppedLabelMap() );
-			}
-		}
-
 		// write out final composite transform
-		std::string level3CompositeTransformFilename = outputDirectory + "_Level3CompositeTransform.tfm";
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 		
 		// Registration level 3

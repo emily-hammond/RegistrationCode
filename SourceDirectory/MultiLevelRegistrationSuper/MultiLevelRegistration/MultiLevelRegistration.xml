@@ -51,7 +51,7 @@
 		<minimum>0</minimum>
 		<maximum>3</maximum>
 	</integer>
-  <region multiple="false" coordinateSystem="ras">
+  <region multiple="true" coordinateSystem="ras">
     <name>ROI2</name>
     <description>Region of interest corresponding to level 2</description>
     <label>Level 2 region</label>
