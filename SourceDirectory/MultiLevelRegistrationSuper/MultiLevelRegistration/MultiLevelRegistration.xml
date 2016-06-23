@@ -52,19 +52,12 @@
 		<maximum>3</maximum>
 	</integer>
   <region multiple="true" coordinateSystem="ras">
-    <name>ROI2</name>
-    <description>Region of interest corresponding to level 2</description>
-    <label>Level 2 region</label>
-    <longflag>ROI2</longflag>
+    <name>ROI</name>
+    <description>A list of ROIs in the order they should be applied where the last one is applied at the last level, moving up until there are no more</description>
+    <label>List of ROIs</label>
+    <longflag>ROI</longflag>
     <channel>input</channel>
-  </region>
-  <region multiple="false" coordinateSystem="ras">
-    <name>ROI3</name>
-    <description>Region of interest corresponding to level 3</description>
-    <label>Level 3 region</label>
-    <longflag>ROI3</longflag>
-    <channel>input</channel>
-  </region>  
+  </region> 
 </parameters>
 
 <parameters>

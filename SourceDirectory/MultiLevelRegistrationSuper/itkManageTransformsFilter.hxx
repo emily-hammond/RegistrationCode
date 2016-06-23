@@ -172,7 +172,14 @@ namespace itk
 
 		// input parameters
 		resample->SetInput( image );
-		resample->SetTransform( m_CompositeTransform );
+		if (!m_CompositeTransform)
+		{
+			resample->SetTransform(m_InitialTransform);
+		}
+		else
+		{
+			resample->SetTransform(m_CompositeTransform);
+		}
 
 		// define interpolator
 		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
