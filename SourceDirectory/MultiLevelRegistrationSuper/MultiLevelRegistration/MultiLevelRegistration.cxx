@@ -136,11 +136,12 @@ int main( int argc, char * argv[] )
 	int numberOfROIs = ROI.size();
 	bool ROI1 = false;
 	std::vector<std::vector<float>>::iterator it = ROI.begin();
+	std::cout << numberOfLevels - numberOfROIs << std::endl;
 	if (numberOfLevels - numberOfROIs == 1)
 	{
 		ROI1 = false;
 	}
-	else if (numberOfLevels - numberOfROIs != 0)
+	else if (numberOfLevels - numberOfROIs == 0)
 	{
 		ROI1 = true;
 	}
@@ -174,6 +175,9 @@ int main( int argc, char * argv[] )
 			transforms->CropImageOn();
 			it++;
 
+			std::vector<float>::iterator jt = (*it).begin();
+			std::cout << "ROI: " << *jt << ", " << *(jt + 1) << ", " << *(jt + 2) << ", " << *(jt + 3) << ", " << *(jt + 4) << ", " << *(jt + 5) << std::endl;
+
 			// insert images into registration class
 			registration->SetFixedImage(transforms->GetFixedCroppedImage());
 			registration->SetMovingImage(transforms->GetMovingCroppedImage());
@@ -183,6 +187,9 @@ int main( int argc, char * argv[] )
 			transforms->SetROI(*it);
 			transforms->CropImageOn();
 			it++;
+
+			std::vector<float>::iterator jt = (*it).begin();
+			std::cout << "ROI: " << *jt << ", " << *(jt + 1) << ", " << *(jt + 2) << ", " << *(jt + 3) << ", " << *(jt + 4) << ", " << *(jt + 5) << std::endl;
 
 			// insert images into registration class
 			registration->SetFixedImage(transforms->GetFixedCroppedImage());

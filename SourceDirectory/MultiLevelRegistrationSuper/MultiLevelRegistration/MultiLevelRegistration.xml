@@ -23,13 +23,6 @@
 		<longflag>movingImage</longflag>
 		<channel>input</channel>
 	</image>
-	<string>
-		<name>outputDirectory</name>
-		<description>The directory where the transforms will be saved</description>
-		<label>Output Directory (.txt)</label>
-		<longflag>outputDirectory</longflag>
-		<channel>output</channel>
-	</string>
   <transform fileExtensions=".txt">
     <name>finalTransform</name>
     <description>Final transformation to transform the moving image into fixed image space (composite transform)</description>
