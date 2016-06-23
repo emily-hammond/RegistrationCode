@@ -134,54 +134,107 @@ int main( int argc, char * argv[] )
 
 	// determine the number of ROIs and creating iterators
 	int numberOfROIs = ROI.size();
-	if (numberOfROIs == 1)
+	bool ROI1 = false;
+	std::vector<std::vector<float>>::iterator it = ROI.begin();
+	if (numberOfLevels - numberOfROIs == 1)
 	{
-		std::vector< float >::iterator it = ROI.begin();
+		ROI1 = false;
 	}
-	else if (numberOfROIs > 1)
+	else if (numberOfLevels - numberOfROIs != 0)
 	{
-		std::vector<std::vector<float>>::iterator it = ROI.begin();
+		ROI1 = true;
 	}
-	else if (numberOfROIs > numberOfLevels) 
-	{ 
-		std::cout << "Too many ROIs are specified" << std::endl; 
-		return EXIT_FAILURE; 
-	}
-	else if ( numberOfROIs - numberOfLevels > 1)
+	else 
 	{
-		std::cout << "Too few ROIs have been specified" << std::endl;
-	}
-	else
-	{
-		std::cout << "Strange things have happened with your ROIs" << std::endl;
+		std::cout << "Mismatched number of ROIs specified." << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	// prepare the Registration framework
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	
-	for (int NOL = 1; NOL < numberOfLevels, ++NOL)
+	for (int level = 1; level < numberOfLevels;  ++level)
 	{
 		// monitors
-		std::string message = "Level " + NOL;
+		std::string message = "Level " + level;
 		chronometer.Start(message.c_str());
 		memorymeter.Start(message.c_str());
 
 		std::cout << "\n*********************************************" << std::endl;
-		std::cout << "            REGISTRATION LEVEL " << NOL << "               " << std::endl;
+		std::cout << "            REGISTRATION LEVEL " << level << "               " << std::endl;
 		std::cout << "*********************************************\n" << std::endl;
 
-		// apply transform from previous level and crop image
+		// apply transform from previous level 
 		transforms->ResampleImageOn();
 		
-		// insert appropriate ROI into 
-		if (numberOfROIs == numberOfLevels)
+		// insert appropriate ROI into transforms class and crop image
+		if ( level == 1 && ROI1 ) // if it is level 1 and ROI is to be used in Level 1
 		{
+			transforms->SetROI(*it);
+			transforms->CropImageOn();
+			it++;
 
+			// insert images into registration class
+			registration->SetFixedImage(transforms->GetFixedCroppedImage());
+			registration->SetMovingImage(transforms->GetMovingCroppedImage());
 		}
-		transforms->CropImageOn();
-		
+		else if (level != 1) // if it is not level 1
+		{
+			transforms->SetROI(*it);
+			transforms->CropImageOn();
+			it++;
+
+			// insert images into registration class
+			registration->SetFixedImage(transforms->GetFixedCroppedImage());
+			registration->SetMovingImage(transforms->GetMovingCroppedImage());
+		}
+		else // ROI is not applied at level
+		{
+			std::cout << "ROI not applied at level " << level << std::endl;
+			// insert images into registration class
+			registration->SetFixedImage( fixedImage );
+			registration->SetMovingImage(transforms->GetTransformedImage());
+		}
+
+		// insert parameters into registration
+		registration->SetNumberOfIterations(numberOfIterations);
+		registration->SetRelaxationFactor(relaxationFactor);
+		registration->SetMaximumStepLength(maximumStepLength);
+		registration->SetMinimumStepLength(minimumStepLength);
+		registration->SetGradientMagnitudeTolerance(gradientMagnitudeTolerance);
+		registration->SetRotationScale(rotationScale);
+		registration->SetTranslationScale(translationScale);
+		registration->SetScalingScale(scalingScale);
+
+		// observe process
+		if (observe) { registration->ObserveOn(); }
+
+		// perform registration
+		try
+		{
+			registration->Update();
+		}
+		catch (itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		// print results
+		registration->Print();
+
+		// add transform to transforms class
+		transforms->AddTransform(registration->GetFinalTransform());
+
+		// write out composite transform
+		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(finalTransform.c_str(), transforms->GetCompositeTransform());
+
+		// Registration level 1
+		chronometer.Stop(message.c_str());
+		memorymeter.Stop(message.c_str());
 	}
-	
+	/*
 	if( numberOfLevels > 0 )
 	{
 		// Registration level 1
@@ -233,7 +286,7 @@ int main( int argc, char * argv[] )
 		chronometer.Stop( "Level 1" );
 		memorymeter.Stop( "Level 1" );
 	}
-	/*
+	
 	if( numberOfLevels > 1 )
 	{
 		// Registration level 2
