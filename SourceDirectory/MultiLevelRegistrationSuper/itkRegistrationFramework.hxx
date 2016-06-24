@@ -62,7 +62,6 @@ namespace itk
 		TransformType::ParametersType identityParameters( this->m_Transform->GetNumberOfParameters() );
 		if( !m_InitialTransform )
 		{
-			std::cout << "InitialTransform not present" << std::endl;
 			// create identity transform parameters
 			identityParameters[0] = 0;	// rotation
 			identityParameters[1] = 0;

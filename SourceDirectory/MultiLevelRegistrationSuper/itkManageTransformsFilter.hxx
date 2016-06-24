@@ -76,24 +76,18 @@ namespace itk
 		if( this->m_CropImage )
 		{
 			this->m_MovingCroppedImage = CropImage( this->m_TransformedImage );
+			this->m_FixedCroppedImage = CropImage( this->m_FixedImage );
+			std::cout << "Images cropped." << std::endl;
 			if( m_MovingLabelMap ) 
 			{ 
-				this->m_MovingCroppedLabelMap = CropImage( this->m_TransformedLabelMap ); 
+				this->m_MovingCroppedLabelMap = CropImage( this->m_TransformedLabelMap );
+				std::cout << "Moving label map cropped." << std::endl;
 			} 
-			else 
-			{ 
-				std::cout << "Moving label map not present" << std::endl; 
-			}
-			this->m_FixedCroppedImage = CropImage( this->m_FixedImage );
 			if( m_FixedLabelMap ) 
 			{ 
-				this->m_FixedCroppedLabelMap = CropImage( this->m_FixedLabelMap ); 
+				this->m_FixedCroppedLabelMap = CropImage( this->m_FixedLabelMap );
+				std::cout << "Fixed label map cropped." << std::endl;
 			}
-			else 
-			{ 
-				std::cout << "Fixed label map not present" << std::endl; 
-			}
-			std::cout << "Images cropped." << std::endl;
 		}
 
 		return;
@@ -170,9 +164,9 @@ namespace itk
 		resample->SetOutputSpacing( this->m_FixedImage->GetSpacing() );
 		resample->SetOutputDirection( this->m_FixedImage->GetDirection() );
 
-		// input parameters
+				// input parameters
 		resample->SetInput( image );
-		if (!m_CompositeTransform)
+		if (m_CompositeTransform->IsTransformQueueEmpty())
 		{
 			resample->SetTransform(m_InitialTransform);
 		}
@@ -251,7 +245,7 @@ namespace itk
 		std::vector<float>::iterator it = m_ROI.begin();
 	
 		// extract center and radius
-		double c[3] = {-*(it),-*(it+1),*(it+2)};
+		double c[3] = {*(it),*(it+1),*(it+2)};
 		double r[3] = {*(it+3),*(it+4),*(it+5)};
 		
 		// create size of mask according to the roi array

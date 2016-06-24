@@ -134,14 +134,6 @@ int main( int argc, char * argv[] )
 	// determine the number of ROIs and creating iterators
 	int numberOfROIs = ROI.size();
 	bool ROI1 = false;
-	/*try
-	{
-		std::vector<std::vector<float>>::iterator it = ROI.begin();
-	}
-	catch (...)
-	{
-		std::cout << "Something wrong with creating iterator." << std::endl;
-	}*/
 
 	std::vector< std::vector< float> >::iterator it = ROI.begin();
 	if (numberOfLevels - numberOfROIs == 1)
@@ -182,16 +174,20 @@ int main( int argc, char * argv[] )
 
 			transforms->SetROI(*it);
 			transforms->CropImageOn();
-			
-			std::vector<float>::iterator jt = (*it).begin();
-			for (jt; jt != (*it).end(); jt++)
-			{
-				std::cout << *jt << ", ";
-			}
-			std::cout << std::endl;
 
 			it++;
 			// insert images into registration class
+			try
+			{
+				transforms->Update();
+			}
+			catch (itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+				return EXIT_FAILURE;
+			}
 			registration->SetFixedImage(transforms->GetFixedCroppedImage());
 			registration->SetMovingImage(transforms->GetMovingCroppedImage());
 		}
@@ -204,6 +200,17 @@ int main( int argc, char * argv[] )
 
 			it++;
 			// insert images into registration class
+			try
+			{
+				transforms->Update();
+			}
+			catch (itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+				return EXIT_FAILURE;
+			}
 			registration->SetFixedImage(transforms->GetFixedCroppedImage());
 			registration->SetMovingImage(transforms->GetMovingCroppedImage());
 		}
@@ -211,6 +218,17 @@ int main( int argc, char * argv[] )
 		{
 			std::cout << "ROI not applied at level " << level << std::endl;
 			// insert images into registration class
+			try
+			{
+				transforms->Update();
+			}
+			catch (itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+				return EXIT_FAILURE;
+			}
 			registration->SetFixedImage( fixedImage );
 			registration->SetMovingImage(transforms->GetTransformedImage());
 		}
@@ -241,7 +259,7 @@ int main( int argc, char * argv[] )
 		}
 
 		// print results
-		//registration->Print();
+		registration->Print();
 
 		// add transform to transforms class
 		transforms->AddTransform(registration->GetFinalTransform());
@@ -254,206 +272,6 @@ int main( int argc, char * argv[] )
 		memorymeter.Stop(message.c_str());
 	}
 	
-
-	/*
-	if( numberOfLevels > 0 )
-	{
-		// Registration level 1
-		chronometer.Start( "Level 1" );
-		memorymeter.Start( "Level 1" );
-
-		// perform registration class
-		itk::RegistrationFramework::Pointer level1Registration = itk::RegistrationFramework::New();
-
-		// test functionality of itkRegistrationFramework.h
-		std::cout << "\n*********************************************" << std::endl;
-		std::cout << "            REGISTRATION LEVEL 1               " << std::endl;
-		std::cout << "*********************************************\n" << std::endl;
-
-		// create registration class
-		level1Registration->SetFixedImage( fixedImage );
-		level1Registration->SetMovingImage( movingImage );
-		level1Registration->SetInitialTransform( initialTransform );
-		level1Registration->SetNumberOfIterations( numberOfIterations );
-		level1Registration->SetRelaxationFactor( relaxationFactor );
-		level1Registration->SetMaximumStepLength( maximumStepLength );
-		level1Registration->SetMinimumStepLength( minimumStepLength );
-		level1Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
-		level1Registration->SetRotationScale( rotationScale );
-		level1Registration->SetTranslationScale( translationScale );
-		level1Registration->SetScalingScale( scalingScale );
-		if( observe ){ level1Registration->ObserveOn(); }
-		
-		try
-		{
-			level1Registration->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-		
-		level1Registration->Print();
-
-		// add transform to composite transform in transforms class and apply to moving image
-		transforms->AddTransform( level1Registration->GetFinalTransform() );
-
-		// write out composite transform
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
-
-		// Registration level 1
-		chronometer.Stop( "Level 1" );
-		memorymeter.Stop( "Level 1" );
-	}
-	
-	if( numberOfLevels > 1 )
-	{
-		// Registration level 2
-		chronometer.Start( "Level 2" );
-		memorymeter.Start( "Level 2" );
-
-
-		// test functionality of itkRegistrationFramework.h
-		std::cout << "\n*********************************************" << std::endl;
-		std::cout << "            REGISTRATION LEVEL 2               " << std::endl;
-		std::cout << "*********************************************\n" << std::endl;
-
-		// crop images
-		transforms->CropImageOn();
-		transforms->ResampleImageOn();
-		transforms->SetROI( ROI2 );
-		try
-		{
-			transforms->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-
-		// create new registration class
-		itk::RegistrationFramework::Pointer level2Registration = itk::RegistrationFramework::New();
-		level2Registration->SetFixedImage( transforms->GetFixedCroppedImage() );
-		level2Registration->SetMovingImage( transforms->GetMovingCroppedImage() );
-		level2Registration->SetNumberOfIterations( numberOfIterations );
-		level2Registration->SetRelaxationFactor( relaxationFactor );
-		level2Registration->SetMaximumStepLength( maximumStepLength/2.0 );
-		level2Registration->SetMinimumStepLength( minimumStepLength );
-		level2Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
-		level2Registration->SetRotationScale( rotationScale/2.0 );
-		level2Registration->SetTranslationScale( translationScale/2.0 );
-		level2Registration->SetScalingScale( scalingScale/2.0 );
-
-
-		if( observe ){ level2Registration->ObserveOn(); }
-
-		try
-		{
-			level2Registration->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-		level2Registration->Print();
-
-		std::cout << "\n -> Transforms\n" << std::endl;
-		// add transform to composite transform in transforms class and apply to moving image/label map image
-		// don't update images here. Apply composite transform to the original moving image and label map
-		transforms->AddTransform( level2Registration->GetFinalTransform() );
-
-		// final composite transform
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
-	
-		// Registration level 2
-		chronometer.Stop( "Level 2" );
-		memorymeter.Stop( "Level 2" );
-	}
-
-	if( numberOfLevels > 2 )
-	{
-		// Registration level 3
-		chronometer.Start( "Level 3" );
-		memorymeter.Start( "Level 3" );
-
-		// test functionality of itkRegistrationFramework.h
-		std::cout << "\n*********************************************" << std::endl;
-		std::cout << "            REGISTRATION LEVEL 3               " << std::endl;
-		std::cout << "*********************************************\n" << std::endl;
-
-		// crop images
-		transforms->CropImageOn();
-		transforms->ResampleImageOn();
-		transforms->SetROI( ROI3 );
-		try
-		{
-			transforms->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-
-		// create new registration class
-		itk::RegistrationFramework::Pointer level3Registration = itk::RegistrationFramework::New();
-		level3Registration->SetFixedImage( transforms->GetFixedCroppedImage() );
-		level3Registration->SetMovingImage( transforms->GetMovingCroppedImage() );
-		level3Registration->SetNumberOfIterations( numberOfIterations );
-		level3Registration->SetRelaxationFactor( relaxationFactor );
-		level3Registration->SetMaximumStepLength( maximumStepLength/4.0 );
-		level3Registration->SetMinimumStepLength( minimumStepLength );
-		level3Registration->SetGradientMagnitudeTolerance( gradientMagnitudeTolerance );
-		level3Registration->SetRotationScale( rotationScale/4.0 );
-		level3Registration->SetTranslationScale( translationScale/4.0 );
-		level3Registration->SetScalingScale( scalingScale/4.0 );
-
-		if( observe ){ level3Registration->ObserveOn(); }
-
-		try
-		{
-			level3Registration->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-		level3Registration->Print();
-
-		std::cout << "\n -> Transforms\n" << std::endl;
-		// add transform to composite transform in transforms class and apply to moving image/label map image
-		// don't update images here. Apply composite transform to the original moving image and label map
-		transforms->AddTransform( level3Registration->GetFinalTransform() );
-		transforms->ResampleImageOn();
-		transforms->CropImageOn();
-		try
-		{
-			transforms->Update();
-		}
-		catch(itk::ExceptionObject & err)
-		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
-		}
-
-		// write out final composite transform
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
-		
-		// Registration level 3
-		chronometer.Stop( "Level 3" );
-		memorymeter.Stop( "Level 3" );
-	}
-	*/
 	// full program
 	chronometer.Stop( "Full program" );
 	memorymeter.Stop( "Full program" );
