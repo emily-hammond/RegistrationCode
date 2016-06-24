@@ -100,6 +100,7 @@ public:
 	// perform function
 	void Update();
 	ImageType::Pointer ResampleImage( ImageType::Pointer image, TransformType::Pointer transform );
+	ImageType::Pointer ResampleImage(ImageType::Pointer image, CompositeTransformType::Pointer transform);
 
 	// use NN interpolation during resampling
 	void NearestNeighborInterpolateOn()

@@ -121,6 +121,7 @@ int main( int argc, char * argv[] )
 	// set up transforms class and insert fixed image (will not change)
 	//transforms->AddTransform( initialize->GetTransform() );
 	transforms->SetInitialTransform( initialTransform );
+	transforms->AddTransform(initialTransform);
 	transforms->SetFixedImage( fixedImage );
 	transforms->SetMovingImage( movingImage );
 
@@ -181,6 +182,14 @@ int main( int argc, char * argv[] )
 			transforms->SetROI(*it);
 			transforms->CropImageOn();
 
+			std::vector<float>::iterator jt = (*it).begin();
+			std::cout << "ROI: ";
+			for (jt; jt != (*it).end(); jt++)
+			{
+				std::cout << *jt << ", ";
+			}
+			std::cout << std::endl;
+
 			it++;
 			// insert images into registration class
 			try
@@ -199,9 +208,9 @@ int main( int argc, char * argv[] )
 
 			if (!debugDirectory.empty() && debugImages)
 			{
-				std::string fixedFilename = debugDirectory + "\\InputFixedImageLevel" + std::to_string(level) + ".nrrd";
+				std::string fixedFilename = debugDirectory + "\\Level" + std::to_string(level) + "InputFixedImage.nrrd";
 				WriteOutImage< ImageType, ImageType >(fixedFilename.c_str(), transforms->GetTransformedImage());
-				std::string movingFilename = debugDirectory + "\\InputMovingImageLevel" + std::to_string(level) + ".nrrd";
+				std::string movingFilename = debugDirectory + "\\Level" + std::to_string(level) + "InputMovingImage.nrrd";
 				WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
 			}
 		}
@@ -211,6 +220,12 @@ int main( int argc, char * argv[] )
 			transforms->CropImageOn();
 
 			std::vector<float>::iterator jt = (*it).begin();
+			std::cout << "ROI: ";
+			for (jt; jt != (*it).end(); jt++)
+			{
+				std::cout << *jt << ", ";
+			}
+			std::cout << std::endl;
 
 			it++;
 			// insert images into registration class
@@ -230,9 +245,9 @@ int main( int argc, char * argv[] )
 
 			if (!debugDirectory.empty() && debugImages)
 			{
-				std::string fixedFilename = debugDirectory + "\\InputFixedImageLevel" + std::to_string(level) + ".nrrd";
+				std::string fixedFilename = debugDirectory + "\\Level" + std::to_string(level) + "InputFixedImage.nrrd";
 				WriteOutImage< ImageType, ImageType >(fixedFilename.c_str(), transforms->GetTransformedImage());
-				std::string movingFilename = debugDirectory + "\\InputMovingImageLevel" + std::to_string(level) + ".nrrd";
+				std::string movingFilename = debugDirectory + "\\Level" + std::to_string(level) + "InputMovingImage.nrrd";
 				WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
 			}
 		}
@@ -257,7 +272,7 @@ int main( int argc, char * argv[] )
 			if (!debugDirectory.empty() && debugImages)
 			{
 				std::cout << "Fixed image not changed at level " << level << std::endl;
-				std::string movingFilename = debugDirectory + "\\InputMovingImageLevel" + std::to_string(level) + ".nrrd";
+				std::string movingFilename = debugDirectory + "\\Level" + std::to_string(level) + "InputMovingImage.nrrd";
 				WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
 			}
 		}
@@ -300,6 +315,12 @@ int main( int argc, char * argv[] )
 		{
 			std::string transformFilename = debugDirectory + "\\Level" + std::to_string(level) + "Transform.tfm";
 			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(transformFilename.c_str(), transforms->GetCompositeTransform());
+		}
+
+		if (!debugDirectory.empty() && debugImages)
+		{
+			std::string movingFilename = debugDirectory + "\\Level" + std::to_string(level) + "OuputMovingImage.nrrd";
+			WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->ResampleImage(movingImage, transforms->GetCompositeTransform()));
 		}
 
 		// Registration level 1
