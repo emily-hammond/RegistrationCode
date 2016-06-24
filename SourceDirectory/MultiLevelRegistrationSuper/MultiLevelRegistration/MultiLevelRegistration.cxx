@@ -127,6 +127,12 @@ int main( int argc, char * argv[] )
 	// write out initial transform
 	WriteOutTransform< TransformType >(finalTransform.c_str(), initialTransform);
 
+	if (!debugDirectory.empty() && debugTransforms)
+	{
+		std::string transformFilename = debugDirectory + "\\InitialTransform.tfm";
+		WriteOutTransform< TransformType >(transformFilename.c_str(), initialTransform);
+	}
+
 	// initialization
 	chronometer.Stop( "Initialization" );
 	memorymeter.Stop( "Initialization" );
@@ -190,6 +196,14 @@ int main( int argc, char * argv[] )
 			}
 			registration->SetFixedImage(transforms->GetFixedCroppedImage());
 			registration->SetMovingImage(transforms->GetMovingCroppedImage());
+
+			if (!debugDirectory.empty() && debugImages)
+			{
+				std::string fixedFilename = debugDirectory + "\\InputFixedImageLevel" + std::to_string(level) + ".nrrd";
+				WriteOutImage< ImageType, ImageType >(fixedFilename.c_str(), transforms->GetTransformedImage());
+				std::string movingFilename = debugDirectory + "\\InputMovingImageLevel" + std::to_string(level) + ".nrrd";
+				WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
+			}
 		}
 		else if (level != 1) // if it is not level 1
 		{
@@ -213,6 +227,14 @@ int main( int argc, char * argv[] )
 			}
 			registration->SetFixedImage(transforms->GetFixedCroppedImage());
 			registration->SetMovingImage(transforms->GetMovingCroppedImage());
+
+			if (!debugDirectory.empty() && debugImages)
+			{
+				std::string fixedFilename = debugDirectory + "\\InputFixedImageLevel" + std::to_string(level) + ".nrrd";
+				WriteOutImage< ImageType, ImageType >(fixedFilename.c_str(), transforms->GetTransformedImage());
+				std::string movingFilename = debugDirectory + "\\InputMovingImageLevel" + std::to_string(level) + ".nrrd";
+				WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
+			}
 		}
 		else // ROI is not applied at level
 		{
@@ -231,6 +253,13 @@ int main( int argc, char * argv[] )
 			}
 			registration->SetFixedImage( fixedImage );
 			registration->SetMovingImage(transforms->GetTransformedImage());
+
+			if (!debugDirectory.empty() && debugImages)
+			{
+				std::cout << "Fixed image not changed at level " << level << std::endl;
+				std::string movingFilename = debugDirectory + "\\InputMovingImageLevel" + std::to_string(level) + ".nrrd";
+				WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
+			}
 		}
 
 		// insert parameters into registration
@@ -266,6 +295,12 @@ int main( int argc, char * argv[] )
 
 		// write out composite transform
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(finalTransform.c_str(), transforms->GetCompositeTransform());
+		
+		if (!debugDirectory.empty() && debugTransforms)
+		{
+			std::string transformFilename = debugDirectory + "\\Level" + std::to_string(level) + "Transform.tfm";
+			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(transformFilename.c_str(), transforms->GetCompositeTransform());
+		}
 
 		// Registration level 1
 		chronometer.Stop(message.c_str());

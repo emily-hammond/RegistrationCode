@@ -200,13 +200,27 @@
 		<longflag>observe</longflag>
 		<default>false</default>
 	</boolean>
-	<boolean>
-		<name>debug</name>
-		<description>Output results at every level</description>
-		<label>Debug</label>
-		<longflag>debug</longflag>
-		<default>false</default>
-	</boolean>
+  <directory>
+    <name>debugDirectory</name>
+    <description>File location to store debugging images/transforms</description>
+    <label>Debug directory</label>
+    <longflag>debugDirectory</longflag>
+    <channel>input</channel>
+  </directory>
+  <boolean>
+    <name>debugTransforms</name>
+    <description>Output transforms at each level</description>
+    <label>Transforms</label>
+    <longflag>debugTransforms</longflag>
+    <default>false</default>
+  </boolean>
+  <boolean>
+    <name>debugImages</name>
+    <description>Output images at each level</description>
+    <label>Images</label>
+    <longflag>debugImages</longflag>
+    <default>false</default>
+  </boolean>
 </parameters>
 
 </executable>
