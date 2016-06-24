@@ -120,7 +120,6 @@ int main( int argc, char * argv[] )
 
 	// set up transforms class and insert fixed image (will not change)
 	//transforms->AddTransform( initialize->GetTransform() );
-	std::cout << "\n -> Transforms\n" << std::endl;
 	transforms->SetInitialTransform( initialTransform );
 	transforms->SetFixedImage( fixedImage );
 	transforms->SetMovingImage( movingImage );
@@ -135,8 +134,16 @@ int main( int argc, char * argv[] )
 	// determine the number of ROIs and creating iterators
 	int numberOfROIs = ROI.size();
 	bool ROI1 = false;
-	std::vector<std::vector<float>>::iterator it = ROI.begin();
-	std::cout << numberOfLevels - numberOfROIs << std::endl;
+	/*try
+	{
+		std::vector<std::vector<float>>::iterator it = ROI.begin();
+	}
+	catch (...)
+	{
+		std::cout << "Something wrong with creating iterator." << std::endl;
+	}*/
+
+	std::vector< std::vector< float> >::iterator it = ROI.begin();
 	if (numberOfLevels - numberOfROIs == 1)
 	{
 		ROI1 = false;
@@ -154,7 +161,7 @@ int main( int argc, char * argv[] )
 	// prepare the Registration framework
 	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 	
-	for (int level = 1; level < numberOfLevels;  ++level)
+	for (int level = 1; level < numberOfLevels+1;  ++level)
 	{
 		// monitors
 		std::string message = "Level " + level;
@@ -171,13 +178,19 @@ int main( int argc, char * argv[] )
 		// insert appropriate ROI into transforms class and crop image
 		if ( level == 1 && ROI1 ) // if it is level 1 and ROI is to be used in Level 1
 		{
+			std::cout << "Applying ROI at level 1" << std::endl;
+
 			transforms->SetROI(*it);
 			transforms->CropImageOn();
-			it++;
-
+			
 			std::vector<float>::iterator jt = (*it).begin();
-			std::cout << "ROI: " << *jt << ", " << *(jt + 1) << ", " << *(jt + 2) << ", " << *(jt + 3) << ", " << *(jt + 4) << ", " << *(jt + 5) << std::endl;
+			for (jt; jt != (*it).end(); jt++)
+			{
+				std::cout << *jt << ", ";
+			}
+			std::cout << std::endl;
 
+			it++;
 			// insert images into registration class
 			registration->SetFixedImage(transforms->GetFixedCroppedImage());
 			registration->SetMovingImage(transforms->GetMovingCroppedImage());
@@ -186,11 +199,10 @@ int main( int argc, char * argv[] )
 		{
 			transforms->SetROI(*it);
 			transforms->CropImageOn();
-			it++;
 
 			std::vector<float>::iterator jt = (*it).begin();
-			std::cout << "ROI: " << *jt << ", " << *(jt + 1) << ", " << *(jt + 2) << ", " << *(jt + 3) << ", " << *(jt + 4) << ", " << *(jt + 5) << std::endl;
 
+			it++;
 			// insert images into registration class
 			registration->SetFixedImage(transforms->GetFixedCroppedImage());
 			registration->SetMovingImage(transforms->GetMovingCroppedImage());
@@ -229,7 +241,7 @@ int main( int argc, char * argv[] )
 		}
 
 		// print results
-		registration->Print();
+		//registration->Print();
 
 		// add transform to transforms class
 		transforms->AddTransform(registration->GetFinalTransform());
@@ -241,6 +253,8 @@ int main( int argc, char * argv[] )
 		chronometer.Stop(message.c_str());
 		memorymeter.Stop(message.c_str());
 	}
+	
+
 	/*
 	if( numberOfLevels > 0 )
 	{
@@ -445,8 +459,8 @@ int main( int argc, char * argv[] )
 	memorymeter.Stop( "Full program" );
 
 	// print out time/memory results
-	chronometer.Report( std::cout );
-	memorymeter.Report( std::cout );
+	//chronometer.Report( std::cout );
+	//memorymeter.Report( std::cout );
 
 	return EXIT_SUCCESS;
 }

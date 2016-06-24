@@ -207,13 +207,6 @@
 		<longflag>debug</longflag>
 		<default>false</default>
 	</boolean>
-	<boolean>
-		<name>skipWB</name>
-		<description>Skip level 1 registration</description>
-		<label>Skip level 1</label>
-		<longflag>skipWB</longflag>
-		<default>false</default>
-	</boolean>
 </parameters>
 
 </executable>
