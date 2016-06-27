@@ -280,15 +280,27 @@ int main( int argc, char * argv[] )
 		// insert parameters into registration
 		registration->SetNumberOfIterations(numberOfIterations);
 		registration->SetRelaxationFactor(relaxationFactor);
-		registration->SetMaximumStepLength(maximumStepLength/(parameterRelaxation*level-1));
 		registration->SetMinimumStepLength(minimumStepLength);
 		registration->SetGradientMagnitudeTolerance(gradientMagnitudeTolerance);
-		registration->SetRotationScale(rotationScale);
-		registration->SetTranslationScale(translationScale);
-		registration->SetScalingScale(scalingScale);
+
+		if (level != 1)
+		{
+			registration->SetMaximumStepLength(maximumStepLength / (parameterRelaxation*level));
+			registration->SetRotationScale(rotationScale / (parameterRelaxation*level));
+			registration->SetTranslationScale(translationScale / (parameterRelaxation*level));
+			registration->SetScalingScale(scalingScale / (parameterRelaxation*level));
+		}
+		else
+		{
+			registration->SetMaximumStepLength(maximumStepLength);
+			registration->SetRotationScale(rotationScale);
+			registration->SetTranslationScale(translationScale);
+			registration->SetScalingScale(scalingScale);
+		}
 
 		// observe process
 		if (observe) { registration->ObserveOn(); }
+		if (debugTransforms) { registration->DebugOn(); registration->SetDebugDirectory(debugDirectory); }
 
 		// perform registration
 		try

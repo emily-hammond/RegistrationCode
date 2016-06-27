@@ -70,6 +70,7 @@ public:
 	itkSetMacro( RotationScale, float );
 	itkSetMacro( TranslationScale, float );
 	itkSetMacro( ScalingScale, float );
+	itkSetMacro( DebugDirectory, std::string );
 
 	// observer
 	void ObserveOn()
@@ -80,6 +81,16 @@ public:
 	void ObserveOff()
 	{
 		this->m_ObserveOn = false;
+		return;
+	}
+	void DebugOn()
+	{
+		this->m_DebugOn = true;
+		return;
+	}
+	void DebugOff()
+	{
+		this->m_DebugOn = false;
 		return;
 	}
 
@@ -116,6 +127,8 @@ private:
 	// observer
 	RigidCommandIterationUpdate::Pointer m_Observer;
 	bool m_ObserveOn;
+	bool m_DebugOn;
+	std::string m_DebugDirectory;
 
 	// optimizer
 	OptimizerType::Pointer m_Optimizer;
