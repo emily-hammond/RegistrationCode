@@ -109,7 +109,7 @@ int main( int argc, char * argv[] )
 	chronometer.Start( "Initialization" );
 	memorymeter.Start( "Initialization" );
 
-	// initialization with validation
+	// initialization
 	std::cout << "\n*********************************************" << std::endl;
 	std::cout << "              INITIALIZATION                 " << std::endl;
 	std::cout << "*********************************************\n" << std::endl;
@@ -159,6 +159,29 @@ int main( int argc, char * argv[] )
 	{
 		std::string transformFilename = debugDirectory + "\\InitialTransform.tfm";
 		WriteOutTransform< TransformType >(transformFilename.c_str(), initialTransform);
+	}
+
+	// validation at initialTransform
+	itk::ValidationFilter::Pointer validationFilter = itk::ValidationFilter::New();
+	if (validation)
+	{
+		validationFilter->SetImage1(fixedImage);
+		validationFilter->SetLabelMap1(fixedImageMask);
+		validationFilter->SetImage2( transforms->ResampleImage( movingImage, initialTransform ));
+		transforms->NearestNeighborInterpolateOn();
+		validationFilter->SetLabelMap2(transforms->ResampleImage(movingImageMask, initialTransform));
+		transforms->NearestNeighborInterpolateOff();
+		validationFilter->LabelOverlapMeasuresOn();
+		try
+		{
+			validationFilter->Update();
+		}
+		catch (itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
 	}
 
 	// initialization
@@ -350,16 +373,38 @@ int main( int argc, char * argv[] )
 		// write out composite transform
 		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(finalTransform.c_str(), transforms->GetCompositeTransform());
 		
+		// write out transforms
 		if (!debugDirectory.empty() && debugTransforms)
 		{
 			std::string transformFilename = debugDirectory + "\\Level" + std::to_string(level) + "Transform.tfm";
 			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(transformFilename.c_str(), transforms->GetCompositeTransform());
 		}
 
+		// write out images
 		if (!debugDirectory.empty() && debugImages)
 		{
 			std::string movingFilename = debugDirectory + "\\Level" + std::to_string(level) + "OuputMovingImage.nrrd";
 			WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->ResampleImage(movingImage, transforms->GetCompositeTransform()));
+		}
+
+		// obtain validation measures
+		if (validation)
+		{
+			validationFilter->SetImage2(transforms->ResampleImage( movingImage, transforms->GetCompositeTransform()));
+			transforms->NearestNeighborInterpolateOn();
+			validationFilter->SetLabelMap2(transforms->ResampleImage(movingImageMask, transforms->GetCompositeTransform()));
+			transforms->NearestNeighborInterpolateOff();
+			validationFilter->LabelOverlapMeasuresOn();
+			try
+			{
+				validationFilter->Update();
+			}
+			catch (itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
 		}
 
 		// Registration level 1
