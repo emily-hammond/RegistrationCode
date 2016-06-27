@@ -280,7 +280,7 @@ int main( int argc, char * argv[] )
 		// insert parameters into registration
 		registration->SetNumberOfIterations(numberOfIterations);
 		registration->SetRelaxationFactor(relaxationFactor);
-		registration->SetMaximumStepLength(maximumStepLength);
+		registration->SetMaximumStepLength(maximumStepLength/(parameterRelaxation*level-1));
 		registration->SetMinimumStepLength(minimumStepLength);
 		registration->SetGradientMagnitudeTolerance(gradientMagnitudeTolerance);
 		registration->SetRotationScale(rotationScale);
