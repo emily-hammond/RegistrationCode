@@ -350,7 +350,12 @@ int main( int argc, char * argv[] )
 
 		// observe process
 		if (observe) { registration->ObserveOn(); }
-		if (debugTransforms) { registration->DebugOn(); registration->SetDebugDirectory(debugDirectory); }
+		if (debugTransforms) 
+		{ 
+			registration->DebugOn();
+			std::string directory = debugDirectory + "\\Level" + std::to_string(level);
+			registration->SetDebugDirectory(directory); 
+		}
 
 		// perform registration
 		try

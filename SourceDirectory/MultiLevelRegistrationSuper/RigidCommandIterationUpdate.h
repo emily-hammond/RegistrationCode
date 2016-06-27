@@ -42,7 +42,7 @@ public:
 		}
 		if ((optimizer->GetCurrentIteration()%50 == 1) && this->m_debug)
 		{
-			std::string filename = this->m_DebugDirectory + "\\Transform_" + std::to_string(optimizer->GetCurrentIteration()) + ".tfm";
+			std::string filename = this->m_DebugDirectory + "Transform_" + std::to_string(optimizer->GetCurrentIteration()) + ".tfm";
 			itk::ScaleVersor3DTransform< double >::Pointer transform = itk::ScaleVersor3DTransform< double >::New();
 			transform->SetParameters( optimizer->GetCurrentPosition() );
 
