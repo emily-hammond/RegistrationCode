@@ -158,7 +158,7 @@ namespace itk
 		// insert into observer if desired
 		if( this->m_ObserveOn )
 		{
-			this->m_Observer->Observe(1);
+			this->m_Observer->Observe();
 			this->m_Optimizer->AddObserver( itk::IterationEvent(), this->m_Observer );
 			std::cout << "Set to observe registration process." << std::endl;
 		}
@@ -166,6 +166,7 @@ namespace itk
 		{
 			this->m_Observer->Debug(this->m_DebugDirectory);
 			this->m_Optimizer->AddObserver(itk::IterationEvent(), this->m_Observer);
+			std::cout << "Writing out every 50 iterations" << std::endl;
 		}
 
 		return;

@@ -175,13 +175,6 @@
 
 <parameters>
   <label>Validation</label>
-  <boolean>
-    <name>performValidation</name>
-    <description>Perform validation with the defined masks</description>
-    <label>Peform validation</label>
-    <longflag>validation</longflag>
-    <default>false</default>
-  </boolean>
   <image type="label" reference="fixedImageFilename">
     <name>fixedImageMask</name>
     <description>The fixed image mask for validation</description>
@@ -207,13 +200,6 @@
 		<longflag>observe</longflag>
 		<default>false</default>
 	</boolean>
-  <directory>
-    <name>debugDirectory</name>
-    <description>File location to store debugging images/transforms</description>
-    <label>Debug directory</label>
-    <longflag>debugDirectory</longflag>
-    <channel>input</channel>
-  </directory>
   <boolean>
     <name>debugTransforms</name>
     <description>Output transforms at each level</description>
@@ -228,6 +214,13 @@
     <longflag>debugImages</longflag>
     <default>false</default>
   </boolean>
+  <directory>
+    <name>debugDirectory</name>
+    <description>File location to store debugging images/transforms</description>
+    <label>Debug directory</label>
+    <longflag>debugDirectory</longflag>
+    <channel>input</channel>
+  </directory>
 </parameters>
 
 </executable>

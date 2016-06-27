@@ -8,17 +8,21 @@ public:
 	typedef itk::SmartPointer< Self >	Pointer;
 	itkNewMacro( Self );
 protected:
-	RigidCommandIterationUpdate() {};
-public:
-	//typedef itk::RegularStepGradientDescentOptimizer	OptimizerType;
-	//typedef itk::VersorRigid3DTransformOptimizer		OptimizerType;
-	typedef itk::VersorTransformOptimizer				OptimizerType;
-	typedef const OptimizerType *						OptimizerPointer;
+	RigidCommandIterationUpdate():
+		m_observe( false ),
+		m_debug( false),
+		m_DebugDirectory( "" )
+	{
+		std::cout << "\n\nObserver initialized\n\n" << std::endl;
+	};
 	bool m_observe;
 	bool m_debug;
 	std::string m_DebugDirectory;
-	void Observe(bool observeFlag) { m_observe = observeFlag; }
-	void Debug(std::string debugDirectory) { m_debug = 1; m_DebugDirectory = debugDirectory; }
+public:
+	typedef itk::VersorTransformOptimizer				OptimizerType;
+	typedef const OptimizerType *						OptimizerPointer;
+	void Observe() { this->m_observe = !this->m_observe; }
+	void Debug(std::string debugDirectory) { this->m_debug = !this->m_debug; this->m_DebugDirectory = debugDirectory; }
 	void Execute( itk::Object *caller, const itk::EventObject &event )
 	{
 		Execute( (const itk::Object *)caller, event);
@@ -36,7 +40,7 @@ public:
 			std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition();
 			std::cout << std::endl;
 		}
-		if (optimizer->GetCurrentIteration() % (optimizer->GetNumberOfIterations() / 10 == 1) && this->m_debug)
+		if ((optimizer->GetCurrentIteration()%50 == 1) && this->m_debug)
 		{
 			std::string filename = this->m_DebugDirectory + "\\Transform_" + std::to_string(optimizer->GetCurrentIteration()) + ".tfm";
 			itk::ScaleVersor3DTransform< double >::Pointer transform = itk::ScaleVersor3DTransform< double >::New();
