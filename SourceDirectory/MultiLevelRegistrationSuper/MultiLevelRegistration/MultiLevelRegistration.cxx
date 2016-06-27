@@ -56,9 +56,23 @@ int main( int argc, char * argv[] )
 	// manage transforms/cropping/applying class
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
 
+	// validation
+	ImageType::Pointer fixedImageMask = ImageType::New();
+	ImageType::Pointer movingImageMask = ImageType::New();
+	bool validation = false;
+	if (!fixedImageMaskFilename.empty() && !movingImageMaskFilename.empty())
+	{
+		validation = true;
+		std::cout << "Validation will be performed" << std::endl;
+	}
+
 	// fixed and moving images
 	ImageType::Pointer fixedImage = ImageType::New();
 	ImageType::Pointer movingImage = ReadInImage< ImageType >(movingImageFilename.c_str());
+	if (validation)
+	{
+		movingImageMask = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
+	}
 
 	// apply fixed initial transform if given
 	if( !fixedImageInitialTransform.empty() )
@@ -70,12 +84,25 @@ int main( int argc, char * argv[] )
 		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
 		std::cout << "Initial transform applied to fixed image." << std::endl;
 		std::cout << "Moving image read in." << std::endl;
+
+		if (validation)
+		{
+			transforms->NearestNeighborInterpolateOn();
+			ImageType::Pointer fixedImageMaskTemp = ReadInImage< ImageType >( fixedImageMaskFilename.c_str() );
+			fixedImageMask = transforms->ResampleImage(fixedImageMaskTemp, initialFixedTransform);
+			transforms->NearestNeighborInterpolateOff();
+		}
 	}
 	else
 	{
 		fixedImage = ReadInImage< ImageType >( fixedImageFilename.c_str() );
 		std::cout << "Fixed image read in." << std::endl;
 		std::cout << "Moving image read in." << std::endl;
+
+		if (validation)
+		{
+			fixedImageMask = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
+		}
 	}
 
 	// initialization

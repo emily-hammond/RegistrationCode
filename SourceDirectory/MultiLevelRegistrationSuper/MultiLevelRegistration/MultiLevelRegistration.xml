@@ -176,14 +176,14 @@
 <parameters>
   <label>Validation</label>
   <image type="label" reference="fixedImageFilename">
-    <name>fixedImageMask</name>
+    <name>fixedImageMaskFilename</name>
     <description>The fixed image mask for validation</description>
     <label>Fixed image mask</label>
     <longflag>fixedImageMask</longflag>
     <channel>input</channel>
   </image>
   <image type="label" reference="movingImageFilename">
-    <name>movingImageMask</name>
+    <name>movingImageMaskFilename</name>
     <description>The moving image mask for validation</description>
     <label>Moving image mask</label>
     <longflag>movingImageMask</longflag>
