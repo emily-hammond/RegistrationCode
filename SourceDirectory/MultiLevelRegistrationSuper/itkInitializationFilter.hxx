@@ -156,10 +156,26 @@ namespace itk
 		{
 			MetricTranslationAlignment( 2 );
 		}
+		// x-axis
+		if (this->m_MetricRotation0Flag)
+		{
+			MetricRotationAlignment(0);
+		}
+		// y-axis
+		if (this->m_MetricRotation1Flag)
+		{
+			MetricRotationAlignment(1);
+		}
+		// z-axis
+		if (this->m_MetricRotation2Flag)
+		{
+			MetricRotationAlignment(2);
+		}
 
 		return;
 	}
 
+	// read in initial transform and convert the affine transform to a ScaleVersorTransform
 	void InitializationFilter::Update( AffineTransformType::Pointer transform )
 	{
 		// transfer parameters
@@ -295,6 +311,26 @@ namespace itk
 	
 		if( this->m_ObserveOn ){ std::cout << std::endl; }
 		std::cout << "Metric initialization on " << axis << " complete." << std::endl;
+		return;
+	}
+
+	void InitializationFilter::MetricRotationAlignment(int axis)
+	{
+		// create axis of rotation and set desired axis to 1;
+		TransformType::AxisType rotAxis;
+		rotAxis[0] = 0;
+		rotAxis[1] = 0;
+		rotAxis[2] = 0;
+		rotAxis[axis] = 1;
+
+		// create a rotation
+		TransformType::VersorType rotation;
+		float angle = sin(10.0 / 2.0);
+		rotation.Set(rotAxis, angle);
+
+		this->m_Transform->SetRotation(rotation);
+
+
 		return;
 	}
 

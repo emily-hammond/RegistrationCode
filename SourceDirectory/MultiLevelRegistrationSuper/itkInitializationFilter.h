@@ -112,6 +112,7 @@ private:
 	void GetRange( int axis );
 	void CenterOnGeometry();
 	void MetricTranslationAlignment( int axis );
+	void MetricRotationAlignment(int axis);
 };
 } // end namespace
 
