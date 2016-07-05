@@ -125,9 +125,9 @@ int main( int argc, char * argv[] )
 		// turn on flags if no predefined transform
 		if( observe ){ initialize->ObserveOn(); }
 		if( centerOfGeometry ){ initialize->CenteredOnGeometryOn(); }
-		if( transX ){ initialize->MetricAlignmentOn( 0 ); }
-		if( transY ){ initialize->MetricAlignmentOn( 1 ); }
-		if( transZ ){ initialize->MetricAlignmentOn( 2 ); }
+		if( transX ){ initialize->MetricTranslationOn( 0 ); }
+		if (transY){ initialize->MetricTranslationOn(1); }
+		if (transZ){ initialize->MetricTranslationOn(2); }
 		initialize->Update();
 		initialTransform = initialize->GetTransform();
 		std::cout << "Initialization complete." << std::endl;

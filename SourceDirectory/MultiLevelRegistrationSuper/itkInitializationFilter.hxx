@@ -8,31 +8,34 @@ namespace itk
 	// contructor to set up initializations and transform
 	InitializationFilter::InitializationFilter():
 		m_CenteredOnGeometry( false ),
-		m_MetricAlignment0Flag( false ),
-		m_MetricAlignment1Flag( false ),
-		m_MetricAlignment2Flag( false ),
+		m_MetricTranslation0Flag(false),
+		m_MetricTranslation1Flag(false),
+		m_MetricTranslation2Flag(false),
+		m_MetricRotation0Flag(false),
+		m_MetricRotation1Flag(false),
+		m_MetricRotation2Flag(false),
 		m_ObserveOn( false )
 	{
 		m_Transform = TransformType::New();
 	}
 
-	// set the flags for metric alignment by axis
-	void InitializationFilter::MetricAlignmentOn( int axis )
+	// set the flags for metric translation alignment by axis
+	void InitializationFilter::MetricTranslationOn(int axis)
 	{
 		// x-axis
 		if( axis == 0 )
 		{
-			this->m_MetricAlignment0Flag = true;
+			this->m_MetricTranslation0Flag = true;
 		}
 		// y-axis
 		else if( axis == 1 )
 		{
-			this->m_MetricAlignment1Flag = true;
+			this->m_MetricTranslation1Flag = true;
 		}
 		// z-axis
 		else if( axis == 2 )
 		{
-			this->m_MetricAlignment2Flag = true;
+			this->m_MetricTranslation2Flag = true;
 		}
 		// error handling
 		else
@@ -42,23 +45,75 @@ namespace itk
 		return;
 	}
 
-	// set the flags for metric alignment by axis - turn off
-	void InitializationFilter::MetricAlignmentOff( int axis )
+	// set the flags for metric rotation alignment by axis
+	void InitializationFilter::MetricRotationOn(int axis)
+	{
+		// x-axis
+		if (axis == 0)
+		{
+			this->m_MetricRotation0Flag = true;
+		}
+		// y-axis
+		else if (axis == 1)
+		{
+			this->m_MetricRotation1Flag = true;
+		}
+		// z-axis
+		else if (axis == 2)
+		{
+			this->m_MetricRotation2Flag = true;
+		}
+		// error handling
+		else
+		{
+			std::cout << "Axis number invalid. 0 = x, 1 = y, 2 = z" << std::endl;
+		}
+		return;
+	}
+
+	// set the flags for metric translation alignment by axis - turn off
+	void InitializationFilter::MetricTranslationOff(int axis)
 	{
 		// x-axis
 		if( axis == 0 )
 		{
-			this->m_MetricAlignment0Flag = false;
+			this->m_MetricTranslation0Flag = false;
 		}
 		// y-axis
 		else if( axis == 1 )
 		{
-			this->m_MetricAlignment1Flag = false;
+			this->m_MetricTranslation1Flag = false;
 		}
 		// z-axis
 		else if( axis == 2 )
 		{
-			this->m_MetricAlignment2Flag = false;
+			this->m_MetricTranslation2Flag = false;
+		}
+		// error handling
+		else
+		{
+			std::cout << "Axis number invalid. 0 = x, 1 = y, 2 = z" << std::endl;
+		}
+		return;
+	}
+
+	// set the flags for metric rotation alignment by axis - turn off
+	void InitializationFilter::MetricRotationOff(int axis)
+	{
+		// x-axis
+		if (axis == 0)
+		{
+			this->m_MetricRotation0Flag = false;
+		}
+		// y-axis
+		else if (axis == 1)
+		{
+			this->m_MetricRotation1Flag = false;
+		}
+		// z-axis
+		else if (axis == 2)
+		{
+			this->m_MetricRotation2Flag = false;
 		}
 		// error handling
 		else
@@ -87,19 +142,19 @@ namespace itk
 			CenterOnGeometry();
 		}
 		// x-axis
-		if( this->m_MetricAlignment0Flag )
+		if (this->m_MetricTranslation0Flag)
 		{
-			MetricAlignment( 0 );
+			MetricTranslationAlignment( 0 );
 		}
 		// y-axis
-		if( this->m_MetricAlignment1Flag )
+		if (this->m_MetricTranslation1Flag)
 		{
-			MetricAlignment( 1 );
+			MetricTranslationAlignment( 1 );
 		}
 		// z-axis
-		if( this->m_MetricAlignment2Flag )
+		if (this->m_MetricTranslation2Flag)
 		{
-			MetricAlignment( 2 );
+			MetricTranslationAlignment( 2 );
 		}
 
 		return;
@@ -171,7 +226,7 @@ namespace itk
 	}
 
 	// metric alignment based on the desired axis
-	void InitializationFilter::MetricAlignment( int axis )
+	void InitializationFilter::MetricTranslationAlignment( int axis )
 	{
 		// instantiate metric to use
 		typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;
