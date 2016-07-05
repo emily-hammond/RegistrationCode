@@ -314,6 +314,7 @@ namespace itk
 		return;
 	}
 
+	// apply rotation
 	void InitializationFilter::MetricRotationAlignment(int axis)
 	{
 		// create axis of rotation and set desired axis to 1;
@@ -325,11 +326,11 @@ namespace itk
 
 		// create a rotation
 		TransformType::VersorType rotation;
-		float angle = sin(10.0 / 2.0);
+		float angle = (1.0*180.0) / 3.141592653589793238463;
 		rotation.Set(rotAxis, angle);
 
 		this->m_Transform->SetRotation(rotation);
-
+		std::cout << this->m_Transform << std::endl;
 
 		return;
 	}

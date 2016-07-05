@@ -128,6 +128,9 @@ int main( int argc, char * argv[] )
 		if( transX ){ initialize->MetricTranslationOn( 0 ); }
 		if (transY){ initialize->MetricTranslationOn(1); }
 		if (transZ){ initialize->MetricTranslationOn(2); }
+		if (rotX){ initialize->MetricRotationOn(0); }
+		if (rotY){ initialize->MetricRotationOn(1); }
+		if (rotZ){ initialize->MetricRotationOn(2); }
 		initialize->Update();
 		initialTransform = initialize->GetTransform();
 		std::cout << "Initialization complete." << std::endl;
@@ -142,7 +145,8 @@ int main( int argc, char * argv[] )
 	std::cout << "\nFinal Parameters" << std::endl;
 	std::cout << "Transform" << std::endl;
 	std::cout << "  Translation   : " << initialTransform->GetTranslation() << std::endl;
-	std::cout << "  Rotation      : " << initialTransform->GetVersor().GetAngle() << std::endl;
+	std::cout << "  Rotation      : " << (initialTransform->GetVersor().GetAngle())*180.0/3.141592653589793238463 << std::endl;
+	std::cout << "  Axis          : " << initialTransform->GetVersor().GetAxis() << std::endl;
 	std::cout << std::endl;
 
 	// set up transforms class and insert fixed image (will not change)
