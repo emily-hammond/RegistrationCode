@@ -200,8 +200,8 @@ namespace itk
 
 		// get desired translation range and calculate start and end parameters
 		this->GetRange( axis );
-		float start = parameters[ axis + 3 ] - this->m_TranslationRange/2.0;
-		float end = parameters[ axis + 3 ] + this->m_TranslationRange/2.0;
+		float start = parameters[ axis + 3 ] - this->m_TranslationRange/1.5;
+		float end = parameters[ axis + 3 ] + this->m_TranslationRange/1.5;
 
 		// header for section
 		if( this->m_ObserveOn )

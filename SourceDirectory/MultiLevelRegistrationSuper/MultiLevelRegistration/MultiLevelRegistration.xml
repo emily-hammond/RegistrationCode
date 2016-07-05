@@ -84,26 +84,47 @@
 		<default>true</default>
 	</boolean>
 	<boolean>
-		<name>metricX</name>
+		<name>transX</name>
 		<description>Perform metric initialization in X direction</description>
-		<label>Metric X</label>
-		<longflag>metricX</longflag>
+		<label>Metric: Translation X</label>
+		<longflag>transX</longflag>
 		<default>false</default>
 	</boolean>
 	<boolean>
-		<name>metricY</name>
+		<name>transY</name>
 		<description>Perform metric initialization in Y direction</description>
-		<label>Metric Y</label>
-		<longflag>metricY</longflag>
+		<label>Metric: Translation Y</label>
+		<longflag>transY</longflag>
 		<default>false</default>
 	</boolean>
 	<boolean>
-		<name>metricZ</name>
+		<name>transZ</name>
 		<description>Perform metric initialization in Z direction</description>
-		<label>Metric Z</label>
-		<longflag>metricZ</longflag>
+		<label>Metric: Translation Z</label>
+		<longflag>transZ</longflag>
 		<default>false</default>
 	</boolean>
+  <boolean>
+    <name>rotX</name>
+    <description>Perform metric initialization in X direction</description>
+    <label>Metric: Rotation X</label>
+    <longflag>rotX</longflag>
+    <default>false</default>
+  </boolean>
+  <boolean>
+    <name>rotY</name>
+    <description>Perform metric initialization in Y direction</description>
+    <label>Metric: Rotation Y</label>
+    <longflag>rotY</longflag>
+    <default>false</default>
+  </boolean>
+  <boolean>
+    <name>rotZ</name>
+    <description>Perform metric initialization in Z direction</description>
+    <label>Metric: Rotation Z</label>
+    <longflag>rotZ</longflag>
+    <default>false</default>
+  </boolean>
 </parameters>
 
 <parameters>
