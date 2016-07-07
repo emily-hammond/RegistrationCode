@@ -359,7 +359,7 @@ namespace itk
 		float end = 45.0 * (3.141592653589793238463 / 180.0);
 
 		// parse through rotation range and determine smallest metric value
-		for (float i = start; i < end; i = i + std::abs(start - end) / 50.0)
+		for (float i = start; i < end; i = i + std::abs(start - end) / 45.0)
 		{
 			// create rotation and set parameters
 			rotation.Set(rotAxis, i);
@@ -389,7 +389,11 @@ namespace itk
 
 		// save results into transform
 		this->m_Transform->SetParameters(this->m_MinParameters);
-		//std::cout << this->m_transform << std::endl;
+		
+		// perform translation alignment
+		MetricTranslationAlignment(0);
+		MetricTranslationAlignment(1);
+		MetricTranslationAlignment(2);
 
 		if (this->m_ObserveOn){ std::cout << std::endl; }
 		std::cout << "Metric initialization on " << axis << " complete." << std::endl;
