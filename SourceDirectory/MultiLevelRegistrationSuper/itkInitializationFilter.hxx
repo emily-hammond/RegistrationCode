@@ -284,6 +284,7 @@ namespace itk
 		// parse through translation range and determine smallest metric value
 		for( float i = start; i < end; i = i - (start-end)/20.0)
 		{
+			std::cout << "Translation: " << i << "    Axis: " << axis;
 			// change parameters
 			parameters[ axis + 3 ] = i;
 			// store parameters and corresponding metric into array
@@ -296,10 +297,10 @@ namespace itk
 			// print out results if observing on
 			if( this->m_ObserveOn )
 			{
-				std::cout<< mmi->GetValue( parameters ) << ":";
+				std::cout << "Metric: " << mmi->GetValue(parameters) ;
 				for( int j = 0; j < 9; ++j )
 				{
-					std::cout << " " << parameters[j];
+					std::cout << "    Parameters: " << parameters[j];
 				}
 				std::cout << std::endl;;
 			}
@@ -317,21 +318,82 @@ namespace itk
 	// apply rotation
 	void InitializationFilter::MetricRotationAlignment(int axis)
 	{
+		// instantiate metric to use
+		typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;
+		MetricType::Pointer mmi = MetricType::New();
+
+		// connect interpolator
+		typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
+		InterpolatorType::Pointer interpolator = InterpolatorType::New();
+
+		// set parameters
+		mmi->SetFixedImage(this->m_FixedImage);
+		mmi->SetMovingImage(this->m_MovingImage);
+		mmi->SetFixedImageRegion(this->m_FixedImage->GetLargestPossibleRegion());
+		mmi->SetTransform(this->m_Transform);
+		mmi->SetInterpolator(interpolator);
+
+		// initialize metric
+		mmi->Initialize();
+
 		// create axis of rotation and set desired axis to 1;
+		TransformType::VersorType rotation;
 		TransformType::AxisType rotAxis;
 		rotAxis[0] = 0;
 		rotAxis[1] = 0;
 		rotAxis[2] = 0;
 		rotAxis[axis] = 1;
 
-		// create a rotation
-		TransformType::VersorType rotation;
-		float angle = (1.0*180.0) / 3.141592653589793238463;
-		rotation.Set(rotAxis, angle);
+		// initialization
+		this->m_MinMetric = 1000000.0;
+		this->m_MinParameters = m_Transform->GetParameters();
 
-		this->m_Transform->SetRotation(rotation);
-		std::cout << this->m_Transform << std::endl;
+		// header for section
+		if (this->m_ObserveOn)
+		{
+			std::cout << "\nMetric Initialization on " << axis << " axis:\n";
+			std::cout << "Rotation range: -10 deg to 10 deg" << std::endl;
+		}
 
+		float start = -45.0 * (3.141592653589793238463 / 180.0);
+		float end = 45.0 * (3.141592653589793238463 / 180.0);
+
+		// parse through rotation range and determine smallest metric value
+		for (float i = start; i < end; i = i + std::abs(start - end) / 50.0)
+		{
+			// create rotation and set parameters
+			rotation.Set(rotAxis, i);
+
+			std::cout << "Rotation: " << i << "    Axis: " << axis;
+			
+			this->m_Transform->SetRotation(rotation);
+			
+			// store parameters and corresponding metric into array
+			if (mmi->GetValue(m_Transform->GetParameters()) < this->m_MinMetric)
+			{
+				this->m_MinMetric = mmi->GetValue(m_Transform->GetParameters());
+				this->m_MinParameters = m_Transform->GetParameters();
+			}
+
+			// print out results if observing on
+			if (this->m_ObserveOn)
+			{
+				std::cout << "    Metric : " << mmi->GetValue(m_Transform->GetParameters()) << "    Parameters: ";
+				for (int j = 0; j < 9; ++j)
+				{
+					std::cout << m_Transform->GetParameters()[j];
+				}
+			}
+			std::cout << std::endl;
+		}
+
+		// save results into transform
+		this->m_Transform->SetParameters(this->m_MinParameters);
+		//std::cout << this->m_transform << std::endl;
+
+		if (this->m_ObserveOn){ std::cout << std::endl; }
+		std::cout << "Metric initialization on " << axis << " complete." << std::endl;
+		
 		return;
 	}
 
