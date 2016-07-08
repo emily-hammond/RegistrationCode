@@ -17,6 +17,9 @@ namespace itk
 		m_ObserveOn( false )
 	{
 		m_Transform = TransformType::New();
+		TransformType::AxisType axis;
+		axis[0] = 0; axis[1] = 0; axis[2] = 1;
+		m_MinRotation.Set(axis, 0.0);
 	}
 
 	// set the flags for metric translation alignment by axis
@@ -284,7 +287,6 @@ namespace itk
 		// parse through translation range and determine smallest metric value
 		for( float i = start; i < end; i = i - (start-end)/20.0)
 		{
-			std::cout << "Translation: " << i << "    Axis: " << axis;
 			// change parameters
 			parameters[ axis + 3 ] = i;
 			// store parameters and corresponding metric into array
@@ -297,12 +299,12 @@ namespace itk
 			// print out results if observing on
 			if( this->m_ObserveOn )
 			{
-				std::cout << "Metric: " << mmi->GetValue(parameters) ;
+				std::cout << "Metric: " << mmi->GetValue(parameters)  << "    Parameters: ";
 				for( int j = 0; j < 9; ++j )
 				{
-					std::cout << "    Parameters: " << parameters[j];
+					std::cout << parameters[j];
 				}
-				std::cout << std::endl;;
+				std::cout << std::endl;
 			}
 		}
 
@@ -352,20 +354,19 @@ namespace itk
 		if (this->m_ObserveOn)
 		{
 			std::cout << "\nMetric Initialization on " << axis << " axis:\n";
-			std::cout << "Rotation range: -10 deg to 10 deg" << std::endl;
+			std::cout << "Rotation range: -45 deg to 45 deg" << std::endl;
 		}
 
 		float start = -45.0 * (3.141592653589793238463 / 180.0);
 		float end = 45.0 * (3.141592653589793238463 / 180.0);
 
 		// parse through rotation range and determine smallest metric value
-		for (float i = start; i < end; i = i + std::abs(start - end) / 45.0)
+		for (float i = start; i < end; i = i + std::abs(start - end) / 20)
 		{
 			// create rotation and set parameters
 			rotation.Set(rotAxis, i);
-
-			std::cout << "Rotation: " << i << "    Axis: " << axis;
-			
+			this->m_MinRotation = rotation*this->m_MinRotation;
+		
 			this->m_Transform->SetRotation(rotation);
 			
 			// store parameters and corresponding metric into array
@@ -378,22 +379,17 @@ namespace itk
 			// print out results if observing on
 			if (this->m_ObserveOn)
 			{
-				std::cout << "    Metric : " << mmi->GetValue(m_Transform->GetParameters()) << "    Parameters: ";
+				std::cout << "Metric : " << mmi->GetValue(m_Transform->GetParameters()) << "    Parameters: ";
 				for (int j = 0; j < 9; ++j)
 				{
 					std::cout << m_Transform->GetParameters()[j];
 				}
+				std::cout << std::endl;
 			}
-			std::cout << std::endl;
 		}
 
 		// save results into transform
 		this->m_Transform->SetParameters(this->m_MinParameters);
-		
-		// perform translation alignment
-		MetricTranslationAlignment(0);
-		MetricTranslationAlignment(1);
-		MetricTranslationAlignment(2);
 
 		if (this->m_ObserveOn){ std::cout << std::endl; }
 		std::cout << "Metric initialization on " << axis << " complete." << std::endl;

@@ -107,6 +107,7 @@ private:
 	bool m_MetricRotation0Flag;
 	bool m_MetricRotation1Flag;
 	bool m_MetricRotation2Flag;
+	TransformType::VersorType m_MinRotation;
 
 	// private functions
 	void GetRange( int axis );
