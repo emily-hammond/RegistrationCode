@@ -56,10 +56,10 @@
 <parameters>
 	<label>Number of levels</label>
 	<integer>
-		<name>noOfLevels</name>
+		<name>numberOfLevels</name>
 		<description>The number of levels at which registration will be performed</description>
 		<label>Number of levels</label>
-		<longflag>noOfLevels</longflag>
+		<longflag>numberOfLevels</longflag>
 		<channel>input</channel>
 		<default>0</default>
 		<minimum>0</minimum>
