@@ -53,10 +53,8 @@ public:
 	itkSetObjectMacro( FixedLabelMap, ImageType );
 	itkSetObjectMacro( MovingImage, ImageType );
 	itkSetObjectMacro( MovingLabelMap, ImageType );
-	void SetROIFilename( char * filename )
-	{
-		this->m_ROIFilename = filename;
-	}
+	void SetROIFilename(const char * filename);
+	void SetROI(std::vector<float> roi);
 
 	// get results
 	itkGetObjectMacro( TransformedImage, ImageType );
@@ -102,6 +100,7 @@ public:
 	// perform function
 	void Update();
 	ImageType::Pointer ResampleImage( ImageType::Pointer image, TransformType::Pointer transform );
+	ImageType::Pointer ResampleImage(ImageType::Pointer image, CompositeTransformType::Pointer transform);
 
 	// use NN interpolation during resampling
 	void NearestNeighborInterpolateOn()
@@ -148,10 +147,12 @@ private:
 	ImageType::RegionType m_CropRegion;
 
 	// ROI
-	char * m_ROIFilename;
-	ImageType::Pointer CropImage( ImageType::Pointer image );
-	double * ExtractROIPoints();
+	const char * m_ROIFilename;
+	std::vector<float> m_ROI;
+	ImageType::Pointer CropImage( ImageType::Pointer image );	// used with reading in ROI from *.ascv file
+	void ExtractROIPoints();	// used with reading in ROI from *.ascv file
 
+	ImageType::Pointer CropImage(ImageType::Pointer image, std::vector<float> roi);
 
 	// applying transform
 	void HardenTransform();

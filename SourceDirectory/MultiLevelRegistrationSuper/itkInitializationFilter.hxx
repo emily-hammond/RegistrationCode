@@ -8,31 +8,37 @@ namespace itk
 	// contructor to set up initializations and transform
 	InitializationFilter::InitializationFilter():
 		m_CenteredOnGeometry( false ),
-		m_MetricAlignment0Flag( false ),
-		m_MetricAlignment1Flag( false ),
-		m_MetricAlignment2Flag( false ),
+		m_MetricTranslation0Flag(false),
+		m_MetricTranslation1Flag(false),
+		m_MetricTranslation2Flag(false),
+		m_MetricRotation0Flag(false),
+		m_MetricRotation1Flag(false),
+		m_MetricRotation2Flag(false),
 		m_ObserveOn( false )
 	{
 		m_Transform = TransformType::New();
+		TransformType::AxisType axis;
+		axis[0] = 0; axis[1] = 0; axis[2] = 1;
+		m_MinRotation.Set(axis, 0.0);
 	}
 
-	// set the flags for metric alignment by axis
-	void InitializationFilter::MetricAlignmentOn( int axis )
+	// set the flags for metric translation alignment by axis
+	void InitializationFilter::MetricTranslationOn(int axis)
 	{
 		// x-axis
 		if( axis == 0 )
 		{
-			this->m_MetricAlignment0Flag = true;
+			this->m_MetricTranslation0Flag = true;
 		}
 		// y-axis
 		else if( axis == 1 )
 		{
-			this->m_MetricAlignment1Flag = true;
+			this->m_MetricTranslation1Flag = true;
 		}
 		// z-axis
 		else if( axis == 2 )
 		{
-			this->m_MetricAlignment2Flag = true;
+			this->m_MetricTranslation2Flag = true;
 		}
 		// error handling
 		else
@@ -42,23 +48,75 @@ namespace itk
 		return;
 	}
 
-	// set the flags for metric alignment by axis - turn off
-	void InitializationFilter::MetricAlignmentOff( int axis )
+	// set the flags for metric rotation alignment by axis
+	void InitializationFilter::MetricRotationOn(int axis)
+	{
+		// x-axis
+		if (axis == 0)
+		{
+			this->m_MetricRotation0Flag = true;
+		}
+		// y-axis
+		else if (axis == 1)
+		{
+			this->m_MetricRotation1Flag = true;
+		}
+		// z-axis
+		else if (axis == 2)
+		{
+			this->m_MetricRotation2Flag = true;
+		}
+		// error handling
+		else
+		{
+			std::cout << "Axis number invalid. 0 = x, 1 = y, 2 = z" << std::endl;
+		}
+		return;
+	}
+
+	// set the flags for metric translation alignment by axis - turn off
+	void InitializationFilter::MetricTranslationOff(int axis)
 	{
 		// x-axis
 		if( axis == 0 )
 		{
-			this->m_MetricAlignment0Flag = false;
+			this->m_MetricTranslation0Flag = false;
 		}
 		// y-axis
 		else if( axis == 1 )
 		{
-			this->m_MetricAlignment1Flag = false;
+			this->m_MetricTranslation1Flag = false;
 		}
 		// z-axis
 		else if( axis == 2 )
 		{
-			this->m_MetricAlignment2Flag = false;
+			this->m_MetricTranslation2Flag = false;
+		}
+		// error handling
+		else
+		{
+			std::cout << "Axis number invalid. 0 = x, 1 = y, 2 = z" << std::endl;
+		}
+		return;
+	}
+
+	// set the flags for metric rotation alignment by axis - turn off
+	void InitializationFilter::MetricRotationOff(int axis)
+	{
+		// x-axis
+		if (axis == 0)
+		{
+			this->m_MetricRotation0Flag = false;
+		}
+		// y-axis
+		else if (axis == 1)
+		{
+			this->m_MetricRotation1Flag = false;
+		}
+		// z-axis
+		else if (axis == 2)
+		{
+			this->m_MetricRotation2Flag = false;
 		}
 		// error handling
 		else
@@ -87,24 +145,40 @@ namespace itk
 			CenterOnGeometry();
 		}
 		// x-axis
-		if( this->m_MetricAlignment0Flag )
+		if (this->m_MetricTranslation0Flag)
 		{
-			MetricAlignment( 0 );
+			MetricTranslationAlignment( 0 );
 		}
 		// y-axis
-		if( this->m_MetricAlignment1Flag )
+		if (this->m_MetricTranslation1Flag)
 		{
-			MetricAlignment( 1 );
+			MetricTranslationAlignment( 1 );
 		}
 		// z-axis
-		if( this->m_MetricAlignment2Flag )
+		if (this->m_MetricTranslation2Flag)
 		{
-			MetricAlignment( 2 );
+			MetricTranslationAlignment( 2 );
+		}
+		// x-axis
+		if (this->m_MetricRotation0Flag)
+		{
+			MetricRotationAlignment(0);
+		}
+		// y-axis
+		if (this->m_MetricRotation1Flag)
+		{
+			MetricRotationAlignment(1);
+		}
+		// z-axis
+		if (this->m_MetricRotation2Flag)
+		{
+			MetricRotationAlignment(2);
 		}
 
 		return;
 	}
 
+	// read in initial transform and convert the affine transform to a ScaleVersorTransform
 	void InitializationFilter::Update( AffineTransformType::Pointer transform )
 	{
 		// transfer parameters
@@ -171,7 +245,7 @@ namespace itk
 	}
 
 	// metric alignment based on the desired axis
-	void InitializationFilter::MetricAlignment( int axis )
+	void InitializationFilter::MetricTranslationAlignment( int axis )
 	{
 		// instantiate metric to use
 		typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;
@@ -200,8 +274,8 @@ namespace itk
 
 		// get desired translation range and calculate start and end parameters
 		this->GetRange( axis );
-		float start = parameters[ axis + 3 ] - this->m_TranslationRange/2.0;
-		float end = parameters[ axis + 3 ] + this->m_TranslationRange/2.0;
+		float start = parameters[ axis + 3 ] - this->m_TranslationRange/1.5;
+		float end = parameters[ axis + 3 ] + this->m_TranslationRange/1.5;
 
 		// header for section
 		if( this->m_ObserveOn )
@@ -225,12 +299,12 @@ namespace itk
 			// print out results if observing on
 			if( this->m_ObserveOn )
 			{
-				std::cout<< mmi->GetValue( parameters ) << ":";
+				std::cout << "Metric: " << mmi->GetValue(parameters)  << "    Parameters: ";
 				for( int j = 0; j < 9; ++j )
 				{
-					std::cout << " " << parameters[j];
+					std::cout << parameters[j];
 				}
-				std::cout << std::endl;;
+				std::cout << std::endl;
 			}
 		}
 
@@ -240,6 +314,86 @@ namespace itk
 	
 		if( this->m_ObserveOn ){ std::cout << std::endl; }
 		std::cout << "Metric initialization on " << axis << " complete." << std::endl;
+		return;
+	}
+
+	// apply rotation
+	void InitializationFilter::MetricRotationAlignment(int axis)
+	{
+		// instantiate metric to use
+		typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;
+		MetricType::Pointer mmi = MetricType::New();
+
+		// connect interpolator
+		typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
+		InterpolatorType::Pointer interpolator = InterpolatorType::New();
+
+		// set parameters
+		mmi->SetFixedImage(this->m_FixedImage);
+		mmi->SetMovingImage(this->m_MovingImage);
+		mmi->SetFixedImageRegion(this->m_FixedImage->GetLargestPossibleRegion());
+		mmi->SetTransform(this->m_Transform);
+		mmi->SetInterpolator(interpolator);
+
+		// initialize metric
+		mmi->Initialize();
+
+		// create axis of rotation and set desired axis to 1;
+		TransformType::VersorType rotation;
+		TransformType::AxisType rotAxis;
+		rotAxis[0] = 0;
+		rotAxis[1] = 0;
+		rotAxis[2] = 0;
+		rotAxis[axis] = 1;
+
+		// initialization
+		this->m_MinMetric = 1000000.0;
+		this->m_MinParameters = m_Transform->GetParameters();
+
+		// header for section
+		if (this->m_ObserveOn)
+		{
+			std::cout << "\nMetric Initialization on " << axis << " axis:\n";
+			std::cout << "Rotation range: -45 deg to 45 deg" << std::endl;
+		}
+
+		float start = -45.0 * (3.141592653589793238463 / 180.0);
+		float end = 45.0 * (3.141592653589793238463 / 180.0);
+
+		// parse through rotation range and determine smallest metric value
+		for (float i = start; i < end; i = i + std::abs(start - end) / 20)
+		{
+			// create rotation and set parameters
+			rotation.Set(rotAxis, i);
+			this->m_MinRotation = rotation*this->m_MinRotation;
+		
+			this->m_Transform->SetRotation(rotation);
+			
+			// store parameters and corresponding metric into array
+			if (mmi->GetValue(m_Transform->GetParameters()) < this->m_MinMetric)
+			{
+				this->m_MinMetric = mmi->GetValue(m_Transform->GetParameters());
+				this->m_MinParameters = m_Transform->GetParameters();
+			}
+
+			// print out results if observing on
+			if (this->m_ObserveOn)
+			{
+				std::cout << "Metric : " << mmi->GetValue(m_Transform->GetParameters()) << "    Parameters: ";
+				for (int j = 0; j < 9; ++j)
+				{
+					std::cout << m_Transform->GetParameters()[j];
+				}
+				std::cout << std::endl;
+			}
+		}
+
+		// save results into transform
+		this->m_Transform->SetParameters(this->m_MinParameters);
+
+		if (this->m_ObserveOn){ std::cout << std::endl; }
+		std::cout << "Metric initialization on " << axis << " complete." << std::endl;
+		
 		return;
 	}
 

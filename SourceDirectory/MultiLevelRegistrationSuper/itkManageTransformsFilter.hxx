@@ -21,6 +21,20 @@ namespace itk
 		m_CompositeTransform = CompositeTransformType::New();
 		m_FixedCroppedImage = ImageType::New();
 		m_MovingCroppedImage = ImageType::New();
+		m_ROI.assign(6, 0.0);
+	}
+
+	void ManageTransformsFilter::SetROIFilename(const char * filename)
+	{
+		m_ROIFilename = filename;
+		ExtractROIPoints();
+		return;
+	}
+
+	void ManageTransformsFilter::SetROI(std::vector<float> roi)
+	{
+		m_ROI = roi;
+		return;
 	}
 
 	void ManageTransformsFilter::AddTransform( TransformType::Pointer transform )
@@ -61,29 +75,19 @@ namespace itk
 		}
 		if( this->m_CropImage )
 		{
-			if( m_ROIFilename == '\0' )
-			{
-				itkExceptionMacro( << "ROI filename not present" );
-			}
 			this->m_MovingCroppedImage = CropImage( this->m_TransformedImage );
+			this->m_FixedCroppedImage = CropImage( this->m_FixedImage );
+			std::cout << "Images cropped." << std::endl;
 			if( m_MovingLabelMap ) 
 			{ 
-				this->m_MovingCroppedLabelMap = CropImage( this->m_TransformedLabelMap ); 
+				this->m_MovingCroppedLabelMap = CropImage( this->m_TransformedLabelMap );
+				std::cout << "Moving label map cropped." << std::endl;
 			} 
-			else 
-			{ 
-				std::cout << "Moving label map not present" << std::endl; 
-			}
-			this->m_FixedCroppedImage = CropImage( this->m_FixedImage );
 			if( m_FixedLabelMap ) 
 			{ 
-				this->m_FixedCroppedLabelMap = CropImage( this->m_FixedLabelMap ); 
+				this->m_FixedCroppedLabelMap = CropImage( this->m_FixedLabelMap );
+				std::cout << "Fixed label map cropped." << std::endl;
 			}
-			else 
-			{ 
-				std::cout << "Fixed label map not present" << std::endl; 
-			}
-			std::cout << "Images cropped." << std::endl;
 		}
 
 		return;
@@ -160,9 +164,16 @@ namespace itk
 		resample->SetOutputSpacing( this->m_FixedImage->GetSpacing() );
 		resample->SetOutputDirection( this->m_FixedImage->GetDirection() );
 
-		// input parameters
+				// input parameters
 		resample->SetInput( image );
-		resample->SetTransform( m_CompositeTransform );
+		if (m_CompositeTransform->IsTransformQueueEmpty())
+		{
+			resample->SetTransform(m_InitialTransform);
+		}
+		else
+		{
+			resample->SetTransform(m_CompositeTransform);
+		}
 
 		// define interpolator
 		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
@@ -228,14 +239,57 @@ namespace itk
 		return resample->GetOutput();
 	}
 
+	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::ResampleImage(ImageType::Pointer image, CompositeTransformType::Pointer transform)
+	{
+		// set up resampling object
+		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
+		ResampleFilterType::Pointer resample = ResampleFilterType::New();
+
+		if (!this->m_FixedImage)
+		{
+			std::cout << "Fixed Image not defined. " << std::endl;
+			return image;
+		}
+
+		// define image resampling with respect to fixed image
+		resample->SetSize(this->m_FixedImage->GetLargestPossibleRegion().GetSize());
+		resample->SetOutputOrigin(this->m_FixedImage->GetOrigin());
+		resample->SetOutputSpacing(this->m_FixedImage->GetSpacing());
+		resample->SetOutputDirection(this->m_FixedImage->GetDirection());
+
+		// input parameters
+		resample->SetInput(image);
+		resample->SetTransform(transform);
+
+		// define interpolator
+		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
+		typedef itk::NearestNeighborInterpolateImageFunction< ImageType, double > NearestNeighborType;
+		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
+
+		if (this->m_NearestNeighbor)
+		{
+			resample->SetInterpolator(nnInterpolator);
+			std::cout << "Nearest neighbor interpolator." << std::endl;
+		}
+		else
+		{
+			resample->SetInterpolator(linInterpolator);
+		}
+
+		// apply
+		resample->Update();
+
+		return resample->GetOutput();
+	}
+
 	// create the mask given an ROI filename
 	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::CropImage( ImageType::Pointer image )
 	{
-		double * roi = ExtractROIPoints();
-
+		std::vector<float>::iterator it = m_ROI.begin();
+	
 		// extract center and radius
-		double c[3] = {-*(roi),-*(roi+1),*(roi+2)};
-		double r[3] = {*(roi+3),*(roi+4),*(roi+5)};
+		double c[3] = {-*(it),-*(it+1),*(it+2)};
+		double r[3] = {*(it+3),*(it+4),*(it+5)};
 		
 		// create size of mask according to the roi array
 		// set start index of mask according to the roi array
@@ -287,10 +341,10 @@ namespace itk
 	}
 
 	// extract point values from the slicer ROI file
-	double * ManageTransformsFilter::ExtractROIPoints()
+	void ManageTransformsFilter::ExtractROIPoints()
 	{
 		// instantiate ROI array
-		static double roi[] = {0.0,0.0,0.0,0.0,0.0,0.0};
+		std::vector<float>::iterator it = m_ROI.begin();
 		bool fullROI = false; // denotes that ROI array is full
 		int numberOfPoints = 0;
 
@@ -329,11 +383,12 @@ namespace itk
 				// extract each point and place into ROI array
 				for( int i = 0; i < 3; ++i )
 				{
-					roi[numberOfPoints] = atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() );
+					m_ROI.insert(it,atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() ));
 					++numberOfPoints;
+					++it;
 
 					// set flag to false if the roi array is filled
-					if( numberOfPoints > 5 )
+					if( it == m_ROI.end() )
 					{
 						fullROI = true;
 					}
@@ -342,7 +397,7 @@ namespace itk
 		}
 
 		// array is output as [ centerx, centery, centerz, radiusx, radiusy, radiusz ]
-		return roi;
+		return;
 	}
 
 } // end namespace

@@ -3,23 +3,25 @@ INSERT COMMENTS HERE
 */
 
 // include files
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkRegistrationFramework.h"
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkInitializationFilter.h"
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkValidationFilter.h"
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\itkManageTransformsFilter.h"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkRegistrationFramework.h"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkInitializationFilter.h"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkValidationFilter.h"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkManageTransformsFilter.h"
 
 // rescale images
 #include "itkRescaleIntensityImageFilter.h"
+#include "itkPluginUtilities.h"
 
 // monitoring
 #include "itkTimeProbesCollectorBase.h"
 #include "itkMemoryProbesCollectorBase.h"
 #include <time.h>
 #include <stdio.h>
+#include <vector>
 
 #include <windows.h>
-#include "mainCLP.h"
+#include "MultiLevelRegistrationCLP.h"
 
 // declare function
 void PrintOutManual();
@@ -214,19 +216,19 @@ int main( int argc, char * argv[] )
 	ImageType::Pointer fixedValidationMask = ImageType::New();
 
 	// apply fixed initial transform if given
-	if( initialFixedTransformFilename )
+	if( !fixedImageInitialTransform.empty() )
 	{
 		// apply transform to fixed image
-		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( fixedImageInitialTransform );
-		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >( fixedImageFilename );
-		transforms->SetFixedImage( ReadInImage< ImageType >( referenceImage ) );
+		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( fixedImageInitialTransform.c_str() );
+		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >( fixedImageFilename.c_str() );
+		transforms->SetFixedImage(ReadInImage< ImageType >(referenceImage.c_str()));
 		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
 
 		// apply transform to fixed validation mask
 		if( performValidation )
 		{
 			transforms->NearestNeighborInterpolateOn();
-			ImageType::Pointer fixedValidationMaskTemp = ReadInImage< ImageType >( fixedImageMask );
+			ImageType::Pointer fixedValidationMaskTemp = ReadInImage< ImageType >(fixedImageMask.c_str());
 			fixedValidationMask = transforms->ResampleImage( fixedValidationMaskTemp, initialFixedTransform );
 			transforms->NearestNeighborInterpolateOff();
 		}
@@ -235,19 +237,19 @@ int main( int argc, char * argv[] )
 	}
 	else
 	{
-		fixedImage = ReadInImage< ImageType >( fixedImageFilename );
+		fixedImage = ReadInImage< ImageType >(fixedImageFilename.c_str());
 		if( performValidation )
 		{
-			fixedValidationMask = ReadInImage< ImageType >( fixedImageMask );
+			fixedValidationMask = ReadInImage< ImageType >(fixedImageMask.c_str());
 		}
 	}
 
 	// read in necessary images
-	ImageType::Pointer movingImage = ReadInImage< ImageType >( movingImageFilename );
+	ImageType::Pointer movingImage = ReadInImage< ImageType >(movingImageFilename.c_str());
 	ImageType::Pointer movingValidationMask = ImageType::New();
 	if( performValidation )
 	{
-		movingValidationMask = ReadInImage< ImageType >( movingImageMask );
+		movingValidationMask = ReadInImage< ImageType >(movingImageMask.c_str());
 	}
 	//TransformType::Pointer initialTransform = ReadInTransform< TransformType >( initialTransformFilename );
 
@@ -255,8 +257,19 @@ int main( int argc, char * argv[] )
 	if( performValidation ) { std::cout << "Fixed validation mask : " << fixedImageMask << std::endl; }
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	if( performValidation ) { std::cout << "Moving validation mask: " << movingImageMask << std::endl; }
-	if( argc > 7 && numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
-	if( argc > 8 && numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
+	//if( numberOfLevels > 1 ){ std::cout << "Level 2 ROI filename  : " << ROI2 << std::endl; }
+	//if( numberOfLevels > 2 ){ std::cout << "Level 3 ROI filename  : " << ROI3 << std::endl; }
+
+	std::vector< std::vector< float> >::iterator it = ROI2.begin();
+	for (it; it != ROI2.end(); it++)
+	{
+		std::vector<float>::iterator jt = (*it).begin();
+		for (jt; jt != (*it).end(); jt++)
+		{
+			std::cout << *jt << std::endl;
+		}
+		std::cout << std::endl;
+	}
 
 	// inputs
 	chronometer.Stop( "Inputs" );
@@ -276,10 +289,10 @@ int main( int argc, char * argv[] )
 	initialize->SetFixedImage( fixedImage );
 	initialize->SetMovingImage( movingImage );
 	
-	if( !manualInitialTransformFilename )
+	if( manualInitialTransformFilename.empty() )
 	{
 		if( observe ){ initialize->ObserveOn(); }
-		if( center ){ initialize->CenteredOnGeometryOn(); }
+		if( centerOfGeometry ){ initialize->CenteredOnGeometryOn(); }
 		if( metricX ){ initialize->MetricAlignmentOn( 0 ); }
 		if( metricY ){ initialize->MetricAlignmentOn( 1 ); }
 		if( metricZ ){ initialize->MetricAlignmentOn( 2 ); }
@@ -290,7 +303,7 @@ int main( int argc, char * argv[] )
 	{
 		std::cout << "Manual initial transform via previously saved file." << std::endl;
 		std::cout << "Initial Transform: " << manualInitialTransformFilename << std::endl;
-		initialize->Update( ReadInTransform< AffineTransformType >( manualInitialTransformFilename ) );
+		initialize->Update( ReadInTransform< AffineTransformType >( manualInitialTransformFilename.c_str() ) );
 		initialTransform = initialize->GetTransform();
 	}
 
@@ -318,9 +331,9 @@ int main( int argc, char * argv[] )
 	if( performValidation ) { transforms->SetMovingLabelMap( movingValidationMask ); }
 	
 	// perform validation
-	validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
 	if( performValidation )
 	{
+		validation->SetImage2( transforms->ResampleImage( movingImage, initialTransform ) );
 		transforms->NearestNeighborInterpolateOn();
 		validation->SetLabelMap2( transforms->ResampleImage( movingValidationMask, initialTransform ) );
 		transforms->NearestNeighborInterpolateOff();
@@ -338,8 +351,9 @@ int main( int argc, char * argv[] )
 	}
 
 	// write out initial transform
-	std::string initialTransformFilename = outputDirectory + "_InitialTransform.tfm";
-	WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialTransform );
+	//std::string initialTransformFilename = outputDirectory + "_InitialTransform.tfm";
+	//WriteOutTransform< TransformType >( initialTransformFilename.c_str(), initialTransform );
+	WriteOutTransform< TransformType >(finalTransform.c_str(), initialTransform);
 	if( debug )
 	{
 		// write out images
@@ -358,7 +372,7 @@ int main( int argc, char * argv[] )
 	// initialization
 	chronometer.Stop( "Initialization" );
 	memorymeter.Stop( "Initialization" );
-
+	
 	if( numberOfLevels > 0 )
 	{
 		// Registration level 1
@@ -446,7 +460,7 @@ int main( int argc, char * argv[] )
 			std::string level1ResampledImageFilename = debugDirectory + "_Level1ResampledImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level1ResampledImageFilename.c_str(), transforms->GetTransformedImage() );
 			// write out label map
-			if( val) 
+			if( performValidation ) 
 			{ 
 				std::string level1ResampledLabelMapFilename = debugDirectory + "_Level1ResampledLabelMap.mhd";
 				WriteOutImage< ImageType, ImageType >( level1ResampledLabelMapFilename.c_str(), transforms->GetTransformedLabelMap() );
@@ -457,14 +471,14 @@ int main( int argc, char * argv[] )
 		{
 			// write out composite transform
 			std::string level1CompositeTransformFilename = outputDirectory + "_Level1CompositeTransform.tfm";
-			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level1CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 		}
 
 		// Registration level 1
 		chronometer.Stop( "Level 1" );
 		memorymeter.Stop( "Level 1" );
 	}
-
+	/*
 	if( numberOfLevels > 1 )
 	{
 		// Registration level 2
@@ -480,7 +494,7 @@ int main( int argc, char * argv[] )
 		// crop images
 		transforms->CropImageOn();
 		transforms->ResampleImageOff();
-		transforms->SetROIFilename( ROI2 );
+		transforms->SetROI( ROI2 );
 		try
 		{
 			transforms->Update();
@@ -572,7 +586,7 @@ int main( int argc, char * argv[] )
 			// write out image
 			std::string level2MovingCroppedImageFilename = debugDirectory + "_Level2MovingCroppedImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level2MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-			if( val) 
+			if( performValidation ) 
 			{ 
 				std::string level2FixedCroppedImageFilename = debugDirectory + "_Level2FixedLabelMap.mhd";
 				WriteOutImage< ImageType, ImageType >( level2FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
@@ -583,7 +597,7 @@ int main( int argc, char * argv[] )
 
 		// final composite transform
 		std::string level2CompositeTransformFilename = outputDirectory + "_Level2CompositeTransform.tfm";
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level2CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 	
 		// Registration level 2
 		chronometer.Stop( "Level 2" );
@@ -604,7 +618,7 @@ int main( int argc, char * argv[] )
 		// crop images
 		transforms->CropImageOn();
 		transforms->ResampleImageOff();
-		transforms->SetROIFilename( ROI3 );
+		transforms->SetROI( ROI3 );
 		try
 		{
 			transforms->Update();
@@ -694,7 +708,7 @@ int main( int argc, char * argv[] )
 			// write out image
 			std::string level3MovingCroppedImageFilename = debugDirectory + "_Level3MovingCroppedImage.mhd";
 			WriteOutImage< ImageType, ImageType >( level3MovingCroppedImageFilename.c_str(), transforms->GetMovingCroppedImage() );
-			if( val) 
+			if( performValidation ) 
 			{ 
 				std::string level3FixedCroppedImageFilename = debugDirectory + "_Level3FixedLabelMap.mhd";
 				WriteOutImage< ImageType, ImageType >( level3FixedCroppedImageFilename.c_str(), transforms->GetFixedCroppedLabelMap() );
@@ -705,7 +719,7 @@ int main( int argc, char * argv[] )
 
 		// write out final composite transform
 		std::string level3CompositeTransformFilename = outputDirectory + "_Level3CompositeTransform.tfm";
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( level3CompositeTransformFilename.c_str(), transforms->GetCompositeTransform() );
+		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >( finalTransform.c_str(), transforms->GetCompositeTransform() );
 		
 		// Registration level 3
 		chronometer.Stop( "Level 3" );
@@ -719,7 +733,7 @@ int main( int argc, char * argv[] )
 	// print out time/memory results
 	chronometer.Report( std::cout );
 	memorymeter.Report( std::cout );
-
+	*/
 	return EXIT_SUCCESS;
 }
 

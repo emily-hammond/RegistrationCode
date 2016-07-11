@@ -55,8 +55,10 @@ public:
 	{
 		this->m_ObserveOn = false;
 	}
-	void MetricAlignmentOn( int axis );	
-	void MetricAlignmentOff( int axis );	
+	void MetricTranslationOn(int axis);
+	void MetricTranslationOff(int axis);
+	void MetricRotationOn(int axis);
+	void MetricRotationOff(int axis);
 	void CenteredOnGeometryOn() 
 	{ 
 		this->m_CenteredOnGeometry = true;
@@ -93,18 +95,25 @@ private:
 	// centered initialization
 	bool m_CenteredOnGeometry;
 	
-	// metric initialization
-	bool m_MetricAlignment0Flag;
-	bool m_MetricAlignment1Flag;
-	bool m_MetricAlignment2Flag;
+	// metric translational initialization
+	bool m_MetricTranslation0Flag;
+	bool m_MetricTranslation1Flag;
+	bool m_MetricTranslation2Flag;
 	float m_TranslationRange;
 	float m_MinMetric;
 	TransformType::ParametersType m_MinParameters;
 
+	// metric rotational initialization
+	bool m_MetricRotation0Flag;
+	bool m_MetricRotation1Flag;
+	bool m_MetricRotation2Flag;
+	TransformType::VersorType m_MinRotation;
+
 	// private functions
 	void GetRange( int axis );
 	void CenterOnGeometry();
-	void MetricAlignment( int axis );
+	void MetricTranslationAlignment( int axis );
+	void MetricRotationAlignment(int axis);
 };
 } // end namespace
 

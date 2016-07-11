@@ -14,7 +14,7 @@
 #include "itkStatisticsImageFilter.h"
 #include "itkVectorIndexSelectionCastImageFilter.h"
 #include "itkVectorMagnitudeImageFilter.h"
-#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistration\ReadWriteFunctions.hxx"
+#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
 #include <string>
 
 template< typename TransformType, typename ImageType >
