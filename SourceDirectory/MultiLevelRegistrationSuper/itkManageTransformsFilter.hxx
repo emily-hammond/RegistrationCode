@@ -42,6 +42,14 @@ namespace itk
 		this->m_CompositeTransform->AddTransform( transform );
 	}
 
+	std::vector<float> ManageTransformsFilter::ExtractROIPoints( const char * filename )
+	{
+		m_ROIFilename = filename;
+		ExtractROIPoints();
+
+		return m_ROI;
+	}
+
 	void ManageTransformsFilter::Update()
 	{
 		// error checking

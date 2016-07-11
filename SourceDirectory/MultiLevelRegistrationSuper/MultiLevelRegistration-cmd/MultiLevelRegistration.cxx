@@ -3,15 +3,15 @@ INSERT COMMENTS HERE
 */
 
 // include files
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkRegistrationFramework.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkInitializationFilter.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkValidationFilter.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkManageTransformsFilter.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkRegistrationFramework.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkInitializationFilter.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkValidationFilter.h"
+#include "C:\Users\ehammond\Documents\ITKprojects\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkManageTransformsFilter.h"
 
 // rescale images
 #include "itkRescaleIntensityImageFilter.h"
-#include "itkPluginUtilities.h"
+//#include "itkPluginUtilities.h"
 
 // monitoring
 #include "itkTimeProbesCollectorBase.h"
@@ -21,7 +21,6 @@ INSERT COMMENTS HERE
 #include <vector>
 
 #include <windows.h>
-#include "MultiLevelRegistrationCLP.h"
 
 // declare function
 void PrintOutManual();
@@ -29,8 +28,69 @@ void Timestamp();
 
 int main( int argc, char * argv[] )
 {
+
+	// ****************************************************************************************************************************
+
 	// parse through inputs 
-	PARSE_ARGS;
+	// input images
+	std::string fixedImageFilename = '\0'; if( strcmp(argv[1],"[]") != 0 ){ fixedImageFilename = argv[1]; }
+	std::string movingImageFilename = '\0'; if( strcmp(argv[1],"[]") != 0 ){ movingImageFilename = argv[2]; }
+	std::string finalTransform = '\0'; if( strcmp(argv[1],"[]") != 0 ){ finalTransform = argv[3]; }
+
+	// number of levels
+	int numberOfLevels = 0; if( strcmp(argv[4],"[]") != 0) { numberOfLevels = atoi(argv[4]); }
+	itk::ManageTransformsFilter::Pointer dealWithROIs = itk::ManageTransformsFilter::New();
+	std::vector<std::vector<float>> ROI;
+	std::string ROI1Filename = '\0'; if( strcmp(argv[5],"[]") != 0 )
+	{ 
+		ROI1Filename = argv[5]; 
+		ROI.push_back( dealWithROIs->ExtractROIPoints(ROI1Filename.c_str())); 
+	}
+	std::string ROI2Filename = '\0'; if (strcmp(argv[6], "[]") != 0)
+	{
+		ROI1Filename = argv[6];
+		ROI.push_back(dealWithROIs->ExtractROIPoints(ROI2Filename.c_str())); 
+	}
+	std::string ROI3Filename = '\0'; if (strcmp(argv[7], "[]") != 0)
+	{
+		ROI2Filename = argv[7];
+		ROI.push_back(dealWithROIs->ExtractROIPoints(ROI3Filename.c_str())); 
+	}
+	
+	// initialization
+	std::string fixedImageInitialTransform = '\0'; if (strcmp(argv[8], "[]") != 0){ fixedImageInitialTransform = argv[8]; }
+	std::string referenceImage = '\0'; if (strcmp(argv[9], "[]") != 0) { referenceImage = argv[9]; }
+	std::string manualInitialTransformFilename = '\0'; if (strcmp(argv[10], "[]") != 0) { manualInitialTransformFilename = argv[10]; }
+	int centerOfGeometry = 1; if (strcmp(argv[11], "[]") != 0) { centerOfGeometry = atoi(argv[11]); }
+	int transX = 0; if (strcmp(argv[12], "[]") != 0) { transX = atoi(argv[12]); }
+	int transY = 0; if (strcmp(argv[13], "[]") != 0) { transY = atoi(argv[13]); }
+	int transZ = 0; if (strcmp(argv[14], "[]") != 0) { transZ = atoi(argv[14]); }
+	int rotX = 0; if (strcmp(argv[15], "[]") != 0) { rotX = atoi(argv[15]); }
+	int rotY = 0; if (strcmp(argv[16], "[]") != 0) { rotY = atoi(argv[16]); }
+	int rotZ = 0; if (strcmp(argv[17], "[]") != 0) { rotZ = atoi(argv[17]); }
+
+	// registration parameters
+	int parameterRelaxation = 2; if (strcmp(argv[18], "[]") != 0) { parameterRelaxation = atoi(argv[18]); }
+	float rotationScale = 0.001; if (strcmp(argv[19], "[]") != 0) { rotationScale = atof(argv[19]); }
+	float translationScale = 10; if (strcmp(argv[20], "[]") != 0) { translationScale = atof(argv[20]); }
+	float scalingScale = 0.001; if (strcmp(argv[21], "[]") != 0) { scalingScale = atof(argv[21]); }
+	int numberOfIterations = 500; if (strcmp(argv[22], "[]") != 0) { numberOfIterations = atoi(argv[22]); }
+	float maximumStepLength = 1.0; if (strcmp(argv[23], "[]") != 0) { maximumStepLength = atof(argv[23]); }
+	float minimumStepLength = 0.001; if (strcmp(argv[24], "[]") != 0) { minimumStepLength = atof(argv[24]); }
+	float relaxationFactor = 0.5; if (strcmp(argv[25], "[]") != 0) { relaxationFactor = atof(argv[25]); }
+	float gradientMagnitudeTolerance = 0.001; if (strcmp(argv[26], "[]") != 0) { gradientMagnitudeTolerance = atof(argv[26]); }
+
+	// validation
+	std::string fixedImageMaskFilename = '\0'; if (strcmp(argv[27], "[]") != 0){ fixedImageMaskFilename = argv[27]; }
+	std::string movingImageMaskFilename = '\0'; if (strcmp(argv[28], "[]") != 0){ movingImageMaskFilename = argv[28]; }
+
+	// debugging
+	int observe = 0; if (strcmp(argv[29], "[]") != 0) { observe = atoi(argv[29]); }
+	int debugTransforms = 0; if (strcmp(argv[30], "[]") != 0) { debugTransforms = atoi(argv[30]); }
+	int debugImages = 0; if (strcmp(argv[31], "[]") != 0) { debugImages = atoi(argv[31]); }
+	std::string debugDirectory = '\0'; if (strcmp(argv[32], "[]") != 0){ debugDirectory = argv[32]; }
+
+	// ****************************************************************************************************************************
 
 	// print out start
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;

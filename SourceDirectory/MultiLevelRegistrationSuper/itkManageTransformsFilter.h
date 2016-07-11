@@ -111,6 +111,9 @@ public:
 	{
 		m_NearestNeighbor = false;
 	}
+
+	std::vector<float> ExtractROIPoints( const char * filename);
+
 protected:
 	// constructor
 	ManageTransformsFilter();
