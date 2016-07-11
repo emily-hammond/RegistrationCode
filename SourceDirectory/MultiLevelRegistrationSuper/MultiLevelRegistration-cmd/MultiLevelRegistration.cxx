@@ -26,73 +26,79 @@ INSERT COMMENTS HERE
 void PrintOutManual();
 void Timestamp();
 
-int main( int argc, char * argv[] )
+int main(int argc, char * argv[])
 {
 
 	// ****************************************************************************************************************************
 
 	// parse through inputs 
 	// input images
-	std::string fixedImageFilename = '\0'; if( strcmp(argv[1],"[]") != 0 ){ fixedImageFilename = argv[1]; }
-	std::string movingImageFilename = '\0'; if( strcmp(argv[1],"[]") != 0 ){ movingImageFilename = argv[2]; }
-	std::string finalTransform = '\0'; if( strcmp(argv[1],"[]") != 0 ){ finalTransform = argv[3]; }
+	std::cout << std::endl;
+	std::string emptyStr = "[]";
+	std::string fixedImageFilename = ""; if (emptyStr.compare(argv[1]) != 0){ fixedImageFilename = argv[1]; std::cout << "fixedImageFilename: " << argv[1] << std::endl; }
+	std::string movingImageFilename = ""; if (emptyStr.compare(argv[2]) != 0){ movingImageFilename = argv[2]; std::cout << "movingImageFilename: " << argv[2] << std::endl; }
+	std::string finalTransform = ""; if (emptyStr.compare(argv[3]) != 0){ finalTransform = argv[3]; std::cout << "finalTransform: " << argv[3] << std::endl; }
 
 	// number of levels
-	int numberOfLevels = 0; if( strcmp(argv[4],"[]") != 0) { numberOfLevels = atoi(argv[4]); }
+	int numberOfLevels = 0; if (emptyStr.compare(argv[4]) != 0) { numberOfLevels = atoi(argv[4]); std::cout << "numberOfLevels: " << argv[4] << std::endl; }
 	itk::ManageTransformsFilter::Pointer dealWithROIs = itk::ManageTransformsFilter::New();
 	std::vector<std::vector<float>> ROI;
-	std::string ROI1Filename = '\0'; if( strcmp(argv[5],"[]") != 0 )
+	std::string ROI1Filename = ""; if (emptyStr.compare(argv[5]) != 0)
 	{ 
 		ROI1Filename = argv[5]; 
-		ROI.push_back( dealWithROIs->ExtractROIPoints(ROI1Filename.c_str())); 
+		ROI.push_back( dealWithROIs->ExtractROIPoints(ROI1Filename.c_str()));
+		std::cout << "ROI1Filename: " << argv[5] << std::endl;
 	}
-	std::string ROI2Filename = '\0'; if (strcmp(argv[6], "[]") != 0)
+	std::string ROI2Filename = ""; if (emptyStr.compare(argv[6]) != 0)
 	{
 		ROI1Filename = argv[6];
-		ROI.push_back(dealWithROIs->ExtractROIPoints(ROI2Filename.c_str())); 
+		ROI.push_back(dealWithROIs->ExtractROIPoints(ROI2Filename.c_str()));
+		std::cout << "ROI2Filename: " << argv[6] << std::endl;
 	}
-	std::string ROI3Filename = '\0'; if (strcmp(argv[7], "[]") != 0)
+	std::string ROI3Filename = ""; if (emptyStr.compare(argv[7]) != 0)
 	{
 		ROI2Filename = argv[7];
-		ROI.push_back(dealWithROIs->ExtractROIPoints(ROI3Filename.c_str())); 
+		ROI.push_back(dealWithROIs->ExtractROIPoints(ROI3Filename.c_str()));
+		std::cout << "ROI3Filename: " << argv[7] << std::endl;
 	}
 	
 	// initialization
-	std::string fixedImageInitialTransform = '\0'; if (strcmp(argv[8], "[]") != 0){ fixedImageInitialTransform = argv[8]; }
-	std::string referenceImage = '\0'; if (strcmp(argv[9], "[]") != 0) { referenceImage = argv[9]; }
-	std::string manualInitialTransformFilename = '\0'; if (strcmp(argv[10], "[]") != 0) { manualInitialTransformFilename = argv[10]; }
-	int centerOfGeometry = 1; if (strcmp(argv[11], "[]") != 0) { centerOfGeometry = atoi(argv[11]); }
-	int transX = 0; if (strcmp(argv[12], "[]") != 0) { transX = atoi(argv[12]); }
-	int transY = 0; if (strcmp(argv[13], "[]") != 0) { transY = atoi(argv[13]); }
-	int transZ = 0; if (strcmp(argv[14], "[]") != 0) { transZ = atoi(argv[14]); }
-	int rotX = 0; if (strcmp(argv[15], "[]") != 0) { rotX = atoi(argv[15]); }
-	int rotY = 0; if (strcmp(argv[16], "[]") != 0) { rotY = atoi(argv[16]); }
-	int rotZ = 0; if (strcmp(argv[17], "[]") != 0) { rotZ = atoi(argv[17]); }
+	std::string fixedImageInitialTransform = ""; if (emptyStr.compare(argv[8]) != 0){ fixedImageInitialTransform = argv[8]; std::cout << "fixedImageInitialTransform: " << argv[8] << std::endl; }
+	std::string referenceImage = ""; if (emptyStr.compare(argv[9]) != 0) { referenceImage = argv[9]; std::cout << "referenceImage: " << argv[9] << std::endl; }
+	std::string manualInitialTransformFilename = ""; if (emptyStr.compare(argv[10]) != 0) { manualInitialTransformFilename = argv[10]; std::cout << "manualInitialTransformFilename: " << argv[10] << std::endl; }
+	int centerOfGeometry = 1; if (emptyStr.compare(argv[11]) != 0) { centerOfGeometry = atoi(argv[11]); std::cout << "centerOfGeometry: " << argv[11] << std::endl; }
+	int transX = 0; if (emptyStr.compare(argv[12]) != 0) { transX = atoi(argv[12]); std::cout << "transX: " << argv[12] << std::endl; }
+	int transY = 0; if (emptyStr.compare(argv[13]) != 0) { transY = atoi(argv[13]); std::cout << "transY: " << argv[13] << std::endl; }
+	int transZ = 0; if (emptyStr.compare(argv[14]) != 0) { transZ = atoi(argv[14]); std::cout << "transZ: " << argv[14] << std::endl; }
+	int rotX = 0; if (emptyStr.compare(argv[15]) != 0) { rotX = atoi(argv[15]); std::cout << "rotX: " << argv[15] << std::endl; }
+	int rotY = 0; if (emptyStr.compare(argv[16]) != 0) { rotY = atoi(argv[16]); std::cout << "rotY: " << argv[16] << std::endl; }
+	int rotZ = 0; if (emptyStr.compare(argv[17]) != 0) { rotZ = atoi(argv[17]); std::cout << "rotZ: " << argv[17] << std::endl; }
 
 	// registration parameters
-	int parameterRelaxation = 2; if (strcmp(argv[18], "[]") != 0) { parameterRelaxation = atoi(argv[18]); }
-	float rotationScale = 0.001; if (strcmp(argv[19], "[]") != 0) { rotationScale = atof(argv[19]); }
-	float translationScale = 10; if (strcmp(argv[20], "[]") != 0) { translationScale = atof(argv[20]); }
-	float scalingScale = 0.001; if (strcmp(argv[21], "[]") != 0) { scalingScale = atof(argv[21]); }
-	int numberOfIterations = 500; if (strcmp(argv[22], "[]") != 0) { numberOfIterations = atoi(argv[22]); }
-	float maximumStepLength = 1.0; if (strcmp(argv[23], "[]") != 0) { maximumStepLength = atof(argv[23]); }
-	float minimumStepLength = 0.001; if (strcmp(argv[24], "[]") != 0) { minimumStepLength = atof(argv[24]); }
-	float relaxationFactor = 0.5; if (strcmp(argv[25], "[]") != 0) { relaxationFactor = atof(argv[25]); }
-	float gradientMagnitudeTolerance = 0.001; if (strcmp(argv[26], "[]") != 0) { gradientMagnitudeTolerance = atof(argv[26]); }
+	int parameterRelaxation = 2; if (emptyStr.compare(argv[18]) != 0) { parameterRelaxation = atoi(argv[18]); std::cout << "parameterRelaxation: " << argv[18] << std::endl; }
+	float rotationScale = 0.001; if (emptyStr.compare(argv[19]) != 0) { rotationScale = atof(argv[19]); std::cout << "rotationScale: " << argv[19] << std::endl; }
+	float translationScale = 10; if (emptyStr.compare(argv[20]) != 0) { translationScale = atof(argv[20]); std::cout << "translationScale: " << argv[20] << std::endl; }
+	float scalingScale = 0.001; if (emptyStr.compare(argv[21]) != 0) { scalingScale = atof(argv[21]); std::cout << "scalingScale: " << argv[21] << std::endl; }
+	int numberOfIterations = 500; if (emptyStr.compare(argv[22]) != 0) { numberOfIterations = atoi(argv[22]); std::cout << "numberOfIterations: " << argv[22] << std::endl; }
+	float maximumStepLength = 1.0; if (emptyStr.compare(argv[23]) != 0) { maximumStepLength = atof(argv[23]); std::cout << "maximumStepLength: " << argv[23] << std::endl; }
+	float minimumStepLength = 0.001; if (emptyStr.compare(argv[24]) != 0) { minimumStepLength = atof(argv[24]); std::cout << "minimumStepLength: " << argv[24] << std::endl; }
+	float relaxationFactor = 0.5; if (emptyStr.compare(argv[25]) != 0) { relaxationFactor = atof(argv[25]); std::cout << "relaxationFactor: " << argv[25] << std::endl; }
+	float gradientMagnitudeTolerance = 0.001; if (emptyStr.compare(argv[26]) != 0) { gradientMagnitudeTolerance = atof(argv[26]); std::cout << "gradientMagnitudeTolerance: " << argv[26] << std::endl; }
 
 	// validation
-	std::string fixedImageMaskFilename = '\0'; if (strcmp(argv[27], "[]") != 0){ fixedImageMaskFilename = argv[27]; }
-	std::string movingImageMaskFilename = '\0'; if (strcmp(argv[28], "[]") != 0){ movingImageMaskFilename = argv[28]; }
+	std::string fixedImageMaskFilename = ""; if (emptyStr.compare(argv[27]) != 0){ fixedImageMaskFilename = argv[27]; std::cout << "fixedImageMaskFilename: " << argv[27] << std::endl; }
+	std::string movingImageMaskFilename = ""; if (emptyStr.compare(argv[28]) != 0){ movingImageMaskFilename = argv[28]; std::cout << "movingImageMaskFilename: " << argv[28] << std::endl; }
 
 	// debugging
-	int observe = 0; if (strcmp(argv[29], "[]") != 0) { observe = atoi(argv[29]); }
-	int debugTransforms = 0; if (strcmp(argv[30], "[]") != 0) { debugTransforms = atoi(argv[30]); }
-	int debugImages = 0; if (strcmp(argv[31], "[]") != 0) { debugImages = atoi(argv[31]); }
-	std::string debugDirectory = '\0'; if (strcmp(argv[32], "[]") != 0){ debugDirectory = argv[32]; }
+	int observe = 0; if (emptyStr.compare(argv[29]) != 0) { observe = atoi(argv[29]); std::cout << "observe: " << argv[29] << std::endl; }
+	int debugTransforms = 0; if (emptyStr.compare(argv[30]) != 0) { debugTransforms = atoi(argv[30]); std::cout << "debugTransforms: " << argv[30] << std::endl; }
+	int debugImages = 0; if (emptyStr.compare(argv[31]) != 0) { debugImages = atoi(argv[31]); std::cout << "debugImages: " << argv[31] << std::endl; }
+	std::string debugDirectory = ""; if (emptyStr.compare(argv[32]) != 0){ debugDirectory = argv[32]; std::cout << "debugDirectory: " << argv[32] << std::endl; }
 
 	// ****************************************************************************************************************************
 
 	// print out start
+	std::cout << std::endl;
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
 	std::cout << "             MULTI-LEVEL REGISTRATION ";
 	Timestamp();
@@ -486,8 +492,8 @@ int main( int argc, char * argv[] )
 	memorymeter.Stop( "Full program" );
 
 	// print out time/memory results
-	//chronometer.Report( std::cout );
-	//memorymeter.Report( std::cout );
+	chronometer.Report( std::cout );
+	memorymeter.Report( std::cout );
 
 	return EXIT_SUCCESS;
 }
@@ -506,13 +512,9 @@ void PrintOutManual()
 	std::cout << std::endl;
 
 	std::cout << " IMAGES: " << std::endl;
-	std::cout << "  outputDirectory: path of the directory to save the results | required" << std::endl;
-	std::cout << "  fixedImageFilename: path to the fixed image | required" << std::endl;
-	std::cout << "  movingImageFilename: path to the moving image | required" << std::endl;
-	std::cout << "  [fixedValidationMaskFilename]: path to the label map corresponding to \n";
-	std::cout << "                               the fixed image for validation | required" << std::endl;
-	std::cout << "  [movingValidationMaskFilename]: path to the label map corresponding to \n";
-	std::cout << "                                the moving image for validation | required" << std::endl;
+	std::cout << "  fixedImageFilename: filename for the fixed image including path | required" << std::endl;
+	std::cout << "  movingImageFilename: filename for the moving image including path | required" << std::endl;
+	std::cout << "  finalTransformFilename: filename for the final transform (output) | required" << std::endl;
 	std::cout << std::endl;
 
 	std::cout << " MULTI-LEVEL: " << std::endl;
@@ -523,34 +525,45 @@ void PrintOutManual()
 	std::cout << "                (must be smaller than the whole image) " << std::endl;
 	std::cout << "          = 3 | an additional ROI used to pair down the process even \n";
 	std::cout << "                further (must be within the 2nd level ROI) " << std::endl;
+	std::cout << "  [level1ROIFilename]: path to the ROI used in the first level\n";
 	std::cout << "  [level2ROIFilename]: path to the ROI used in the second level | required \n";
 	std::cout << "                       if numberOfLevels >= 2" << std::endl;
 	std::cout << "  [level3ROIFilename]: path to the ROI used in the third level | required \n";
 	std::cout << "                       if numberOfLevels = 3" << std::endl;
-	std::cout << "  [observe]: print out the monitoring of the registration process at each \n";
-	std::cout << "             level | default = 0" << std::endl;
-	std::cout << "          = 0 | YES " << std::endl;
-	std::cout << "          = 1 | NO " << std::endl;
 	std::cout << std::endl;
 
 	std::cout << " INITIALIZATION: " << std::endl;
+	std::cout << "  [fixedImageInitialTransform]: inital transform applied to the fixed image\n";
+	std::cout << "                                prior to registration | default = NULL" << std::endl;
+	std::cout << "  [referenceImage]: image used as a reference when applying the fixed image\n";
+	std::cout << "                    initial transform | required if fixedImageInitialTransform" << std::endl;
 	std::cout << "  [manualInitialTransform]: initial transform filename as a manual input" << std::endl;
 	std::cout << "                            | default = NULL" << std::endl;
-	std::cout << "  [center]: perform center of geomentry initialization | default = 1" << std::endl;
+	std::cout << "  [centerOfGeometry]: perform center of geomentry initialization | default = 1" << std::endl;
 	std::cout << "          = 0 | YES " << std::endl;
 	std::cout << "          = 1 | NO " << std::endl;
-	std::cout << "  [metricX]: perform metric initialization in the x axis | default = 0" << std::endl;
+	std::cout << "  [transX]: perform translation initialization in the x axis | default = 0" << std::endl;
 	std::cout << "          = 0 | YES " << std::endl;
 	std::cout << "          = 1 | NO " << std::endl;
-	std::cout << "  [metricY]: perform metric initialization in the y axis | default = 0" << std::endl;
+	std::cout << "  [transY]: perform translation initialization in the y axis | default = 0" << std::endl;
 	std::cout << "          = 0 | YES " << std::endl;
 	std::cout << "          = 1 | NO " << std::endl;
-	std::cout << "  [metricZ]: perform metric initialization in the z axis | default = 0" << std::endl;
+	std::cout << "  [transZ]: perform translation initialization in the z axis | default = 0" << std::endl;
+	std::cout << "          = 0 | YES " << std::endl;
+	std::cout << "          = 1 | NO " << std::endl;
+	std::cout << "  [rotX]: perform rotational initialization around the x axis | default = 0" << std::endl;
+	std::cout << "          = 0 | YES " << std::endl;
+	std::cout << "          = 1 | NO " << std::endl;
+	std::cout << "  [rotY]: perform translation initialization around the y axis | default = 0" << std::endl;
+	std::cout << "          = 0 | YES " << std::endl;
+	std::cout << "          = 1 | NO " << std::endl;
+	std::cout << "  [rotZ]: perform translation initialization around the z axis | default = 0" << std::endl;
 	std::cout << "          = 0 | YES " << std::endl;
 	std::cout << "          = 1 | NO " << std::endl;
 	std::cout << std::endl;
 
 	std::cout << " REGISTRATION PARAMETERS: " << std::endl;
+	std::cout << "  [parameterRelaxation]: divisor to reduced parameters at each level | default = 2" << std::endl;
 	std::cout << "  [rotationScale]: expected amount of rotation to occur | default = 0.001" << std::endl;
 	std::cout << "  [translationScale]: expected amount of translation to occur | default = 10" << std::endl;
 	std::cout << "  [scalingScale]: expected amount of scaling to occur | default = 0.001" << std::endl;
@@ -564,14 +577,21 @@ void PrintOutManual()
 	std::cout << "                                allowed | default = 0.001" << std::endl;
 	std::cout << std::endl;
 
+	std::cout << " VALIDATION PARAMETERS: " << std::endl;
+	std::cout << "  [fixedImageMaskFilename]: path to the label map corresponding to \n";
+	std::cout << "                               the fixed image for validation | required" << std::endl;
+	std::cout << "  [movingImageMaskFilename]: path to the label map corresponding to \n";
+	std::cout << "                                the moving image for validation | required" << std::endl;
+
 	std::cout << " SPECIAL PARAMETERS: " << std::endl;
-	std::cout << "  [skipWB]: skip the first level of registration and begin with application" << std::endl;
-	std::cout << "            of the second level ROI after initialization | default = 0" << std::endl;
-	std::cout << "  [debug]: print out images are at each level | default = 0" << std::endl;
-	std::cout << "  [initialFixedTransform]: transform that is applied to the fixed image prior" << std::endl;
-	std::cout << "                           to registration | default = NULL" << std::endl;
-	std::cout << "  [referenceImage]: image required if there is an initial fixed transform to" << std::endl;
-	std::cout << "                    define the resampled fixed image | default = NULL" << std::endl;
+	std::cout << "  [observe]: print out the monitoring of the registration process at each \n";
+	std::cout << "             level | default = 0" << std::endl;
+	std::cout << "          = 0 | YES " << std::endl;
+	std::cout << "          = 1 | NO " << std::endl;
+	std::cout << "  [debugTransforms]: print out transforms at each level and every 50 iterations\n";
+	std::cout << "                     | default = 0" << std::endl;
+	std::cout << "  [debugImages]: print out results at start and end of each level | default = 0" << std::endl;
+	std::cout << "  [debugDirectory]: path to folder that will contain all the debug information" << std::endl;
 	std::cout << std::endl;
 	
 	return;
