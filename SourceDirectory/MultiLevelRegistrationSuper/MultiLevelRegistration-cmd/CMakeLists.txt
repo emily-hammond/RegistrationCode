@@ -13,3 +13,5 @@ target_link_libraries(MultiLevelRegistrationLib ${ITK_LIBRARIES})
 
 add_executable(MultiLevelRegistration ${MultiLevelRegistration_SRC})
 target_link_libraries(MultiLevelRegistration ${ITK_LIBRARIES})
+
+add_subdirectory(Validation)

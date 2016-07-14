@@ -31,7 +31,13 @@ int main(int argc, char * argv[])
 
 	// ****************************************************************************************************************************
 
-	// parse through inputs 
+	// parse through inputs
+	if (argc < 1)
+	{
+		PrintOutManual();
+		return EXIT_SUCCESS;
+	}
+
 	// input images
 	std::cout << std::endl;
 	std::string emptyStr = "[]";
@@ -46,22 +52,26 @@ int main(int argc, char * argv[])
 	std::string ROI1Filename = ""; if (emptyStr.compare(argv[5]) != 0)
 	{ 
 		ROI1Filename = argv[5]; 
-		ROI.push_back( dealWithROIs->ExtractROIPoints(ROI1Filename.c_str()));
+		std::vector<float> ROIvalues = dealWithROIs->ExtractROIPoints(ROI1Filename.c_str());
+		ROI.push_back(ROIvalues);
 		std::cout << "ROI1Filename: " << argv[5] << std::endl;
 	}
 	std::string ROI2Filename = ""; if (emptyStr.compare(argv[6]) != 0)
 	{
-		ROI1Filename = argv[6];
-		ROI.push_back(dealWithROIs->ExtractROIPoints(ROI2Filename.c_str()));
+		ROI2Filename = argv[6];
+		std::vector<float> ROIvalues = dealWithROIs->ExtractROIPoints(ROI2Filename.c_str());
+		ROI.push_back(ROIvalues);
 		std::cout << "ROI2Filename: " << argv[6] << std::endl;
 	}
 	std::string ROI3Filename = ""; if (emptyStr.compare(argv[7]) != 0)
 	{
-		ROI2Filename = argv[7];
-		ROI.push_back(dealWithROIs->ExtractROIPoints(ROI3Filename.c_str()));
+		ROI3Filename = argv[7];
+		std::vector<float> ROIvalues = dealWithROIs->ExtractROIPoints(ROI3Filename.c_str());
+		ROI.push_back(ROIvalues);
 		std::cout << "ROI3Filename: " << argv[7] << std::endl;
 	}
-	
+	std::cout << std::endl;
+		
 	// initialization
 	std::string fixedImageInitialTransform = ""; if (emptyStr.compare(argv[8]) != 0){ fixedImageInitialTransform = argv[8]; std::cout << "fixedImageInitialTransform: " << argv[8] << std::endl; }
 	std::string referenceImage = ""; if (emptyStr.compare(argv[9]) != 0) { referenceImage = argv[9]; std::cout << "referenceImage: " << argv[9] << std::endl; }
@@ -75,7 +85,7 @@ int main(int argc, char * argv[])
 	int rotZ = 0; if (emptyStr.compare(argv[17]) != 0) { rotZ = atoi(argv[17]); std::cout << "rotZ: " << argv[17] << std::endl; }
 
 	// registration parameters
-	int parameterRelaxation = 2; if (emptyStr.compare(argv[18]) != 0) { parameterRelaxation = atoi(argv[18]); std::cout << "parameterRelaxation: " << argv[18] << std::endl; }
+	float parameterRelaxation = 2.0; if (emptyStr.compare(argv[18]) != 0) { parameterRelaxation = atof(argv[18]); std::cout << "parameterRelaxation: " << argv[18] << std::endl; }
 	float rotationScale = 0.001; if (emptyStr.compare(argv[19]) != 0) { rotationScale = atof(argv[19]); std::cout << "rotationScale: " << argv[19] << std::endl; }
 	float translationScale = 10; if (emptyStr.compare(argv[20]) != 0) { translationScale = atof(argv[20]); std::cout << "translationScale: " << argv[20] << std::endl; }
 	float scalingScale = 0.001; if (emptyStr.compare(argv[21]) != 0) { scalingScale = atof(argv[21]); std::cout << "scalingScale: " << argv[21] << std::endl; }
@@ -405,10 +415,10 @@ int main(int argc, char * argv[])
 
 		if (level != 1)
 		{
-			registration->SetMaximumStepLength(maximumStepLength / (parameterRelaxation*level));
-			registration->SetRotationScale(rotationScale / (parameterRelaxation*level));
-			registration->SetTranslationScale(translationScale / (parameterRelaxation*level));
-			registration->SetScalingScale(scalingScale / (parameterRelaxation*level));
+			registration->SetMaximumStepLength(maximumStepLength / (parameterRelaxation*(level-1)));
+			registration->SetRotationScale(rotationScale / (parameterRelaxation*(level - 1)));
+			registration->SetTranslationScale(translationScale / (parameterRelaxation*(level - 1)));
+			registration->SetScalingScale(scalingScale / (parameterRelaxation*(level - 1)));
 		}
 		else
 		{
@@ -494,7 +504,7 @@ int main(int argc, char * argv[])
 	// print out time/memory results
 	chronometer.Report( std::cout );
 	memorymeter.Report( std::cout );
-
+	
 	return EXIT_SUCCESS;
 }
 

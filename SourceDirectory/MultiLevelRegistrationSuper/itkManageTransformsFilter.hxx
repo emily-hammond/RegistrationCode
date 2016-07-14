@@ -352,9 +352,7 @@ namespace itk
 	void ManageTransformsFilter::ExtractROIPoints()
 	{
 		// instantiate ROI array
-		std::vector<float>::iterator it = m_ROI.begin();
 		bool fullROI = false; // denotes that ROI array is full
-		int numberOfPoints = 0;
 
 		// open file and extract lines
 		std::ifstream file( this->m_ROIFilename );
@@ -364,6 +362,7 @@ namespace itk
 			std::cerr << this->m_ROIFilename << " not properly opened" << std::endl;
 		}
 		std::string line;
+		int idx = 0; 
 		// iterate through file
 		while( getline( file,line ) )
 		{
@@ -391,13 +390,13 @@ namespace itk
 				// extract each point and place into ROI array
 				for( int i = 0; i < 3; ++i )
 				{
-					m_ROI.insert(it,atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() ));
-					++numberOfPoints;
-					++it;
+					m_ROI[idx] = atof( line.substr( positionsOfBars[i]+1, positionsOfBars[i+1]-positionsOfBars[i]-1 ).c_str() );
+					idx++;
 
 					// set flag to false if the roi array is filled
-					if( it == m_ROI.end() )
+					if( idx > 5 )
 					{
+						
 						fullROI = true;
 					}
 				}

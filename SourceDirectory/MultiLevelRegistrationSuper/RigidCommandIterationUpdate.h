@@ -13,7 +13,7 @@ protected:
 		m_debug( false),
 		m_DebugDirectory( "" )
 	{
-		std::cout << "\n\nObserver initialized\n\n" << std::endl;
+		std::cout << "\nObserver initialized\n" << std::endl;
 	};
 	bool m_observe;
 	bool m_debug;
@@ -21,8 +21,8 @@ protected:
 public:
 	typedef itk::VersorTransformOptimizer				OptimizerType;
 	typedef const OptimizerType *						OptimizerPointer;
-	void Observe() { this->m_observe = !this->m_observe; }
-	void Debug(std::string debugDirectory) { this->m_debug = !this->m_debug; this->m_DebugDirectory = debugDirectory; }
+	void Observe() { this->m_observe = true; }
+	void Debug(std::string debugDirectory) { this->m_debug = true; this->m_DebugDirectory = debugDirectory; }
 	void Execute( itk::Object *caller, const itk::EventObject &event )
 	{
 		Execute( (const itk::Object *)caller, event);
@@ -34,7 +34,7 @@ public:
 		{
 			return;
 		}
-		if( (optimizer->GetCurrentIteration()%10 == 1 || optimizer->GetCurrentIteration()%10 == 2) && this->m_observe )
+		if ((optimizer->GetCurrentIteration() % 10 == 0 || (optimizer->GetCurrentIteration() % 10 == 1)) && this->m_observe)
 		{
 			std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
 			std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition();
