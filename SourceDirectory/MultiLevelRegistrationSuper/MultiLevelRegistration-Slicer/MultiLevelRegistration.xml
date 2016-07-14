@@ -129,13 +129,13 @@
 
 <parameters>
 	<label>Registration parameters (expert)</label>
-  <integer>
+  <float>
     <name>parameterRelaxation</name>
     <description>Relaxation factor for parameters</description>
     <label>Parameter relaxation factor</label>
     <longflag>parameterRelaxation</longflag>
     <default>2</default>
-  </integer>
+  </float>
 	<float>
 		<name>rotationScale</name>
 		<description>Expected amount of rotation to occur</description>
