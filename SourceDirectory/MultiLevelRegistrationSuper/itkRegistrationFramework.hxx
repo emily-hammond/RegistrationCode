@@ -6,28 +6,29 @@
 namespace itk
 {
 	// set up defaults in constructor
-	RegistrationFramework::RegistrationFramework():
+	RegistrationFramework::RegistrationFramework() :
 		// images
-		m_FixedImage( ITK_NULLPTR ),	// provided by user
-		m_MovingImage( ITK_NULLPTR ),	// provided by user
+		m_FixedImage(ITK_NULLPTR),	// provided by user
+		m_MovingImage(ITK_NULLPTR),	// provided by user
 
 		// transforms
-		m_InitialTransform( ITK_NULLPTR ),	// provided by user
+		m_InitialTransform(ITK_NULLPTR),	// provided by user
 
 		// metric
-		m_PercentageOfSamples( 0.01 ),
-		m_HistogramBins( 50 ),
+		m_PercentageOfSamples(0.01),
+		m_HistogramBins(50),
 
 		// optimizer
-		m_MinimumStepLength( 0.001 ),
-		m_MaximumStepLength( 1 ),
-		m_NumberOfIterations( 500 ),
-		m_RelaxationFactor( 0.5 ),
-		m_GradientMagnitudeTolerance( 0.001 ),
-		m_RotationScale( 0.001 ),
-		m_TranslationScale( 10 ),
-		m_ScalingScale( 0.001 ),
-		m_ObserveOn( false )
+		m_MinimumStepLength(0.001),
+		m_MaximumStepLength(1),
+		m_NumberOfIterations(500),
+		m_RelaxationFactor(0.5),
+		m_GradientMagnitudeTolerance(0.001),
+		m_RotationScale(0.001),
+		m_TranslationScale(10),
+		m_ScalingScale(0.001),
+		m_ObserveOn(false),
+		m_ObserverSet(true)
 	{
 		// observer
 		m_Transform = TransformType::New();
@@ -166,9 +167,10 @@ namespace itk
 			this->m_Observer->Debug(this->m_DebugDirectory);
 			std::cout << "Writing out every 50 iterations" << std::endl;
 		}
-		if (this->m_ObserveOn || this->m_DebugOn)
+		if ((this->m_ObserveOn || this->m_DebugOn) && this->m_ObserverSet)
 		{
 			this->m_Optimizer->AddObserver(itk::IterationEvent(), this->m_Observer);
+			this->m_ObserverSet = false;
 		}
 
 		return;

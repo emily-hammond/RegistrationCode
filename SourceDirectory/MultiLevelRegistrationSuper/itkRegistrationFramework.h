@@ -129,6 +129,7 @@ private:
 	bool m_ObserveOn;
 	bool m_DebugOn;
 	std::string m_DebugDirectory;
+	bool m_ObserverSet;
 
 	// optimizer
 	OptimizerType::Pointer m_Optimizer;

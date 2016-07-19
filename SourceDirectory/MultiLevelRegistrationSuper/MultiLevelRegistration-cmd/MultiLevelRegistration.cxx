@@ -50,8 +50,8 @@ int main(int argc, char * argv[])
 	itk::ManageTransformsFilter::Pointer dealWithROIs = itk::ManageTransformsFilter::New();
 	std::vector<std::vector<float>> ROI;
 	std::string ROI1Filename = ""; if (emptyStr.compare(argv[5]) != 0)
-	{ 
-		ROI1Filename = argv[5]; 
+	{
+		ROI1Filename = argv[5];
 		std::vector<float> ROIvalues = dealWithROIs->ExtractROIPoints(ROI1Filename.c_str());
 		ROI.push_back(ROIvalues);
 		std::cout << "ROI1Filename: " << argv[5] << std::endl;
@@ -70,8 +70,7 @@ int main(int argc, char * argv[])
 		ROI.push_back(ROIvalues);
 		std::cout << "ROI3Filename: " << argv[7] << std::endl;
 	}
-	std::cout << std::endl;
-		
+
 	// initialization
 	std::string fixedImageInitialTransform = ""; if (emptyStr.compare(argv[8]) != 0){ fixedImageInitialTransform = argv[8]; std::cout << "fixedImageInitialTransform: " << argv[8] << std::endl; }
 	std::string referenceImage = ""; if (emptyStr.compare(argv[9]) != 0) { referenceImage = argv[9]; std::cout << "referenceImage: " << argv[9] << std::endl; }
@@ -120,9 +119,9 @@ int main(int argc, char * argv[])
 	itk::MemoryProbesCollectorBase	memorymeter;
 
 	// full program
-	chronometer.Start( "Full program" );
-	memorymeter.Start( "Full program" );
-	
+	chronometer.Start("Full program");
+	memorymeter.Start("Full program");
+
 	// instantiate image and transform types
 	typedef itk::Image< short, 3 >	ImageType;
 	typedef itk::Image< unsigned char, 3 >	MaskImageType;
@@ -151,27 +150,27 @@ int main(int argc, char * argv[])
 	}
 
 	// apply fixed initial transform if given
-	if( !fixedImageInitialTransform.empty() )
+	if (!fixedImageInitialTransform.empty())
 	{
 		// apply transform to fixed image
-		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( fixedImageInitialTransform.c_str() );
-		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >( fixedImageFilename.c_str() );
-		transforms->SetFixedImage( ReadInImage< ImageType >(referenceImage.c_str()) );
-		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
+		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >(fixedImageInitialTransform.c_str());
+		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >(fixedImageFilename.c_str());
+		transforms->SetFixedImage(ReadInImage< ImageType >(referenceImage.c_str()));
+		fixedImage = transforms->ResampleImage(fixedImageTemp, initialFixedTransform);
 		std::cout << "Initial transform applied to fixed image." << std::endl;
 		std::cout << "Moving image read in." << std::endl;
 
 		if (validation)
 		{
 			transforms->NearestNeighborInterpolateOn();
-			ImageType::Pointer fixedImageMaskTemp = ReadInImage< ImageType >( fixedImageMaskFilename.c_str() );
+			ImageType::Pointer fixedImageMaskTemp = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
 			fixedImageMask = transforms->ResampleImage(fixedImageMaskTemp, initialFixedTransform);
 			transforms->NearestNeighborInterpolateOff();
 		}
 	}
 	else
 	{
-		fixedImage = ReadInImage< ImageType >( fixedImageFilename.c_str() );
+		fixedImage = ReadInImage< ImageType >(fixedImageFilename.c_str());
 		std::cout << "Fixed image read in." << std::endl;
 		std::cout << "Moving image read in." << std::endl;
 
@@ -182,8 +181,8 @@ int main(int argc, char * argv[])
 	}
 
 	// initialization
-	chronometer.Start( "Initialization" );
-	memorymeter.Start( "Initialization" );
+	chronometer.Start("Initialization");
+	memorymeter.Start("Initialization");
 
 	// initialization
 	std::cout << "\n*********************************************" << std::endl;
@@ -193,15 +192,15 @@ int main(int argc, char * argv[])
 	// perform initialization class
 	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
 	TransformType::Pointer initialTransform = TransformType::New();
-	initialize->SetFixedImage( fixedImage );
-	initialize->SetMovingImage( movingImage );
-	
-	if( manualInitialTransformFilename.empty() )
+	initialize->SetFixedImage(fixedImage);
+	initialize->SetMovingImage(movingImage);
+
+	if (manualInitialTransformFilename.empty())
 	{
 		// turn on flags if no predefined transform
-		if( observe ){ initialize->ObserveOn(); }
-		if( centerOfGeometry ){ initialize->CenteredOnGeometryOn(); }
-		if( transX ){ initialize->MetricTranslationOn( 0 ); }
+		if (observe){ initialize->ObserveOn(); }
+		if (centerOfGeometry){ initialize->CenteredOnGeometryOn(); }
+		if (transX){ initialize->MetricTranslationOn(0); }
 		if (transY){ initialize->MetricTranslationOn(1); }
 		if (transZ){ initialize->MetricTranslationOn(2); }
 		if (rotX){ initialize->MetricRotationOn(0); }
@@ -213,7 +212,7 @@ int main(int argc, char * argv[])
 	}
 	else
 	{
-		initialize->Update( ReadInTransform< AffineTransformType >( manualInitialTransformFilename.c_str() ) );
+		initialize->Update(ReadInTransform< AffineTransformType >(manualInitialTransformFilename.c_str()));
 		initialTransform = initialize->GetTransform();
 		std::cout << "Initialization complete via predefined transform." << std::endl;
 	}
@@ -221,16 +220,16 @@ int main(int argc, char * argv[])
 	std::cout << "\nFinal Parameters" << std::endl;
 	std::cout << "Transform" << std::endl;
 	std::cout << "  Translation   : " << initialTransform->GetTranslation() << std::endl;
-	std::cout << "  Rotation      : " << (initialTransform->GetVersor().GetAngle())*180.0/3.141592653589793238463 << std::endl;
+	std::cout << "  Rotation      : " << (initialTransform->GetVersor().GetAngle())*180.0 / 3.141592653589793238463 << std::endl;
 	std::cout << "  Axis          : " << initialTransform->GetVersor().GetAxis() << std::endl;
 	std::cout << std::endl;
 
 	// set up transforms class and insert fixed image (will not change)
 	//transforms->AddTransform( initialize->GetTransform() );
-	transforms->SetInitialTransform( initialTransform );
+	transforms->SetInitialTransform(initialTransform);
 	transforms->AddTransform(initialTransform);
-	transforms->SetFixedImage( fixedImage );
-	transforms->SetMovingImage( movingImage );
+	transforms->SetFixedImage(fixedImage);
+	transforms->SetMovingImage(movingImage);
 
 	// write out initial transform
 	WriteOutTransform< TransformType >(finalTransform.c_str(), initialTransform);
@@ -247,7 +246,7 @@ int main(int argc, char * argv[])
 	{
 		validationFilter->SetImage1(fixedImage);
 		validationFilter->SetLabelMap1(fixedImageMask);
-		validationFilter->SetImage2( transforms->ResampleImage( movingImage, initialTransform ));
+		validationFilter->SetImage2(transforms->ResampleImage(movingImage, initialTransform));
 		transforms->NearestNeighborInterpolateOn();
 		validationFilter->SetLabelMap2(transforms->ResampleImage(movingImageMask, initialTransform));
 		transforms->NearestNeighborInterpolateOff();
@@ -265,8 +264,8 @@ int main(int argc, char * argv[])
 	}
 
 	// initialization
-	chronometer.Stop( "Initialization" );
-	memorymeter.Stop( "Initialization" );
+	chronometer.Stop("Initialization");
+	memorymeter.Stop("Initialization");
 
 	// determine the number of ROIs and creating iterators
 	int numberOfROIs = ROI.size();
@@ -281,16 +280,20 @@ int main(int argc, char * argv[])
 	{
 		ROI1 = true;
 	}
-	else 
+	else
 	{
 		std::cout << "Mismatched number of ROIs specified." << std::endl;
 		return EXIT_FAILURE;
 	}
 
-	// prepare the Registration framework
-	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
-	
-	for (int level = 1; level < numberOfLevels+1;  ++level)
+	// create independent level transforms
+	TransformType::Pointer level1;
+	TransformType::Pointer level2;
+	TransformType::Pointer level3;
+	TransformType::Pointer level4;
+	TransformType::Pointer level5;
+
+	for ( int level = 1; level < numberOfLevels + 1; ++level)
 	{
 		// monitors
 		std::string message = "Level " + level;
@@ -301,11 +304,14 @@ int main(int argc, char * argv[])
 		std::cout << "            REGISTRATION LEVEL " << level << "               " << std::endl;
 		std::cout << "*********************************************\n" << std::endl;
 
+		// prepare the Registration framework
+		itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
+		
 		// apply transform from previous level 
 		transforms->ResampleImageOn();
-		
+
 		// insert appropriate ROI into transforms class and crop image
-		if ( level == 1 && ROI1 ) // if it is level 1 and ROI is to be used in Level 1
+		if (level == 1 && ROI1) // if it is level 1 and ROI is to be used in Level 1
 		{
 			std::cout << "Applying ROI at level 1" << std::endl;
 
@@ -396,7 +402,7 @@ int main(int argc, char * argv[])
 				std::cerr << std::endl;
 				return EXIT_FAILURE;
 			}
-			registration->SetFixedImage( fixedImage );
+			registration->SetFixedImage(fixedImage);
 			registration->SetMovingImage(transforms->GetTransformedImage());
 
 			if (!debugDirectory.empty() && debugImages)
@@ -415,7 +421,7 @@ int main(int argc, char * argv[])
 
 		if (level != 1)
 		{
-			registration->SetMaximumStepLength(maximumStepLength / (parameterRelaxation*(level-1)));
+			registration->SetMaximumStepLength(maximumStepLength / (parameterRelaxation*(level - 1)));
 			registration->SetRotationScale(rotationScale / (parameterRelaxation*(level - 1)));
 			registration->SetTranslationScale(translationScale / (parameterRelaxation*(level - 1)));
 			registration->SetScalingScale(scalingScale / (parameterRelaxation*(level - 1)));
@@ -430,11 +436,11 @@ int main(int argc, char * argv[])
 
 		// observe process
 		if (observe) { registration->ObserveOn(); }
-		if (debugTransforms) 
-		{ 
+		if (debugTransforms)
+		{
 			registration->DebugOn();
 			std::string directory = debugDirectory + "\\Level" + std::to_string(level);
-			registration->SetDebugDirectory(directory); 
+			registration->SetDebugDirectory(directory);
 		}
 
 		// perform registration
@@ -462,7 +468,7 @@ int main(int argc, char * argv[])
 		if (!debugDirectory.empty() && debugTransforms)
 		{
 			std::string transformFilename = debugDirectory + "\\Level" + std::to_string(level) + "Transform.tfm";
-			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(transformFilename.c_str(), transforms->GetCompositeTransform());
+			WriteOutTransform< TransformType >(transformFilename.c_str(), registration->GetFinalTransform());
 		}
 
 		// write out images
@@ -475,7 +481,7 @@ int main(int argc, char * argv[])
 		// obtain validation measures
 		if (validation)
 		{
-			validationFilter->SetImage2(transforms->ResampleImage( movingImage, transforms->GetCompositeTransform()));
+			validationFilter->SetImage2(transforms->ResampleImage(movingImage, transforms->GetCompositeTransform()));
 			transforms->NearestNeighborInterpolateOn();
 			validationFilter->SetLabelMap2(transforms->ResampleImage(movingImageMask, transforms->GetCompositeTransform()));
 			transforms->NearestNeighborInterpolateOff();
@@ -496,7 +502,8 @@ int main(int argc, char * argv[])
 		chronometer.Stop(message.c_str());
 		memorymeter.Stop(message.c_str());
 	}
-	
+	transforms->GetCompositeTransform()->Print(std::cout);
+
 	// full program
 	chronometer.Stop( "Full program" );
 	memorymeter.Stop( "Full program" );
