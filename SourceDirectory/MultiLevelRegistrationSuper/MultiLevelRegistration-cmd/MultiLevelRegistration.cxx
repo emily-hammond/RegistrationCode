@@ -1,5 +1,5 @@
 /*
-INSERT COMMENTS HERE
+COMMAND LINE INTERFACE CODE
 */
 
 // include files
