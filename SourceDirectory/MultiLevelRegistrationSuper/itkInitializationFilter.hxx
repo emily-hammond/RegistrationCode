@@ -449,12 +449,12 @@ namespace itk
 		this->m_MovingImage->TransformIndexToPhysicalPoint(middleIndex, middlePoint);
 
 		// iterate and find metric at 125 specific points
-		int n = 8;
-		for (int i = 1; i < n; i++)
+		int n = 25; int o = 5;
+		for (int i = o; i < (n-o); i++)
 		{
-			for (int j = 1; j < n; j++)
+			for (int j = o; j < (n - o); j++)
 			{
-				for (int k = 1; k < n; k++)
+				for (int k = o; k < (n - o); k++)
 				{
 					// find fixed index
 					ImageType::IndexType fixedIndex;
@@ -492,79 +492,6 @@ namespace itk
 				}
 			}
 		}
-
-		/*
-		// find index of middle of moving image
-		ImageType::SizeType movingSize = this->m_MovingImage->GetLargestPossibleRegion().GetSize();
-		ImageType::IndexType middleIndex;
-		middleIndex[0] = movingSize[0] / 2;
-		middleIndex[1] = movingSize[1] / 2;
-		middleIndex[2] = movingSize[2] / 2;
-
-		// find number of pixels in fixed image
-		ImageType::SizeType size = this->m_FixedImage->GetLargestPossibleRegion().GetSize();
-		int noPixels = size[0] * size[1] * size[2];
-		std::cout << "Number of pixels: " << noPixels << std::endl;
-
-		// find initial translation
-		ImageType::PointType fixedPoint;
-		ImageType::PointType movingPoint;
-		// get physical points
-		this->m_FixedImage->TransformIndexToPhysicalPoint(middleIndex, fixedPoint);
-
-		std::cout << "Middle of moving image: " << middleIndex[0] << ", " << middleIndex[1] << ", " << middleIndex[2] << std::endl;
-		std::cout << "Fixed point: " << fixedPoint[0] << ", " << fixedPoint[1] << ", " << fixedPoint[2] << std::endl;
-		std::cout << "Moving point: " << movingPoint[0] << ", " << movingPoint[1] << ", " << movingPoint[2] << std::endl;
-
-		this->m_MovingImage->TransformIndexToPhysicalPoint(middleIndex, movingPoint);
-		// find initial parameters
-		TransformType::ParametersType parameters = this->m_Transform->GetParameters();
-		parameters[3] = movingPoint[0] - fixedPoint[0];
-		parameters[4] = movingPoint[1] - fixedPoint[1];
-		parameters[5] = movingPoint[2] - fixedPoint[2];
-		this->m_MinParameters = parameters;
-
-		std::cout << "Parameters: ";
-		for (int j = 0; j < 9; ++j)
-		{
-			std::cout << parameters[j] << ", ";
-		}
-		std::cout << std::endl;
-		
-		// iterate through the image
-		
-		while (!fixedIterator.IsAtEnd())
-		{
-			this->m_FixedImage->TransformIndexToPhysicalPoint(fixedIterator.GetIndex(), fixedPoint);
-			TransformType::ParametersType parameters = this->m_Transform->GetParameters();
-			parameters[3] = fixedPoint[0] - movingPoint[0];
-			parameters[4] = fixedPoint[1] - movingPoint[1];
-			parameters[5] = fixedPoint[2] - movingPoint[2];
-			
-			// calculate metric
-			if (mmi->GetValue(parameters) < this->m_MinMetric)
-			{
-				this->m_MinMetric = mmi->GetValue(parameters);
-				this->m_MinParameters = parameters;
-			}
-
-			// print out results if observing on
-			if (this->m_ObserveOn)
-			{
-				std::cout << "Metric: " << mmi->GetValue(parameters) << "    Parameters: ";
-				for (int j = 0; j < 9; ++j)
-				{
-					std::cout << parameters[j] << ", ";
-				}
-				std::cout << std::endl;
-			}
-
-			for (int i = 0; i < noPixels/100; i++)
-			{
-				++fixedIterator;
-			}
-		}
-		*/
 
 		// save results into transform
 		this->m_Transform->SetParameters(this->m_MinParameters);
