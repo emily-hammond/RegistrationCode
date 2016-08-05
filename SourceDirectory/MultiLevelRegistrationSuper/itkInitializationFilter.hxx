@@ -14,7 +14,8 @@ namespace itk
 		m_MetricRotation0Flag(false),
 		m_MetricRotation1Flag(false),
 		m_MetricRotation2Flag(false),
-		m_ObserveOn( false )
+		m_ObserveOn( false ),
+		m_IterativeAlignment( true )
 	{
 		m_Transform = TransformType::New();
 		TransformType::AxisType axis;
@@ -137,6 +138,13 @@ namespace itk
 		if( !m_MovingImage )
 		{
 			itkExceptionMacro( << "MovingImage not present" );
+		}
+
+		// iterative alignment
+		if (this->m_IterativeAlignment)
+		{
+			IterativeAlignment();
+			return;
 		}
 
 		// center images based on geometry
@@ -302,7 +310,7 @@ namespace itk
 				std::cout << "Metric: " << mmi->GetValue(parameters)  << "    Parameters: ";
 				for( int j = 0; j < 9; ++j )
 				{
-					std::cout << parameters[j];
+					std::cout << parameters[j] << ", ";
 				}
 				std::cout << std::endl;
 			}
@@ -395,6 +403,122 @@ namespace itk
 		std::cout << "Metric initialization on " << axis << " complete." << std::endl;
 		
 		return;
+	}
+
+	void InitializationFilter::IterativeAlignment()
+	{
+		// instantiate metric to use
+		typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;
+		MetricType::Pointer mmi = MetricType::New();
+
+		// connect interpolator
+		typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
+		InterpolatorType::Pointer interpolator = InterpolatorType::New();
+
+		// set parameters
+		mmi->SetFixedImage(this->m_FixedImage);
+		mmi->SetMovingImage(this->m_MovingImage);
+		mmi->SetFixedImageRegion(this->m_FixedImage->GetLargestPossibleRegion());
+		mmi->SetTransform(this->m_Transform);
+		mmi->SetInterpolator(interpolator);
+
+		// initialize metric
+		mmi->Initialize();
+
+		// initialization
+		this->m_MinMetric = 1000000.0;
+
+		// header for section
+		if (this->m_ObserveOn)
+		{
+			std::cout << "\nIterative alignment\n";
+		}
+
+		// find index of middle of moving image
+		ImageType::SizeType movingSize = this->m_MovingImage->GetLargestPossibleRegion().GetSize();
+		ImageType::IndexType middleIndex;
+		middleIndex[0] = movingSize[0] / 2;
+		middleIndex[1] = movingSize[1] / 2;
+		middleIndex[2] = movingSize[2] / 2;
+		// create iterator and initialize
+		itk::ImageRegionIteratorWithIndex< ImageType > fixedIterator(this->m_FixedImage, this->m_FixedImage->GetLargestPossibleRegion());
+		fixedIterator.Begin();
+		for (int i = 0; i < (middleIndex[0] * middleIndex[1] * middleIndex[2]); ++i)
+		{
+			++fixedIterator;
+		}
+		// find number of pixels in fixed image
+		ImageType::SizeType size = this->m_FixedImage->GetLargestPossibleRegion().GetSize();
+		int noPixels = size[0] * size[1] * size[2];
+		std::cout << "Number of pixels: " << noPixels << std::endl;
+
+		// find initial translation
+		ImageType::PointType fixedPoint;
+		ImageType::PointType movingPoint;
+		// get physical points
+		this->m_FixedImage->TransformIndexToPhysicalPoint(middleIndex, fixedPoint);
+
+		std::cout << "Middle of moving image: " << middleIndex[0] << ", " << middleIndex[1] << ", " << middleIndex[2] << std::endl;
+		std::cout << "Fixed point: " << fixedPoint[0] << ", " << fixedPoint[1] << ", " << fixedPoint[2] << std::endl;
+		std::cout << "Moving point: " << movingPoint[0] << ", " << movingPoint[1] << ", " << movingPoint[2] << std::endl;
+
+		this->m_MovingImage->TransformIndexToPhysicalPoint(middleIndex, movingPoint);
+		// find initial parameters
+		TransformType::ParametersType parameters = this->m_Transform->GetParameters();
+		parameters[3] = movingPoint[0] - fixedPoint[0];
+		parameters[4] = movingPoint[1] - fixedPoint[1];
+		parameters[5] = movingPoint[2] - fixedPoint[2];
+		this->m_MinParameters = parameters;
+
+		std::cout << "Parameters: ";
+		for (int j = 0; j < 9; ++j)
+		{
+			std::cout << parameters[j] << ", ";
+		}
+		std::cout << std::endl;
+		
+		// iterate through the image
+		
+		while (!fixedIterator.IsAtEnd())
+		{
+			this->m_FixedImage->TransformIndexToPhysicalPoint(fixedIterator.GetIndex(), fixedPoint);
+			TransformType::ParametersType parameters = this->m_Transform->GetParameters();
+			parameters[3] = fixedPoint[0] - movingPoint[0];
+			parameters[4] = fixedPoint[1] - movingPoint[1];
+			parameters[5] = fixedPoint[2] - movingPoint[2];
+			/*
+			// calculate metric
+			if (mmi->GetValue(parameters) < this->m_MinMetric)
+			{
+				this->m_MinMetric = mmi->GetValue(parameters);
+				this->m_MinParameters = parameters;
+			}
+
+			// print out results if observing on
+			if (this->m_ObserveOn)
+			{
+				std::cout << "Metric: " << mmi->GetValue(parameters) << "    Parameters: ";
+				for (int j = 0; j < 9; ++j)
+				{
+					std::cout << parameters[j] << ", ";
+				}
+				std::cout << std::endl;
+			}*/
+
+			for (int i = 0; i < noPixels/100; i++)
+			{
+				++fixedIterator;
+			}
+		}
+
+		// save results into transform
+		this->m_Transform->SetParameters(this->m_MinParameters);
+		//std::cout << this->m_transform << std::endl;
+
+		if (this->m_ObserveOn){ std::cout << std::endl; }
+		std::cout << "Iteration alignment complete." << std::endl;
+		return;
+
 	}
 
 } // end namespace

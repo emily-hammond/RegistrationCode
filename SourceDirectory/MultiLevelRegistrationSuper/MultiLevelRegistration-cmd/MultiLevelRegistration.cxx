@@ -468,7 +468,7 @@ int main(int argc, char * argv[])
 		if (!debugDirectory.empty() && debugTransforms)
 		{
 			std::string transformFilename = debugDirectory + "\\Level" + std::to_string(level) + "Transform.tfm";
-			WriteOutTransform< TransformType >(transformFilename.c_str(), registration->GetFinalTransform());
+			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(transformFilename.c_str(), transforms->GetCompositeTransform());
 		}
 
 		// write out images
@@ -502,7 +502,6 @@ int main(int argc, char * argv[])
 		chronometer.Stop(message.c_str());
 		memorymeter.Stop(message.c_str());
 	}
-	transforms->GetCompositeTransform()->Print(std::cout);
 
 	// full program
 	chronometer.Stop( "Full program" );

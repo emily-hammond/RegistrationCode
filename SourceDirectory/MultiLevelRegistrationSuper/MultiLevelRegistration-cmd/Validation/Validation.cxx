@@ -86,6 +86,20 @@ int main( int argc, char * argv[] )
 	std::cout << "Fixed validation mask : " << fixedMaskFilename << std::endl;
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	std::cout << "Moving validation mask: " << movingMaskFilename << std::endl;
+	if (argc > 7)
+	{
+		std::cout << "\nROI2: " << level2ROIFilename << std::endl;
+	}
+	if (argc > 9)
+	{
+		std::cout << "ROI3: " << level3ROIFilename << std::endl;
+	}
+	if (argc > 11)
+	{
+		std::cout << "\nInitial Fixed Transform: " << initialFixedTransformFilename << std::endl;
+		std::cout << "Reference Image: " << referenceImageFilename << std::endl;
+	}
+	std::cout << std::endl;
 
 	// check inputs
 	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();

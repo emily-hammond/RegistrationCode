@@ -8,15 +8,17 @@ public:
 	typedef itk::SmartPointer< Self >	Pointer;
 	itkNewMacro( Self );
 protected:
-	RigidCommandIterationUpdate():
-		m_observe( false ),
-		m_debug( false),
-		m_DebugDirectory( "" )
+	RigidCommandIterationUpdate() :
+		m_observe(false),
+		m_debug(false),
+		m_DebugDirectory(""),
+		stepSize(0)
 	{
 		std::cout << "\nObserver initialized\n" << std::endl;
 	};
 	bool m_observe;
 	bool m_debug;
+	float stepSize;
 	std::string m_DebugDirectory;
 public:
 	typedef itk::VersorTransformOptimizer				OptimizerType;
@@ -34,13 +36,14 @@ public:
 		{
 			return;
 		}
-		if ((optimizer->GetCurrentIteration() % 10 == 0 || (optimizer->GetCurrentIteration() % 10 == 1)) && this->m_observe)
+		if ((optimizer->GetCurrentIteration() < 20 || (optimizer->GetCurrentIteration() % 10 == 0)) && this->m_observe)
 		{
 			std::cout << optimizer->GetCurrentIteration() << " " << optimizer->GetCurrentStepLength();// << " " << optimizer->GetGradientMagnitude();
 			std::cout << " " << optimizer->GetValue() << " " << optimizer->GetCurrentPosition();
 			std::cout << std::endl;
 		}
-		if ((optimizer->GetCurrentIteration()%50 == 1) && this->m_debug)
+		float diff = optimizer->GetCurrentStepLength() - stepSize;
+		if ((abs(diff)>0.0001) && this->m_debug)
 		{
 			std::string filename = this->m_DebugDirectory + "Transform_" + std::to_string(optimizer->GetCurrentIteration()) + ".tfm";
 			itk::ScaleVersor3DTransform< double >::Pointer transform = itk::ScaleVersor3DTransform< double >::New();
@@ -48,5 +51,6 @@ public:
 
 			WriteOutTransform< itk::ScaleVersor3DTransform< double >>(filename.c_str(), transform);
 		}
+		stepSize = optimizer->GetCurrentStepLength();
 	}
 };

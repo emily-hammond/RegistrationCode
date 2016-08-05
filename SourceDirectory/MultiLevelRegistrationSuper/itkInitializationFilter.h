@@ -18,6 +18,7 @@ Remaining to implement:
 // include files not defined in itkRegistrationFramework.h
 #include "itkCenteredTransformInitializer.h"
 #include "itkAffineTransform.h"
+#include "itkImageRegionIteratorWithIndex.h"
 
 namespace itk
 {
@@ -67,6 +68,14 @@ public:
 	{ 
 		this->m_CenteredOnGeometry = false;
 	}
+	void IterativeAlignmentOn()
+	{
+		this->m_IterativeAlignment = true;
+	}
+	void IterativeAlignmentOff()
+	{
+		this->m_IterativeAlignment = false;
+	}
 
 	// perform function
 	void Update();
@@ -109,11 +118,15 @@ private:
 	bool m_MetricRotation2Flag;
 	TransformType::VersorType m_MinRotation;
 
+	// iterative alignment
+	bool m_IterativeAlignment;
+
 	// private functions
 	void GetRange( int axis );
 	void CenterOnGeometry();
 	void MetricTranslationAlignment( int axis );
 	void MetricRotationAlignment(int axis);
+	void IterativeAlignment();
 };
 } // end namespace
 
