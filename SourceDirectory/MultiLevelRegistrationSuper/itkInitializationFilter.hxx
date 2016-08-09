@@ -15,7 +15,7 @@ namespace itk
 		m_MetricRotation1Flag(false),
 		m_MetricRotation2Flag(false),
 		m_ObserveOn( false ),
-		m_IterativeAlignment( true )
+		m_IterativeAlignment( false )
 	{
 		m_Transform = TransformType::New();
 		TransformType::AxisType axis;
