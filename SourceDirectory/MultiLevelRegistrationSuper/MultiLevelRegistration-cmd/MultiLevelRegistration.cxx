@@ -560,6 +560,9 @@ void PrintOutManual()
 	std::cout << "  [centerOfGeometry]: perform center of geomentry initialization | default = 1" << std::endl;
 	std::cout << "          = 0 | YES " << std::endl;
 	std::cout << "          = 1 | NO " << std::endl;
+	std::cout << "  [iterativeAlignment]: iterative over 125 locations for best alignment | default = 0" << std::endl;
+	std::cout << "          = 0 | YES " << std::endl;
+	std::cout << "          = 1 | NO " << std::endl;
 	std::cout << "  [transX]: perform translation initialization in the x axis | default = 0" << std::endl;
 	std::cout << "          = 0 | YES " << std::endl;
 	std::cout << "          = 1 | NO " << std::endl;

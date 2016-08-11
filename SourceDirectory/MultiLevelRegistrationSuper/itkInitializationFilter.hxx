@@ -294,24 +294,30 @@ namespace itk
 		// parse through translation range and determine smallest metric value
 		for( float i = start; i < end; i = i - (start-end)/20.0)
 		{
-			// change parameters
-			parameters[ axis + 3 ] = i;
-			// store parameters and corresponding metric into array
-			if( mmi->GetValue( parameters ) < this->m_MinMetric )
+			try
 			{
-				this->m_MinMetric = mmi->GetValue( parameters );
-				this->m_MinParameters = parameters;
-			}
-
-			// print out results if observing on
-			if( this->m_ObserveOn )
-			{
-				std::cout << "Metric: " << mmi->GetValue(parameters)  << "    Parameters: ";
-				for( int j = 0; j < 9; ++j )
+				// change parameters
+				parameters[ axis + 3 ] = i;
+				// store parameters and corresponding metric into array
+				if( mmi->GetValue( parameters ) < this->m_MinMetric )
 				{
-					std::cout << parameters[j] << ", ";
+					this->m_MinMetric = mmi->GetValue( parameters );
+					this->m_MinParameters = parameters;
 				}
-				std::cout << std::endl;
+
+				// print out results if observing on
+				if( this->m_ObserveOn )
+				{
+					std::cout << "Metric: " << mmi->GetValue(parameters)  << "    Parameters: ";
+					for( int j = 0; j < 9; ++j )
+					{
+						std::cout << parameters[j] << ", ";
+					}
+					std::cout << std::endl;
+				}
+			}
+			catch (itk::ExceptionObject & err)
+			{
 			}
 		}
 
