@@ -1,5 +1,5 @@
 /*
-INSERT COMMENTS HERE
+SLICER COMPATIBLE CODE
 */
 
 // include files
@@ -210,12 +210,12 @@ int main( int argc, char * argv[] )
 		std::cout << "Mismatched number of ROIs specified." << std::endl;
 		return EXIT_FAILURE;
 	}
-
-	// prepare the Registration framework
-	itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
-	
+		
 	for (int level = 1; level < numberOfLevels+1;  ++level)
 	{
+		// prepare the Registration framework
+		itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
+		
 		// monitors
 		std::string message = "Level " + level;
 		chronometer.Start(message.c_str());
@@ -339,10 +339,10 @@ int main( int argc, char * argv[] )
 
 		if (level != 1)
 		{
-			registration->SetMaximumStepLength(maximumStepLength / (parameterRelaxation*level));
-			registration->SetRotationScale(rotationScale / (parameterRelaxation*level));
-			registration->SetTranslationScale(translationScale / (parameterRelaxation*level));
-			registration->SetScalingScale(scalingScale / (parameterRelaxation*level));
+			registration->SetMaximumStepLength(maximumStepLength / (parameterRelaxation*(level-1)));
+			registration->SetRotationScale(rotationScale / (parameterRelaxation*(level - 1)));
+			registration->SetTranslationScale(translationScale / (parameterRelaxation*(level - 1)));
+			registration->SetScalingScale(scalingScale / (parameterRelaxation*(level - 1)));
 		}
 		else
 		{
@@ -437,82 +437,5 @@ void Timestamp()
 	time_t ltime;
 	ltime = time( NULL );
 	printf("%s",asctime( localtime( &ltime ) ) );
-	return;
-}
-
-void PrintOutManual()
-{
-	std::cout << "                           **** USER MANUAL ****                             " << std::endl;
-	std::cout << std::endl;
-
-	std::cout << " IMAGES: " << std::endl;
-	std::cout << "  outputDirectory: path of the directory to save the results | required" << std::endl;
-	std::cout << "  fixedImageFilename: path to the fixed image | required" << std::endl;
-	std::cout << "  movingImageFilename: path to the moving image | required" << std::endl;
-	std::cout << "  [fixedValidationMaskFilename]: path to the label map corresponding to \n";
-	std::cout << "                               the fixed image for validation | required" << std::endl;
-	std::cout << "  [movingValidationMaskFilename]: path to the label map corresponding to \n";
-	std::cout << "                                the moving image for validation | required" << std::endl;
-	std::cout << std::endl;
-
-	std::cout << " MULTI-LEVEL: " << std::endl;
-	std::cout << "  [numberOfLevels]: number of desired levels for registration | default = 0" << std::endl;
-	std::cout << "          = 0 | initialization only " << std::endl;
-	std::cout << "          = 1 | whole image registration " << std::endl;
-	std::cout << "          = 2 | ROI used to isolate a specific region for registration \n";
-	std::cout << "                (must be smaller than the whole image) " << std::endl;
-	std::cout << "          = 3 | an additional ROI used to pair down the process even \n";
-	std::cout << "                further (must be within the 2nd level ROI) " << std::endl;
-	std::cout << "  [level2ROIFilename]: path to the ROI used in the second level | required \n";
-	std::cout << "                       if numberOfLevels >= 2" << std::endl;
-	std::cout << "  [level3ROIFilename]: path to the ROI used in the third level | required \n";
-	std::cout << "                       if numberOfLevels = 3" << std::endl;
-	std::cout << "  [observe]: print out the monitoring of the registration process at each \n";
-	std::cout << "             level | default = 0" << std::endl;
-	std::cout << "          = 0 | YES " << std::endl;
-	std::cout << "          = 1 | NO " << std::endl;
-	std::cout << std::endl;
-
-	std::cout << " INITIALIZATION: " << std::endl;
-	std::cout << "  [manualInitialTransform]: initial transform filename as a manual input" << std::endl;
-	std::cout << "                            | default = NULL" << std::endl;
-	std::cout << "  [center]: perform center of geomentry initialization | default = 1" << std::endl;
-	std::cout << "          = 0 | YES " << std::endl;
-	std::cout << "          = 1 | NO " << std::endl;
-	std::cout << "  [metricX]: perform metric initialization in the x axis | default = 0" << std::endl;
-	std::cout << "          = 0 | YES " << std::endl;
-	std::cout << "          = 1 | NO " << std::endl;
-	std::cout << "  [metricY]: perform metric initialization in the y axis | default = 0" << std::endl;
-	std::cout << "          = 0 | YES " << std::endl;
-	std::cout << "          = 1 | NO " << std::endl;
-	std::cout << "  [metricZ]: perform metric initialization in the z axis | default = 0" << std::endl;
-	std::cout << "          = 0 | YES " << std::endl;
-	std::cout << "          = 1 | NO " << std::endl;
-	std::cout << std::endl;
-
-	std::cout << " REGISTRATION PARAMETERS: " << std::endl;
-	std::cout << "  [rotationScale]: expected amount of rotation to occur | default = 0.001" << std::endl;
-	std::cout << "  [translationScale]: expected amount of translation to occur | default = 10" << std::endl;
-	std::cout << "  [scalingScale]: expected amount of scaling to occur | default = 0.001" << std::endl;
-	std::cout << "  [numberOfIterations]: number of iterations allowed at each level of \n";
-	std::cout << "                        registration | default = 500" << std::endl;
-	std::cout << "  [maximumStepLength]: maximum step length allowed at each level | default = 1" << std::endl;
-	std::cout << "  [minimumStepLength]: minimum step length allowed at each level | default = 0.001" << std::endl;
-	std::cout << "  [relaxationFactor]: amount by which the step length decreases during \n";
-	std::cout << "                      optimization | default = 0.5" << std::endl;
-	std::cout << "  [gradientMagnitudeTolerance]: the minimum gradient magnitude \n";
-	std::cout << "                                allowed | default = 0.001" << std::endl;
-	std::cout << std::endl;
-
-	std::cout << " SPECIAL PARAMETERS: " << std::endl;
-	std::cout << "  [skipWB]: skip the first level of registration and begin with application" << std::endl;
-	std::cout << "            of the second level ROI after initialization | default = 0" << std::endl;
-	std::cout << "  [debug]: print out images are at each level | default = 0" << std::endl;
-	std::cout << "  [initialFixedTransform]: transform that is applied to the fixed image prior" << std::endl;
-	std::cout << "                           to registration | default = NULL" << std::endl;
-	std::cout << "  [referenceImage]: image required if there is an initial fixed transform to" << std::endl;
-	std::cout << "                    define the resampled fixed image | default = NULL" << std::endl;
-	std::cout << std::endl;
-	
 	return;
 }
