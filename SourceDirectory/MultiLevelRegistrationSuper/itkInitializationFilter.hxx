@@ -144,7 +144,6 @@ namespace itk
 		if (this->m_IterativeAlignment)
 		{
 			IterativeAlignment();
-			return;
 		}
 
 		// center images based on geometry
@@ -346,6 +345,8 @@ namespace itk
 		// initialize metric
 		mmi->Initialize();
 
+		TransformType::ParametersType parameters = this->m_Transform->GetParameters();
+
 		// create axis of rotation and set desired axis to 1;
 		TransformType::VersorType rotation;
 		TransformType::AxisType rotAxis;
@@ -357,6 +358,11 @@ namespace itk
 		// initialization
 		this->m_MinMetric = 1000000.0;
 		this->m_MinParameters = m_Transform->GetParameters();
+		for (int j = 0; j < 9; ++j)
+		{
+			std::cout << parameters[j] << ", ";
+		}
+		std::cout << std::endl;
 
 		// header for section
 		if (this->m_ObserveOn)
@@ -374,25 +380,33 @@ namespace itk
 			// create rotation and set parameters
 			rotation.Set(rotAxis, i);
 			this->m_MinRotation = rotation*this->m_MinRotation;
-		
+
 			this->m_Transform->SetRotation(rotation);
+			double versor[4] = { rotation.GetX(), rotation.GetY(), rotation.GetZ(), rotation.GetW() };
+			parameters[axis] = versor[axis];
 			
 			// store parameters and corresponding metric into array
-			if (mmi->GetValue(m_Transform->GetParameters()) < this->m_MinMetric)
+			try
 			{
-				this->m_MinMetric = mmi->GetValue(m_Transform->GetParameters());
-				this->m_MinParameters = m_Transform->GetParameters();
-			}
-
-			// print out results if observing on
-			if (this->m_ObserveOn)
-			{
-				std::cout << "Metric : " << mmi->GetValue(m_Transform->GetParameters()) << "    Parameters: ";
-				for (int j = 0; j < 9; ++j)
+				MetricType::MeasureType value = mmi->GetValue(parameters);
+				if (value < this->m_MinMetric)
 				{
-					std::cout << m_Transform->GetParameters()[j];
+					this->m_MinMetric = mmi->GetValue(parameters);
+					this->m_MinParameters = parameters;
 				}
-				std::cout << std::endl;
+				// print out results if observing on
+				if (this->m_ObserveOn)
+				{
+					std::cout << "Metric : " << mmi->GetValue(parameters) << "    Parameters: ";
+					for (int j = 0; j < 9; ++j)
+					{
+						std::cout << m_Transform->GetParameters()[j] << ", ";
+					}
+					std::cout << std::endl;
+				}
+			}
+			catch (itk::ExceptionObject & err)
+			{
 			}
 		}
 
@@ -497,7 +511,14 @@ namespace itk
 		this->m_Transform->SetParameters(this->m_MinParameters);
 		//std::cout << this->m_transform << std::endl;
 
-		if (this->m_ObserveOn){ std::cout << std::endl; }
+		if (this->m_ObserveOn)
+		{ 
+			for (int j = 0; j < 9; ++j)
+			{
+				std::cout << m_Transform->GetParameters()[j] << ", ";
+			}
+			std::cout << std::endl; 
+		}
 		std::cout << "Iterative alignment complete." << std::endl;
 		return;
 
