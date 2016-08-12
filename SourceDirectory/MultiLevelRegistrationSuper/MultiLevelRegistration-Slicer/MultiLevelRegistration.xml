@@ -84,6 +84,13 @@
 		<default>true</default>
 	</boolean>
 	<boolean>
+		<name>iterativeAlignment</name>
+		<description>Perform initialization by iterating over 125 distinct points between the two images</description>
+		<label>Iterative alignment</label>
+		<longflag>iterativeAlignment</longflag>
+		<default>false</default>
+	</boolean>
+	<boolean>
 		<name>transX</name>
 		<description>Perform metric initialization in X direction</description>
 		<label>Metric: Translation X</label>

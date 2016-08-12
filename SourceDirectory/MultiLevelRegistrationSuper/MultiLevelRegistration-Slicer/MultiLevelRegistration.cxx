@@ -3,11 +3,11 @@ SLICER COMPATIBLE CODE
 */
 
 // include files
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkRegistrationFramework.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkInitializationFilter.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkValidationFilter.h"
-#include "C:\Users\ehammond\Documents\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkManageTransformsFilter.h"
+#include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
+#include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkRegistrationFramework.h"
+#include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkInitializationFilter.h"
+#include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkValidationFilter.h"
+#include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkManageTransformsFilter.h"
 
 // rescale images
 #include "itkRescaleIntensityImageFilter.h"
@@ -125,6 +125,7 @@ int main( int argc, char * argv[] )
 		// turn on flags if no predefined transform
 		if( observe ){ initialize->ObserveOn(); }
 		if( centerOfGeometry ){ initialize->CenteredOnGeometryOn(); }
+		if (iterativeAlignment) { initialize->IterativeAlignmentOn(); }
 		if( transX ){ initialize->MetricTranslationOn( 0 ); }
 		if (transY){ initialize->MetricTranslationOn(1); }
 		if (transZ){ initialize->MetricTranslationOn(2); }
