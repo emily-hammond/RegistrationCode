@@ -86,15 +86,15 @@ int main( int argc, char * argv[] )
 	std::cout << "Fixed validation mask : " << fixedMaskFilename << std::endl;
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	std::cout << "Moving validation mask: " << movingMaskFilename << std::endl;
-	if (argc > 7)
+	if (argc > 7 && strcmp(argv[7], "[]") != 0)
 	{
 		std::cout << "\nROI2: " << level2ROIFilename << std::endl;
 	}
-	if (argc > 9)
+	if (argc > 9 && strcmp(argv[9], "[]") != 0)
 	{
 		std::cout << "ROI3: " << level3ROIFilename << std::endl;
 	}
-	if (argc > 11)
+	if (argc > 11 && strcmp(argv[11], "[]") != 0)
 	{
 		std::cout << "\nInitial Fixed Transform: " << initialFixedTransformFilename << std::endl;
 		std::cout << "Reference Image: " << referenceImageFilename << std::endl;
