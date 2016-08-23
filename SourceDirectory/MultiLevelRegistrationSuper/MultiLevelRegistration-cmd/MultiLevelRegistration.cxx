@@ -223,6 +223,13 @@ int main(int argc, char * argv[])
 		movingImage = SmoothImage< ImageType >(movingImage, sigma);
 	}
 
+	// write out preprocessed images if debugging
+	if (!debugDirectory.empty() && debugImages)
+	{
+		std::string movingFilename = debugDirectory + "\\PreprocessedMovingImage.nrrd";
+		WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
+	}
+
 	// initialization
 	chronometer.Start("Initialization");
 	memorymeter.Start("Initialization");
