@@ -6,7 +6,6 @@ list of functions in file
 4. PrintFiducials
 5. WriteOutTransform
 
-add comment here
 */
 
 #include "itkImageFileReader.h"
