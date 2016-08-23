@@ -4,7 +4,7 @@
 
 // templated function to threshold an image with an upper value
 template< typename ImageType > 
-typename ImageType::Pointer UpperThresholdImage( typename ImageType::Pointer image, int upperThreshold)
+typename ImageType::Pointer UpperThresholdImage( typename ImageType::Pointer image, float upperThreshold)
 {
 	typedef itk::ThresholdImageFilter< ImageType > 		ThresholdImageFilterType;
 	typename ThresholdImageFilterType::Pointer threshold = ThresholdImageFilterType::New();
@@ -27,7 +27,7 @@ typename ImageType::Pointer UpperThresholdImage( typename ImageType::Pointer ima
 
 // write a function to threshold an image with a lower value
 template< typename ImageType >
-typename ImageType::Pointer PreprocessingFilter::LowerThresholdImage( typename ImageType::Pointer image, int lowerThreshold)
+typename ImageType::Pointer LowerThresholdImage( typename ImageType::Pointer image, float lowerThreshold)
 {
 	typedef itk::ThresholdImageFilter< ImageType > 		ThresholdImageFilterType;
 	typename ThresholdImageFilterType::Pointer threshold = ThresholdImageFilterType::New();
@@ -50,7 +50,7 @@ typename ImageType::Pointer PreprocessingFilter::LowerThresholdImage( typename I
 
 // write a function to smooth an image with a gaussian image filter with specified sigma
 template< typename ImageType >
-typename ImageType::Pointer PreprocessingFilter::SmoothImage( typename ImageType::Pointer image, int sigma )
+typename ImageType::Pointer SmoothImage( typename ImageType::Pointer image, float sigma )
 {
 	typedef itk::DiscreteGaussianImageFilter< ImageType, ImageType >		SmoothingImageFilterType;
 	typename SmoothingImageFilterType::Pointer smooth = SmoothingImageFilterType::New();

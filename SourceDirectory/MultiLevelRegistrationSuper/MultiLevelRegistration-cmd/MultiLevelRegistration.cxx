@@ -76,6 +76,11 @@ int main(int argc, char * argv[])
 		ni++; 
 	}
 
+	// preprocessing
+	float upperThreshold = -1.0; if (emptyStr.compare(argv[ni]) != 0){ upperThreshold = atof(argv[ni]); std::cout << "upperThreshold: " << argv[ni] << std::endl; ni++; }
+	float lowerThreshold = -1.0; if (emptyStr.compare(argv[ni]) != 0){ lowerThreshold = atof(argv[ni]); std::cout << "lowerThreshold: " << argv[ni] << std::endl; ni++; }
+	float sigma = -1.0; if (emptyStr.compare(argv[ni]) != 0){ sigma = atof(argv[ni]); std::cout << "sigma: " << argv[ni] << std::endl; ni++; }
+
 	// initialization
 	std::string fixedImageInitialTransform = ""; if (emptyStr.compare(argv[ni]) != 0){ fixedImageInitialTransform = argv[ni]; std::cout << "fixedImageInitialTransform: " << argv[ni] << std::endl; ni++; }
 	std::string referenceImage = ""; if (emptyStr.compare(argv[ni]) != 0) { referenceImage = argv[ni]; std::cout << "referenceImage: " << argv[ni] << std::endl; ni++; }
@@ -194,6 +199,28 @@ int main(int argc, char * argv[])
 		{
 			fixedImageMask = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
 		}
+	}
+
+	// preprocessing
+	chronometer.Start("Preprocessing");
+	memorymeter.Start("Preprocessing");
+
+	// preprocessing
+	std::cout << "\n*********************************************" << std::endl;
+	std::cout << "              PREPROCESSING                  " << std::endl;
+	std::cout << "*********************************************\n" << std::endl;
+
+	if (upperThreshold > 0)
+	{
+		movingImage = UpperThresholdImage< ImageType >(movingImage, upperThreshold);
+	}
+	if (lowerThreshold > 0)
+	{
+		movingImage = LowerThresholdImage< ImageType >(movingImage, lowerThreshold);
+	}
+	if (sigma > 0)
+	{
+		movingImage = SmoothImage< ImageType >(movingImage, sigma);
 	}
 
 	// initialization
