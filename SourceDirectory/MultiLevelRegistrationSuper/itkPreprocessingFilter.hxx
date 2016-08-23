@@ -51,7 +51,28 @@ namespace itk
 		
 		return threshold->GetOutput();
 	}
+	
+	ImageType::Pointer PreProcessingFilter::SmoothImage( ImageType::Pointer image, int sigma )
+	{
+		typedef itk::DiscreteGaussianImageFilter< ImageType, ImageType >		SmoothingImageFilterType;
+		SmoothingImageFilterType::Pointer smooth = SmoothingImageFilterType::New();
+		smooth->SetInput( image );
+		smooth->SetVariance( sigma );
 		
+		try
+		{
+			smooth->Update();
+		}
+		catch (itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+		
+		return smooth->GetOutput();
+	}
+	
 		
 } // end namespace
 

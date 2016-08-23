@@ -38,10 +38,10 @@ public:
 	itkTypeMacro(PreprocessingFilter, Object)
 	
 	// member functions
-	ImageType::Pointer UpperThresholdImage( ImageType::Pointer int upperThreshold);
-	ImageType::Pointer LowerThresholdImage( ImageType::Pointer int upperThreshold);
-	ImageType::Pointer BiasCorrection( ImageType::Pointer );
-	ImageType::Pointer SmoothImage( ImageType::Pointer, int sigma );
+	ImageType::Pointer UpperThresholdImage( ImageType::Pointer image, int upperThreshold);
+	ImageType::Pointer LowerThresholdImage( ImageType::Pointer image, int upperThreshold);
+	ImageType::Pointer BiasCorrection( ImageType::Pointer image );
+	ImageType::Pointer SmoothImage( ImageType::Pointer image, int sigma );
 
 protected:
 	// constructor
