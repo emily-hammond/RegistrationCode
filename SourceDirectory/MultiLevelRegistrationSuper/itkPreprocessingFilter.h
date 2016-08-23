@@ -12,6 +12,9 @@ bias correction, and gaussian smoothing
 #define_itkPreprocessingFilter_h
 
 // include files not defined elsewhere
+#include "itkDiscreteGaussianImageFilter.h"
+#include "itkN4BiasFieldCorrectionImageFilter.h"
+#include "itkThresholdImageFilter.h"
 
 namespace itk
 {
@@ -26,6 +29,7 @@ public:
 	typedef SmartPointer<const Self>	ConstPointer;
 	
 	// definitions
+	typedef itk::Image< short, 3 >		ImageType;
 	
 	// method for creation
 	itkNewMacro(Self)
@@ -34,6 +38,10 @@ public:
 	itkTypeMacro(PreprocessingFilter, Object)
 	
 	// member functions
+	ImageType::Pointer UpperThresholdImage( ImageType::Pointer int upperThreshold);
+	ImageType::Pointer LowerThresholdImage( ImageType::Pointer int upperThreshold);
+	ImageType::Pointer BiasCorrection( ImageType::Pointer );
+	ImageType::Pointer SmoothImage( ImageType::Pointer, int sigma );
 
 protected:
 	// constructor
