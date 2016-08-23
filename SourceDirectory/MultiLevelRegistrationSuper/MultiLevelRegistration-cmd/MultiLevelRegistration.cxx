@@ -599,6 +599,12 @@ void PrintOutManual()
 	std::cout << "                       if numberOfLevels = 3" << std::endl;
 	std::cout << std::endl;
 
+	std::cout << " PREPROCESSING (only applied to moving image currently): " << std::endl;
+	std::cout << "  [upperThreshold]: upper threshold value for thresholding the moving image\n";
+	std::cout << "  [lowerThreshold]: lower threshold value for thresholding the moving image \n";
+	std::cout << "  [sigma]: variance of the gaussian kernel used for smoothing the moving image \n";
+	std::cout << std::endl;
+
 	std::cout << " INITIALIZATION: " << std::endl;
 	std::cout << "  [fixedImageInitialTransform]: inital transform applied to the fixed image\n";
 	std::cout << "                                prior to registration | default = NULL" << std::endl;
