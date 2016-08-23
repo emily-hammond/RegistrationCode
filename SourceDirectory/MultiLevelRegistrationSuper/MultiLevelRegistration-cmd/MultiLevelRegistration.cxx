@@ -41,70 +41,74 @@ int main(int argc, char * argv[])
 
 	// input images
 	std::cout << std::endl;
+	int ni = 0;
 	std::string emptyStr = "[]";
-	std::string fixedImageFilename = ""; if (emptyStr.compare(argv[1]) != 0){ fixedImageFilename = argv[1]; std::cout << "fixedImageFilename: " << argv[1] << std::endl; }
-	std::string movingImageFilename = ""; if (emptyStr.compare(argv[2]) != 0){ movingImageFilename = argv[2]; std::cout << "movingImageFilename: " << argv[2] << std::endl; }
-	std::string finalTransform = ""; if (emptyStr.compare(argv[3]) != 0){ finalTransform = argv[3]; std::cout << "finalTransform: " << argv[3] << std::endl; }
+	std::string fixedImageFilename = ""; if (emptyStr.compare(argv[ni]) != 0){ fixedImageFilename = argv[ni]; std::cout << "fixedImageFilename: " << argv[ni] << std::endl; ni++; }
+	std::string movingImageFilename = ""; if (emptyStr.compare(argv[ni]) != 0){ movingImageFilename = argv[ni]; std::cout << "movingImageFilename: " << argv[ni] << std::endl; ni++; }
+	std::string finalTransform = ""; if (emptyStr.compare(argv[ni]) != 0){ finalTransform = argv[ni]; std::cout << "finalTransform: " << argv[ni] << std::endl; ni++; }
 
 	// number of levels
-	int numberOfLevels = 0; if (emptyStr.compare(argv[4]) != 0) { numberOfLevels = atoi(argv[4]); std::cout << "numberOfLevels: " << argv[4] << std::endl; }
+	int numberOfLevels = 0; if (emptyStr.compare(argv[ni]) != 0) { numberOfLevels = atoi(argv[ni]); std::cout << "numberOfLevels: " << argv[ni] << std::endl; ni++; }
 	itk::ManageTransformsFilter::Pointer dealWithROIs = itk::ManageTransformsFilter::New();
 	std::vector<std::vector<float>> ROI;
-	std::string ROI1Filename = ""; if (emptyStr.compare(argv[5]) != 0)
+	std::string ROI1Filename = ""; if (emptyStr.compare(argv[ni]) != 0)
 	{
-		ROI1Filename = argv[5];
+		ROI1Filename = argv[ni];
 		std::vector<float> ROIvalues = dealWithROIs->ExtractROIPoints(ROI1Filename.c_str());
 		ROI.push_back(ROIvalues);
-		std::cout << "ROI1Filename: " << argv[5] << std::endl;
+		std::cout << "ROI1Filename: " << argv[ni] << std::endl;
+		ni++;
 	}
-	std::string ROI2Filename = ""; if (emptyStr.compare(argv[6]) != 0)
+	std::string ROI2Filename = ""; if (emptyStr.compare(argv[ni]) != 0)
 	{
-		ROI2Filename = argv[6];
+		ROI2Filename = argv[ni];
 		std::vector<float> ROIvalues = dealWithROIs->ExtractROIPoints(ROI2Filename.c_str());
 		ROI.push_back(ROIvalues);
-		std::cout << "ROI2Filename: " << argv[6] << std::endl;
+		std::cout << "ROI2Filename: " << argv[ni] << std::endl;
+		ni++;
 	}
-	std::string ROI3Filename = ""; if (emptyStr.compare(argv[7]) != 0)
+	std::string ROI3Filename = ""; if (emptyStr.compare(argv[ni]) != 0)
 	{
-		ROI3Filename = argv[7];
+		ROI3Filename = argv[ni];
 		std::vector<float> ROIvalues = dealWithROIs->ExtractROIPoints(ROI3Filename.c_str());
 		ROI.push_back(ROIvalues);
-		std::cout << "ROI3Filename: " << argv[7] << std::endl;
+		std::cout << "ROI3Filename: " << argv[ni] << std::endl;
+		ni++; 
 	}
 
 	// initialization
-	std::string fixedImageInitialTransform = ""; if (emptyStr.compare(argv[8]) != 0){ fixedImageInitialTransform = argv[8]; std::cout << "fixedImageInitialTransform: " << argv[8] << std::endl; }
-	std::string referenceImage = ""; if (emptyStr.compare(argv[9]) != 0) { referenceImage = argv[9]; std::cout << "referenceImage: " << argv[9] << std::endl; }
-	std::string manualInitialTransformFilename = ""; if (emptyStr.compare(argv[10]) != 0) { manualInitialTransformFilename = argv[10]; std::cout << "manualInitialTransformFilename: " << argv[10] << std::endl; }
-	int centerOfGeometry = 1; if (emptyStr.compare(argv[11]) != 0) { centerOfGeometry = atoi(argv[11]); std::cout << "centerOfGeometry: " << argv[11] << std::endl; }
-	int iterativeAlignment = 0; if (emptyStr.compare(argv[12]) != 0) { iterativeAlignment = atoi(argv[12]); std::cout << "iterativeAlignment: " << argv[12] << std::endl; }
-	int transX = 0; if (emptyStr.compare(argv[13]) != 0) { transX = atoi(argv[13]); std::cout << "transX: " << argv[13] << std::endl; }
-	int transY = 0; if (emptyStr.compare(argv[14]) != 0) { transY = atoi(argv[14]); std::cout << "transY: " << argv[14] << std::endl; }
-	int transZ = 0; if (emptyStr.compare(argv[15]) != 0) { transZ = atoi(argv[15]); std::cout << "transZ: " << argv[15] << std::endl; }
-	int rotX = 0; if (emptyStr.compare(argv[16]) != 0) { rotX = atoi(argv[16]); std::cout << "rotX: " << argv[16] << std::endl; }
-	int rotY = 0; if (emptyStr.compare(argv[17]) != 0) { rotY = atoi(argv[17]); std::cout << "rotY: " << argv[17] << std::endl; }
-	int rotZ = 0; if (emptyStr.compare(argv[18]) != 0) { rotZ = atoi(argv[18]); std::cout << "rotZ: " << argv[18] << std::endl; }
+	std::string fixedImageInitialTransform = ""; if (emptyStr.compare(argv[ni]) != 0){ fixedImageInitialTransform = argv[ni]; std::cout << "fixedImageInitialTransform: " << argv[ni] << std::endl; ni++; }
+	std::string referenceImage = ""; if (emptyStr.compare(argv[ni]) != 0) { referenceImage = argv[ni]; std::cout << "referenceImage: " << argv[ni] << std::endl; ni++; }
+	std::string manualInitialTransformFilename = ""; if (emptyStr.compare(argv[ni]) != 0) { manualInitialTransformFilename = argv[ni]; std::cout << "manualInitialTransformFilename: " << argv[ni] << std::endl; ni++; }
+	int centerOfGeometry = 1; if (emptyStr.compare(argv[ni]) != 0) { centerOfGeometry = atoi(argv[ni]); std::cout << "centerOfGeometry: " << argv[ni] << std::endl; ni++; }
+	int iterativeAlignment = 0; if (emptyStr.compare(argv[ni]) != 0) { iterativeAlignment = atoi(argv[ni]); std::cout << "iterativeAlignment: " << argv[ni] << std::endl; ni++; }
+	int transX = 0; if (emptyStr.compare(argv[ni]) != 0) { transX = atoi(argv[ni]); std::cout << "transX: " << argv[ni] << std::endl; ni++; }
+	int transY = 0; if (emptyStr.compare(argv[ni]) != 0) { transY = atoi(argv[ni]); std::cout << "transY: " << argv[ni] << std::endl; ni++; }
+	int transZ = 0; if (emptyStr.compare(argv[ni]) != 0) { transZ = atoi(argv[ni]); std::cout << "transZ: " << argv[ni] << std::endl; ni++; }
+	int rotX = 0; if (emptyStr.compare(argv[ni]) != 0) { rotX = atoi(argv[ni]); std::cout << "rotX: " << argv[ni] << std::endl; ni++; }
+	int rotY = 0; if (emptyStr.compare(argv[ni]) != 0) { rotY = atoi(argv[ni]); std::cout << "rotY: " << argv[ni] << std::endl; ni++; }
+	int rotZ = 0; if (emptyStr.compare(argv[ni]) != 0) { rotZ = atoi(argv[ni]); std::cout << "rotZ: " << argv[ni] << std::endl; ni++; }
 
 	// registration parameters
-	float parameterRelaxation = 2.0; if (emptyStr.compare(argv[19]) != 0) { parameterRelaxation = atof(argv[19]); std::cout << "parameterRelaxation: " << argv[19] << std::endl; }
-	float rotationScale = 0.001; if (emptyStr.compare(argv[20]) != 0) { rotationScale = atof(argv[20]); std::cout << "rotationScale: " << argv[20] << std::endl; }
-	float translationScale = 10; if (emptyStr.compare(argv[21]) != 0) { translationScale = atof(argv[21]); std::cout << "translationScale: " << argv[21] << std::endl; }
-	float scalingScale = 0.001; if (emptyStr.compare(argv[22]) != 0) { scalingScale = atof(argv[22]); std::cout << "scalingScale: " << argv[22] << std::endl; }
-	int numberOfIterations = 500; if (emptyStr.compare(argv[23]) != 0) { numberOfIterations = atoi(argv[23]); std::cout << "numberOfIterations: " << argv[23] << std::endl; }
-	float maximumStepLength = 1.0; if (emptyStr.compare(argv[24]) != 0) { maximumStepLength = atof(argv[24]); std::cout << "maximumStepLength: " << argv[24] << std::endl; }
-	float minimumStepLength = 0.001; if (emptyStr.compare(argv[25]) != 0) { minimumStepLength = atof(argv[25]); std::cout << "minimumStepLength: " << argv[25] << std::endl; }
-	float relaxationFactor = 0.5; if (emptyStr.compare(argv[26]) != 0) { relaxationFactor = atof(argv[26]); std::cout << "relaxationFactor: " << argv[26] << std::endl; }
-	float gradientMagnitudeTolerance = 0.001; if (emptyStr.compare(argv[27]) != 0) { gradientMagnitudeTolerance = atof(argv[27]); std::cout << "gradientMagnitudeTolerance: " << argv[27] << std::endl; }
+	float parameterRelaxation = 2.0; if (emptyStr.compare(argv[ni]) != 0) { parameterRelaxation = atof(argv[ni]); std::cout << "parameterRelaxation: " << argv[ni] << std::endl; ni++; }
+	float rotationScale = 0.001; if (emptyStr.compare(argv[ni]) != 0) { rotationScale = atof(argv[ni]); std::cout << "rotationScale: " << argv[ni] << std::endl; ni++; }
+	float translationScale = 10; if (emptyStr.compare(argv[ni]) != 0) { translationScale = atof(argv[ni]); std::cout << "translationScale: " << argv[ni] << std::endl; ni++; }
+	float scalingScale = 0.001; if (emptyStr.compare(argv[ni]) != 0) { scalingScale = atof(argv[ni]); std::cout << "scalingScale: " << argv[ni] << std::endl; ni++; }
+	int numberOfIterations = 500; if (emptyStr.compare(argv[ni]) != 0) { numberOfIterations = atoi(argv[ni]); std::cout << "numberOfIterations: " << argv[ni] << std::endl; ni++; }
+	float maximumStepLength = 1.0; if (emptyStr.compare(argv[ni]) != 0) { maximumStepLength = atof(argv[ni]); std::cout << "maximumStepLength: " << argv[ni] << std::endl; ni++; }
+	float minimumStepLength = 0.001; if (emptyStr.compare(argv[ni]) != 0) { minimumStepLength = atof(argv[ni]); std::cout << "minimumStepLength: " << argv[ni] << std::endl; ni++; }
+	float relaxationFactor = 0.5; if (emptyStr.compare(argv[ni]) != 0) { relaxationFactor = atof(argv[ni]); std::cout << "relaxationFactor: " << argv[ni] << std::endl; ni++; }
+	float gradientMagnitudeTolerance = 0.001; if (emptyStr.compare(argv[ni]) != 0) { gradientMagnitudeTolerance = atof(argv[ni]); std::cout << "gradientMagnitudeTolerance: " << argv[ni] << std::endl; ni++; }
 
 	// validation
-	std::string fixedImageMaskFilename = ""; if (emptyStr.compare(argv[28]) != 0){ fixedImageMaskFilename = argv[28]; std::cout << "fixedImageMaskFilename: " << argv[28] << std::endl; }
-	std::string movingImageMaskFilename = ""; if (emptyStr.compare(argv[29]) != 0){ movingImageMaskFilename = argv[29]; std::cout << "movingImageMaskFilename: " << argv[29] << std::endl; }
+	std::string fixedImageMaskFilename = ""; if (emptyStr.compare(argv[ni]) != 0){ fixedImageMaskFilename = argv[ni]; std::cout << "fixedImageMaskFilename: " << argv[ni] << std::endl; ni++; }
+	std::string movingImageMaskFilename = ""; if (emptyStr.compare(argv[ni]) != 0){ movingImageMaskFilename = argv[ni]; std::cout << "movingImageMaskFilename: " << argv[ni] << std::endl; ni++; }
 
 	// debugging
-	int observe = 0; if (emptyStr.compare(argv[30]) != 0) { observe = atoi(argv[30]); std::cout << "observe: " << argv[30] << std::endl; }
-	int debugTransforms = 0; if (emptyStr.compare(argv[31]) != 0) { debugTransforms = atoi(argv[31]); std::cout << "debugTransforms: " << argv[31] << std::endl; }
-	int debugImages = 0; if (emptyStr.compare(argv[32]) != 0) { debugImages = atoi(argv[32]); std::cout << "debugImages: " << argv[32] << std::endl; }
-	std::string debugDirectory = ""; if (emptyStr.compare(argv[33]) != 0){ debugDirectory = argv[33]; std::cout << "debugDirectory: " << argv[33] << std::endl; }
+	int observe = 0; if (emptyStr.compare(argv[ni]) != 0) { observe = atoi(argv[ni]); std::cout << "observe: " << argv[ni] << std::endl; ni++; }
+	int debugTransforms = 0; if (emptyStr.compare(argv[ni]) != 0) { debugTransforms = atoi(argv[ni]); std::cout << "debugTransforms: " << argv[ni] << std::endl; ni++; }
+	int debugImages = 0; if (emptyStr.compare(argv[ni]) != 0) { debugImages = atoi(argv[ni]); std::cout << "debugImages: " << argv[ni] << std::endl; ni++; }
+	std::string debugDirectory = ""; if (emptyStr.compare(argv[ni]) != 0){ debugDirectory = argv[ni]; std::cout << "debugDirectory: " << argv[ni] << std::endl; ni++; }
 
 	// ****************************************************************************************************************************
 
