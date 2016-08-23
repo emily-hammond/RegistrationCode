@@ -7,9 +7,6 @@ for initialization of two images. It allows for initialization via center of geo
 metric initialization along a specified axis. Multiple initialization methods are allowed
 on the same two images.
 
-Remaining to implement:
-1. unset flags
-
 */
 
 #ifndef __itkInitializationFilter_h

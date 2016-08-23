@@ -156,8 +156,18 @@ int main(int argc, char * argv[])
 		// apply transform to fixed image
 		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >(fixedImageInitialTransform.c_str());
 		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >(fixedImageFilename.c_str());
-		transforms->SetFixedImage(ReadInImage< ImageType >(referenceImage.c_str()));
-		fixedImage = transforms->ResampleImage(fixedImageTemp, initialFixedTransform);
+		try
+		{
+			std::cout << "Applying initial transform to fixed image." << std::endl;
+			transforms->SetFixedImage(ReadInImage< ImageType >(referenceImage.c_str()));
+			fixedImage = transforms->ResampleImage(fixedImageTemp, initialFixedTransform);
+		}
+		catch (itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
 		std::cout << "Initial transform applied to fixed image." << std::endl;
 		std::cout << "Moving image read in." << std::endl;
 
