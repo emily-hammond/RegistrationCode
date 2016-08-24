@@ -39,11 +39,13 @@ int main(int argc, char * argv[])
 		return EXIT_SUCCESS;
 	}
 
+	/*
 	// print out all inputs
 	for (int i = 0; i < argc; i++)
 	{
 		std::cout << argv[i] << std::endl;
 	}
+	*/
 
 	// input images
 	std::cout << std::endl;
