@@ -22,6 +22,7 @@ typename ImageType::Pointer UpperThresholdImage( typename ImageType::Pointer ima
 		std::cerr << std::endl;
 	}
 	
+	std::cout << "Image thresholded with threshold of " << upperThreshold << std::endl;
 	return threshold->GetOutput();
 }
 
@@ -45,6 +46,7 @@ typename ImageType::Pointer LowerThresholdImage( typename ImageType::Pointer ima
 		std::cerr << std::endl;
 	}
 	
+	std::cout << "Image thresholded with threshold of " << lowerThreshold << std::endl;
 	return threshold->GetOutput();
 }
 
@@ -68,5 +70,6 @@ typename ImageType::Pointer SmoothImage( typename ImageType::Pointer image, floa
 		std::cerr << std::endl;
 	}
 	
+	std::cout << "Image smoothed with sigma of " << sigma << std::endl;
 	return smooth->GetOutput();
 }
