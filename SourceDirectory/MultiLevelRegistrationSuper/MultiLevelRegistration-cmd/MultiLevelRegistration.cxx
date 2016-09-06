@@ -201,7 +201,7 @@ int main(int argc, char * argv[])
 	ImageType::Pointer movingImage = ReadInImage< ImageType >(movingImageFilename.c_str());
 	if (validation)
 	{
-		movingImageMask = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
+		movingImageMask = ReadInImage< ImageType >(movingImageMaskFilename.c_str());
 	}
 
 	// apply fixed initial transform if given
@@ -337,14 +337,17 @@ int main(int argc, char * argv[])
 
 	// validation at initialTransform
 	itk::ValidationFilter::Pointer validationFilter = itk::ValidationFilter::New();
+	itk::ManageTransformsFilter::Pointer vtf = itk::ManageTransformsFilter::New();
 	if (validation)
 	{
+		vtf->SetFixedImage(fixedImage);
+		vtf->SetFixedLabelMap(fixedImageMask);
 		validationFilter->SetImage1(fixedImage);
 		validationFilter->SetLabelMap1(fixedImageMask);
-		validationFilter->SetImage2(transforms->ResampleImage(movingImage, initialTransform));
-		transforms->NearestNeighborInterpolateOn();
-		validationFilter->SetLabelMap2(transforms->ResampleImage(movingImageMask, initialTransform));
-		transforms->NearestNeighborInterpolateOff();
+		validationFilter->SetImage2(vtf->ResampleImage(movingImage, initialTransform));
+		vtf->NearestNeighborInterpolateOn();
+		validationFilter->SetLabelMap2(vtf->ResampleImage(movingImageMask, initialTransform));
+		vtf->NearestNeighborInterpolateOff();
 		validationFilter->LabelOverlapMeasuresOn();
 		try
 		{
@@ -355,6 +358,16 @@ int main(int argc, char * argv[])
 			std::cerr << "Exception Object Caught!" << std::endl;
 			std::cerr << err << std::endl;
 			std::cerr << std::endl;
+		}
+
+		if (!debugDirectory.empty() && debugImages)
+		{
+			std::string valMovingFilename = debugDirectory + "\\movingMaskForValidation.nrrd";
+			WriteOutImage< ImageType, ImageType >(valMovingFilename.c_str(), movingImageMask);
+			vtf->NearestNeighborInterpolateOn();
+			std::string valMovingFilenameMask = debugDirectory + "\\movingMaskTranslated.nrrd";
+			WriteOutImage< ImageType, ImageType >(valMovingFilenameMask.c_str(), vtf->ResampleImage( movingImageMask, initialTransform));
+			vtf->NearestNeighborInterpolateOff();
 		}
 	}
 
