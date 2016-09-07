@@ -359,16 +359,6 @@ int main(int argc, char * argv[])
 			std::cerr << err << std::endl;
 			std::cerr << std::endl;
 		}
-
-		if (!debugDirectory.empty() && debugImages)
-		{
-			std::string valMovingFilename = debugDirectory + "\\movingMaskForValidation.nrrd";
-			WriteOutImage< ImageType, ImageType >(valMovingFilename.c_str(), movingImageMask);
-			vtf->NearestNeighborInterpolateOn();
-			std::string valMovingFilenameMask = debugDirectory + "\\movingMaskTranslated.nrrd";
-			WriteOutImage< ImageType, ImageType >(valMovingFilenameMask.c_str(), vtf->ResampleImage( movingImageMask, initialTransform));
-			vtf->NearestNeighborInterpolateOff();
-		}
 	}
 
 	// initialization
