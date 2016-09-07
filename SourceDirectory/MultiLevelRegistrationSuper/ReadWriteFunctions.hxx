@@ -150,9 +150,11 @@ typename TransformType::Pointer ReadInTransform( const char * transformFilename)
 	try
 	{
 		transformReader->Update();
+		std::cout << "Transform read in." << std::endl;	
 	}
 	catch(itk::ExceptionObject & err)
 	{
+		std::cerr << transformFilename << std::endl;
 		std::cerr << "Exception Object Caught!" << std::endl;
 		std::cerr << err << std::endl;
 		std::cerr << std::endl;
@@ -183,8 +185,6 @@ typename TransformType::Pointer ReadInTransform( const char * transformFilename)
 			std::cout << "Transform is not compatible." << std::endl;
 		}
 	}
-
-	std::cout << "Transform read in." << std::endl;
 
 	return transform;
 }

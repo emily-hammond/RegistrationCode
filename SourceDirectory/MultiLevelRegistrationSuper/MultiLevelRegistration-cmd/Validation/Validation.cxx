@@ -35,7 +35,7 @@ int main( int argc, char * argv[] )
 	char * initialTransformFilename = '\0';
 	if( argc < 6 )
 	{
-		std::cout << ".exe fixedImage fixedMask movingImage movingMask initialTransform [level1Transform]";
+		std::cout << ".exe fixedImage fixedMask movingImage movingMask initialTransform [level1Transform level1ROI]";
 		std::cout << "      [level2Transform level2ROI] [level3Transform level3ROI] [initialFixedTransform referenceImage]" << std::endl;;
 		return EXIT_FAILURE;
 	}
@@ -50,6 +50,7 @@ int main( int argc, char * argv[] )
 	char * level1TransformFilename = '\0';
 	char * level2TransformFilename = '\0';
 	char * level3TransformFilename = '\0';
+	char * level1ROIFilename = '\0';
 	char * level2ROIFilename = '\0';
 	char * level3ROIFilename = '\0';
 	char * initialFixedTransformFilename = '\0';
@@ -57,23 +58,24 @@ int main( int argc, char * argv[] )
 	if( argc > 6 && strcmp(argv[6],"[]") != 0 )
 	{
 		level1TransformFilename = argv[6];
+		level1ROIFilename = argv[7];
 	}
-	if( argc > 7 && strcmp(argv[7],"[]") != 0 )
+	if( argc > 8 && strcmp(argv[8],"[]") != 0 )
 	{
-		level2TransformFilename = argv[7];
-		level2ROIFilename = argv[8];
+		level2TransformFilename = argv[8];
+		level2ROIFilename = argv[9];
 	}
-	if( argc > 9 && strcmp(argv[9],"[]") != 0 )
+	if( argc > 10 && strcmp(argv[10],"[]") != 0 )
 	{
-		level3TransformFilename = argv[9];
-		level3ROIFilename = argv[10];
+		level3TransformFilename = argv[10];
+		level3ROIFilename = argv[11];
 	}
-	if( argc > 11 && strcmp(argv[11],"[]") != 0 )
+	if( argc > 12 && strcmp(argv[12],"[]") != 0 )
 	{
-		initialFixedTransformFilename = argv[11];
-		referenceImageFilename = argv[12];
+		initialFixedTransformFilename = argv[12];
+		referenceImageFilename = argv[13];
 	}
-	if( argc > 13 )
+	if( argc > 14 )
 	{
 		std::cout << "Too many inputs." << std::endl;
 		return EXIT_FAILURE;
@@ -86,15 +88,19 @@ int main( int argc, char * argv[] )
 	std::cout << "Fixed validation mask : " << fixedMaskFilename << std::endl;
 	std::cout << "Moving image          : " << movingImageFilename << std::endl;
 	std::cout << "Moving validation mask: " << movingMaskFilename << std::endl;
-	if (argc > 7 && strcmp(argv[7], "[]") != 0)
+	if (argc > 6 && strcmp(argv[6], "[]") != 0)
 	{
-		std::cout << "\nROI2: " << level2ROIFilename << std::endl;
+		std::cout << "\nROI1: " << level1ROIFilename << std::endl;
 	}
-	if (argc > 9 && strcmp(argv[9], "[]") != 0)
+	if (argc > 8 && strcmp(argv[8], "[]") != 0)
+	{
+		std::cout << "ROI2: " << level2ROIFilename << std::endl;
+	}
+	if (argc > 10 && strcmp(argv[10], "[]") != 0)
 	{
 		std::cout << "ROI3: " << level3ROIFilename << std::endl;
 	}
-	if (argc > 11 && strcmp(argv[11], "[]") != 0)
+	if (argc > 12 && strcmp(argv[12], "[]") != 0)
 	{
 		std::cout << "\nInitial Fixed Transform: " << initialFixedTransformFilename << std::endl;
 		std::cout << "Reference Image: " << referenceImageFilename << std::endl;
@@ -107,7 +113,7 @@ int main( int argc, char * argv[] )
 	ImageType::Pointer fixedMask = ImageType::New();
 
 	// apply fixed initial transform if given
-	if( argc > 11 && strcmp(argv[11],"[]") != 0 )
+	if( argc > 12 && strcmp(argv[12],"[]") != 0 )
 	{
 		// apply transform to fixed image
 		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( initialFixedTransformFilename );
@@ -165,26 +171,70 @@ int main( int argc, char * argv[] )
 	if( argc > 6 && strcmp(argv[6],"[]") != 0 )
 	{
 		TransformType::Pointer level1Transform = ReadInTransform< TransformType >( level1TransformFilename );
-		std::cout << "\nTransform: " << level1TransformFilename << std::endl;
+		std::cout << "\nTransform: " << level1TransformFilename << std::endl;		
+		// transforms filter
+		itk::ManageTransformsFilter::Pointer transforms1 = itk::ManageTransformsFilter::New();
+		
+		if (strcmp(level1ROIFilename, "[]") != 0)
+		{
+			transforms1->SetFixedImage(fixedImage);
+			transforms1->SetFixedLabelMap(fixedMask);
+			transforms1->SetMovingImage(movingImage);
+			transforms1->SetMovingLabelMap(movingMask);
 
-		validation->SetImage2( transforms->ResampleImage( movingImage, level1Transform ) );
-		transforms->NearestNeighborInterpolateOn();
-		validation->SetLabelMap2( transforms->ResampleImage( movingMask, level1Transform ) );
-		transforms->NearestNeighborInterpolateOff();
-		validation->LabelOverlapMeasuresOn();
-		try
-		{
-			validation->Update();
+			transforms1->AddTransform(level1Transform);
+			transforms1->SetROIFilename(level1ROIFilename);
+			transforms1->ResampleImageOn();
+			transforms1->CropImageOn();
+			try
+			{
+				transforms1->Update();
+			}
+			catch (itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
+		
+			validation->SetImage1(transforms1->GetFixedCroppedImage());
+			validation->SetLabelMap1(transforms1->GetFixedCroppedLabelMap());
+			validation->SetImage2(transforms1->GetMovingCroppedImage());
+			validation->SetLabelMap2(transforms1->GetMovingCroppedLabelMap());
+			validation->LabelOverlapMeasuresOn();
+			try
+			{
+				validation->Update();
+			}
+			catch (itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
+
 		}
-		catch(itk::ExceptionObject & err)
+		else
 		{
-			std::cerr << "Exception Object Caught!" << std::endl;
-			std::cerr << err << std::endl;
-			std::cerr << std::endl;
+			validation->SetImage2(transforms->ResampleImage(movingImage, level1Transform));
+			transforms->NearestNeighborInterpolateOn();
+			validation->SetLabelMap2(transforms->ResampleImage(movingMask, level1Transform));
+			transforms->NearestNeighborInterpolateOff();
+			validation->LabelOverlapMeasuresOn();
+			try
+			{
+				validation->Update();
+			}
+			catch (itk::ExceptionObject & err)
+			{
+				std::cerr << "Exception Object Caught!" << std::endl;
+				std::cerr << err << std::endl;
+				std::cerr << std::endl;
+			}
 		}
 	}
 
-	if( argc > 7 && strcmp(argv[7],"[]") != 0 )
+	if( argc > 8 && strcmp(argv[8],"[]") != 0 )
 	{
 		TransformType::Pointer level2Transform = ReadInTransform< TransformType >( level2TransformFilename );
 
@@ -197,7 +247,6 @@ int main( int argc, char * argv[] )
 
 		transforms2->AddTransform( level2Transform );
 		transforms2->SetROIFilename( level2ROIFilename );
-		std::cout << "ROI2: " << level2ROIFilename << std::endl;
 		transforms2->ResampleImageOn();
 		transforms2->CropImageOn();
 		try
@@ -230,7 +279,7 @@ int main( int argc, char * argv[] )
 		}
 	}
 
-	if( argc > 9 && strcmp(argv[9],"[]") != 0 )
+	if( argc > 10 && strcmp(argv[10],"[]") != 0 )
 	{
 		TransformType::Pointer level3Transform = ReadInTransform< TransformType >( level3TransformFilename );
 

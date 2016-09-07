@@ -31,9 +31,9 @@ int main(int argc, char * argv[])
 {
 
 	// ****************************************************************************************************************************
-
+	std::cout << argc << std::endl;
 	// parse through inputs
-	if (argc < 1)
+	if (argc < 3)
 	{
 		PrintOutManual();
 		return EXIT_SUCCESS;
