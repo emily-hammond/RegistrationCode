@@ -141,7 +141,6 @@ int main( int argc, char * argv[] )
 	transforms->SetMovingLabelMap( movingMask );
 
 	std::cout << "\nTransform: " << initialTransformFilename << std::endl;
-	std::cout << initialTransform << std::endl;
 
 	// instantiate validation filter
 	itk::ValidationFilter::Pointer validation = itk::ValidationFilter::New();
@@ -167,7 +166,6 @@ int main( int argc, char * argv[] )
 	{
 		TransformType::Pointer level1Transform = ReadInTransform< TransformType >( level1TransformFilename );
 		std::cout << "\nTransform: " << level1TransformFilename << std::endl;
-		std::cout << level1Transform << std::endl;
 
 		validation->SetImage2( transforms->ResampleImage( movingImage, level1Transform ) );
 		transforms->NearestNeighborInterpolateOn();
@@ -214,7 +212,6 @@ int main( int argc, char * argv[] )
 		}
 
 		std::cout << "\nTransform: " << level2TransformFilename << std::endl;
-		std::cout << level2Transform << std::endl;
 
 		validation->SetImage1( transforms2->GetFixedCroppedImage() );
 		validation->SetLabelMap1( transforms2->GetFixedCroppedLabelMap() );
@@ -260,7 +257,6 @@ int main( int argc, char * argv[] )
 		}
 
 		std::cout << "\nTransform: " << level3TransformFilename << std::endl;
-		std::cout << level3Transform << std::endl;
 
 		validation->SetImage1( transforms3->GetFixedCroppedImage() );
 		validation->SetLabelMap1( transforms3->GetFixedCroppedLabelMap() );
