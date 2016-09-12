@@ -4,6 +4,7 @@ SLICER COMPATIBLE CODE
 
 // include files
 #include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
+#include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\PreprocessingFunctions.hxx"
 #include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkRegistrationFramework.h"
 #include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkInitializationFilter.h"
 #include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkValidationFilter.h"
