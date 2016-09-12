@@ -33,6 +33,37 @@
 </parameters>
 
 <parameters>
+  <label>Preprocessing</label>
+  <integer>
+    <name>upperThreshold</name>
+    <description>The upper value of the threshold (used in binary thresholding)</description>
+    <label>Upper threshold</label>
+    <longflag>upperThreshold</longflag>
+    <channel>input</channel>
+    <default>-1</default>
+    <minimum>0</minimum>
+  </integer>
+  <integer>
+    <name>lowerThreshold</name>
+    <description>The lower value of the threshold (used in binary thresholding)</description>
+    <label>Lower threshold</label>
+    <longflag>lowerThreshold</longflag>
+    <channel>input</channel>
+    <default>-1</default>
+    <minimum>0</minimum>
+  </integer>
+  <float>
+    <name>sigma</name>
+    <description>The width of the gaussian kernel used for smoothing</description>
+    <label>Smoothing sigma</label>
+    <longflag>sigma</longflag>
+    <channel>input</channel>
+    <default>-1</default>
+    <minimum>0</minimum>
+  </float>
+</parameters>
+
+<parameters>
 	<label>Number of levels</label>
 	<integer>
 		<name>numberOfLevels</name>
