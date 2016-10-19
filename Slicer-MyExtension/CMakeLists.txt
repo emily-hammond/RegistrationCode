@@ -19,7 +19,7 @@ include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 # Extension modules
-add_subdirectory(Multi-Level Registration)
+add_subdirectory(Multi-LevelRegistration)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
