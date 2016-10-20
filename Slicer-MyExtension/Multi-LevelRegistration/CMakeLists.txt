@@ -14,8 +14,18 @@ include(${SlicerExecutionModel_USE_FILE})
 # ITK
 #
 set(${PROJECT_NAME}_ITK_COMPONENTS
+  ITKCommon
   ITKIOImageBase
-  ITKSmoothing
+  ITKIOTransformBase
+  ITKImageFunction
+  ITKImageGrid
+  ITKImageIntensity
+  ITKOptimizers
+  ITKRegistrationCommon
+  ITKSpatialObjects
+  ITKStatistics
+  ITKTestKernel
+  ITKTransform
   )
 find_package(ITK 4.6 COMPONENTS ${${PROJECT_NAME}_ITK_COMPONENTS} REQUIRED)
 set(ITK_NO_IO_FACTORY_REGISTER_MANAGER 1) # See Libs/ITKFactoryRegistration/CMakeLists.txt
