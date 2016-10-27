@@ -6,7 +6,8 @@
 namespace itk
 {
 	// constructor
-	ValidationFilter::ValidationFilter():
+	template< typename TPixelType >
+	ValidationFilter< TPixelType >::ValidationFilter():
 		m_LabelMap1( ITK_NULLPTR ),	// defined by user
 		m_LabelMap2( ITK_NULLPTR ),	// defined by user
 		m_Image1( ITK_NULLPTR ),	// defined by user
@@ -19,7 +20,8 @@ namespace itk
 		{}
 
 	// perform desired measures
-	void ValidationFilter::Update()
+	template< typename TPixelType >
+	void ValidationFilter< TPixelType >::Update()
 	{
 		// compute overlap measures
 		if( this->m_LabelMapOverlapMeasures )
@@ -78,7 +80,8 @@ namespace itk
 	}
 
 	// calculate overlap measures by dividing up the labels in each image first
-	void ValidationFilter::LabelOverlapMeasures()
+	template< typename TPixelType >
+	void ValidationFilter< TPixelType >::LabelOverlapMeasures()
 	{
 		// create temp images
 		ImageType::Pointer source = ImageType::New();
@@ -129,7 +132,8 @@ namespace itk
 	}
 
 	// calculate overlap measures according to the label in the image
-	void ValidationFilter::LabelOverlapMeasuresByLabel( ImageType::Pointer source, ImageType::Pointer target, int label )
+	template< typename TPixelType >
+	void ValidationFilter< TPixelType >::LabelOverlapMeasuresByLabel(typename ImageType::Pointer source, typename ImageType::Pointer target, int label)
 	{
 		// declare and input images
 		typedef itk::LabelOverlapMeasuresImageFilter< ImageType >	OverlapFilterType;
@@ -179,7 +183,8 @@ namespace itk
 		return;
 	}
 
-	ValidationFilter::ImageType::Pointer ValidationFilter::IsolateLabel( ImageType::Pointer image, int label )
+	template< typename TPixelType >
+	typename ValidationFilter< TPixelType >::ImageType::Pointer ValidationFilter< TPixelType >::IsolateLabel(typename ImageType::Pointer image, int label)
 	{
 		// set up thresholding
 		typedef itk::BinaryThresholdImageFilter< ImageType, ImageType >	ThresholdType;
@@ -208,7 +213,8 @@ namespace itk
 		return threshold->GetOutput();
 	}
 
-	int ValidationFilter::GetStatistics( ImageType::Pointer image, ImageType::Pointer label )
+	template< typename TPixelType >
+	int ValidationFilter< TPixelType >::GetStatistics(typename ImageType::Pointer image, typename ImageType::Pointer label)
 	{
 		// convert label map to image type
 		typedef itk::CastImageFilter< ImageType, ImageType >	ConvertLabelMapFilterType;
@@ -249,8 +255,8 @@ namespace itk
 		return statistics->GetNumberOfLabels();
 	}
 
-
-	void ValidationFilter::CheckerboardImage()
+	template< typename TPixelType >
+	void ValidationFilter< TPixelType >::CheckerboardImage()
 	{
 		//declare and insert inputs
 		typedef itk::CheckerBoardImageFilter< ImageType >	CheckerboardFilterType;
@@ -269,7 +275,8 @@ namespace itk
 		return;
 	}
 
-	void ValidationFilter::FiducialAlignment()
+	template< typename TPixelType >
+	void ValidationFilter< TPixelType >::FiducialAlignment()
 	{
 		std::cout << "Fiducial alignment complete." << std::endl;
 		return;

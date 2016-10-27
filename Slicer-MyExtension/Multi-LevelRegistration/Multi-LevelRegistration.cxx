@@ -255,7 +255,7 @@ int main( int argc, char * argv[] )
 	}
 
 	// validation at initialTransform
-	itk::ValidationFilter::Pointer validationFilter = itk::ValidationFilter::New();
+	itk::ValidationFilter<PixelType>::Pointer validationFilter = itk::ValidationFilter<PixelType>::New();
 	if (validation)
 	{
 		validationFilter->SetImage1(fixedImage);

@@ -36,6 +36,7 @@ Remaining to implement:
 namespace itk
 {
 // class Validation
+template< typename TPixelType >
 class ValidationFilter: public Object
 {
 public:
@@ -46,7 +47,7 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 
 	// definitions
-	typedef itk::Image< short, 3 >	ImageType;
+	typedef itk::Image< TPixelType, 3 >	ImageType;
 	
 	// method for creation
 	itkNewMacro(Self);
@@ -112,10 +113,10 @@ protected:
 	
 private:
 	// declare variables
-	ImageType::Pointer m_Image1;
-	ImageType::Pointer m_LabelMap1;
-	ImageType::Pointer m_Image2;
-	ImageType::Pointer m_LabelMap2;
+	typename ImageType::Pointer m_Image1;
+	typename ImageType::Pointer m_LabelMap1;
+	typename ImageType::Pointer m_Image2;
+	typename ImageType::Pointer m_LabelMap2;
 	char * m_FixedFiducialFilename;
 	char * m_MovingFiducialFilename;
 
@@ -126,13 +127,13 @@ private:
 	// overlap measures
 	bool m_LabelMapOverlapMeasures;
 	void LabelOverlapMeasures();
-	void LabelOverlapMeasuresByLabel( ImageType::Pointer source, ImageType::Pointer target, int label );
-	ImageType::Pointer IsolateLabel( ImageType::Pointer image, int label );
-	int GetStatistics( ImageType::Pointer image, ImageType::Pointer label );
+	void LabelOverlapMeasuresByLabel(typename ImageType::Pointer source, typename ImageType::Pointer target, int label);
+	typename ImageType::Pointer IsolateLabel(typename ImageType::Pointer image, int label);
+	int GetStatistics(typename ImageType::Pointer image, typename ImageType::Pointer label);
 	
 	// checkerboard images
 	bool m_CheckerboardImage;
-	ImageType::Pointer m_CBImage;
+	typename ImageType::Pointer m_CBImage;
 	void CheckerboardImage();	
 };
 } // end namespace
