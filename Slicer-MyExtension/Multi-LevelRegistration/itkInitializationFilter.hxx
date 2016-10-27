@@ -6,7 +6,8 @@
 namespace itk
 {
 	// contructor to set up initializations and transform
-	InitializationFilter::InitializationFilter():
+	template< typename TPixelType >
+	InitializationFilter<typename TPixelType>::InitializationFilter():
 		m_CenteredOnGeometry( false ),
 		m_MetricTranslation0Flag(false),
 		m_MetricTranslation1Flag(false),
@@ -24,7 +25,8 @@ namespace itk
 	}
 
 	// set the flags for metric translation alignment by axis
-	void InitializationFilter::MetricTranslationOn(int axis)
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::MetricTranslationOn(int axis)
 	{
 		// x-axis
 		if( axis == 0 )
@@ -50,7 +52,8 @@ namespace itk
 	}
 
 	// set the flags for metric rotation alignment by axis
-	void InitializationFilter::MetricRotationOn(int axis)
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::MetricRotationOn(int axis)
 	{
 		// x-axis
 		if (axis == 0)
@@ -76,7 +79,8 @@ namespace itk
 	}
 
 	// set the flags for metric translation alignment by axis - turn off
-	void InitializationFilter::MetricTranslationOff(int axis)
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::MetricTranslationOff(int axis)
 	{
 		// x-axis
 		if( axis == 0 )
@@ -102,7 +106,8 @@ namespace itk
 	}
 
 	// set the flags for metric rotation alignment by axis - turn off
-	void InitializationFilter::MetricRotationOff(int axis)
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::MetricRotationOff(int axis)
 	{
 		// x-axis
 		if (axis == 0)
@@ -128,7 +133,8 @@ namespace itk
 	}
 
 	// perform the initialization by going through the set flags
-	void InitializationFilter::Update()
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::Update()
 	{
 		// error checking
 		if( !m_FixedImage )
@@ -186,7 +192,8 @@ namespace itk
 	}
 
 	// read in initial transform and convert the affine transform to a ScaleVersorTransform
-	void InitializationFilter::Update( AffineTransformType::Pointer transform )
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::Update(AffineTransformType::Pointer transform)
 	{
 		// transfer parameters
 		TransformType::ParametersType parameters = this->m_Transform->GetParameters();
@@ -216,7 +223,8 @@ namespace itk
 	}
 
 	// obtain the proper range to translate the moving image for metric alignment depending on the given axis
-	void InitializationFilter::GetRange( int axis )
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::GetRange(int axis)
 	{
 		// moving image parameters
 		const ImageType::SizeType & movingSize = this->m_MovingImage->GetLargestPossibleRegion().GetSize();
@@ -233,7 +241,8 @@ namespace itk
 	}
 
 	// center the images based on geometry
-	void InitializationFilter::CenterOnGeometry()
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::CenterOnGeometry()
 	{
 		// instantiate initialization filter
 		typedef itk::CenteredTransformInitializer< TransformType, ImageType, ImageType >	CenteredInitializeType;
@@ -252,7 +261,8 @@ namespace itk
 	}
 
 	// metric alignment based on the desired axis
-	void InitializationFilter::MetricTranslationAlignment( int axis )
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::MetricTranslationAlignment(int axis)
 	{
 		// instantiate metric to use
 		typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;
@@ -331,7 +341,8 @@ namespace itk
 	}
 
 	// apply rotation
-	void InitializationFilter::MetricRotationAlignment(int axis)
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::MetricRotationAlignment(int axis)
 	{
 		// instantiate metric to use
 		typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;
@@ -425,7 +436,8 @@ namespace itk
 		return;
 	}
 
-	void InitializationFilter::IterativeAlignment()
+	template< typename TPixelType >
+	void InitializationFilter<typename TPixelType>::IterativeAlignment()
 	{
 		// instantiate metric to use
 		typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType > MetricType;

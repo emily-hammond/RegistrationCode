@@ -104,7 +104,8 @@ int main( int argc, char * argv[] )
 	std::cout << std::endl;
 
 	// instantiate image and transform types
-	typedef itk::Image< short, 3 >	ImageType;
+	typedef short					PixelType;
+	typedef itk::Image< PixelType, 3 >	ImageType;
 	typedef itk::Image< unsigned char, 3 >	MaskImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	typedef itk::AffineTransform< double >	AffineTransformType;
@@ -202,7 +203,7 @@ int main( int argc, char * argv[] )
 	std::cout << "*********************************************\n" << std::endl;
 
 	// perform initialization class
-	itk::InitializationFilter::Pointer initialize = itk::InitializationFilter::New();
+	itk::InitializationFilter<PixelType>::Pointer initialize = itk::InitializationFilter<PixelType>::New();
 	TransformType::Pointer initialTransform = TransformType::New();
 	initialize->SetFixedImage(fixedImage);
 	initialize->SetMovingImage(movingImage);

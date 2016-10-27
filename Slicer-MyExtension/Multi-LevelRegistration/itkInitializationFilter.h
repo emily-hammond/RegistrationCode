@@ -20,6 +20,7 @@ on the same two images.
 namespace itk
 {
 // class InitializationFilter
+template <typename TPixelType>
 class InitializationFilter: public Object
 {
 public:
@@ -30,7 +31,7 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 
 	// definitions
-	typedef itk::Image< short, 3 >			ImageType;
+	typedef itk::Image< TPixelType, 3 >				ImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	typedef itk::AffineTransform< double >			AffineTransformType;
 	
@@ -93,8 +94,8 @@ protected:
 	
 private:
 	// declare variables
-	ImageType::Pointer m_FixedImage;
-	ImageType::Pointer m_MovingImage;
+	typename ImageType::Pointer m_FixedImage;
+	typename ImageType::Pointer m_MovingImage;
 	TransformType::Pointer m_Transform;
 	bool m_ObserveOn;
 
