@@ -7,7 +7,8 @@
 namespace itk
 {
 	// constructor
-	ManageTransformsFilter::ManageTransformsFilter():
+	template< typename TPixelType >
+	ManageTransformsFilter< typename TPixelType >::ManageTransformsFilter():
 		m_FixedImage( ITK_NULLPTR ),	// defined by user
 		m_MovingImage( ITK_NULLPTR ),	// defined by user
 		m_MovingLabelMap( ITK_NULLPTR ),	// defined by user
@@ -24,25 +25,29 @@ namespace itk
 		m_ROI.assign(6, 0.0);
 	}
 
-	void ManageTransformsFilter::SetROIFilename(const char * filename)
+	template< typename TPixelType >
+	void ManageTransformsFilter< typename TPixelType >::SetROIFilename(const char * filename)
 	{
 		m_ROIFilename = filename;
 		ExtractROIPoints();
 		return;
 	}
 
-	void ManageTransformsFilter::SetROI(std::vector<float> roi)
+	template< typename TPixelType >
+	void ManageTransformsFilter< typename TPixelType >::SetROI(std::vector<float> roi)
 	{
 		m_ROI = roi;
 		return;
 	}
 
-	void ManageTransformsFilter::AddTransform( TransformType::Pointer transform )
+	template< typename TPixelType >
+	void ManageTransformsFilter< typename TPixelType >::AddTransform(TransformType::Pointer transform)
 	{
 		this->m_CompositeTransform->AddTransform( transform );
 	}
 
-	std::vector<float> ManageTransformsFilter::ExtractROIPoints( const char * filename )
+	template< typename TPixelType >
+	std::vector<float> ManageTransformsFilter< typename TPixelType >::ExtractROIPoints(const char * filename)
 	{
 		m_ROIFilename = filename;
 		ExtractROIPoints();
@@ -50,7 +55,8 @@ namespace itk
 		return m_ROI;
 	}
 
-	void ManageTransformsFilter::Update()
+	template< typename TPixelType >
+	void ManageTransformsFilter< typename TPixelType >::Update()
 	{
 		// error checking
 		if( !m_FixedImage )
@@ -102,7 +108,8 @@ namespace itk
 	}
 
 	// apply current transform on file to the header information of the input image
-	void ManageTransformsFilter::HardenTransform()
+	template< typename TPixelType >
+	void ManageTransformsFilter< typename TPixelType >::HardenTransform()
 	{
 		// get image properties
 		/*ImageType::PointType origin = this->movingImage->GetOrigin();
@@ -160,7 +167,8 @@ namespace itk
 		return; 
 	}
 
-	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::ResampleImage( ImageType::Pointer image )
+	template< typename TPixelType >
+	typename ManageTransformsFilter< TPixelType >::ImageType::Pointer ManageTransformsFilter< typename TPixelType >::ResampleImage(typename ImageType::Pointer image)
 	{
 		// set up resampling object
 		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
@@ -204,7 +212,8 @@ namespace itk
 		return resample->GetOutput();
 	}
 
-	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::ResampleImage( ImageType::Pointer image, TransformType::Pointer transform )
+	template< typename TPixelType >
+	typename ManageTransformsFilter< TPixelType >::ImageType::Pointer ManageTransformsFilter< TPixelType >::ResampleImage(typename ImageType::Pointer image, TransformType::Pointer transform)
 	{
 		// set up resampling object
 		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
@@ -247,7 +256,8 @@ namespace itk
 		return resample->GetOutput();
 	}
 
-	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::ResampleImage(ImageType::Pointer image, CompositeTransformType::Pointer transform)
+	template< typename TPixelType >
+	typename ManageTransformsFilter< TPixelType >::ImageType::Pointer ManageTransformsFilter< TPixelType >::ResampleImage(typename ImageType::Pointer image, CompositeTransformType::Pointer transform)
 	{
 		// set up resampling object
 		typedef itk::ResampleImageFilter< ImageType, ImageType >	ResampleFilterType;
@@ -291,7 +301,8 @@ namespace itk
 	}
 
 	// create the mask given an ROI filename
-	ManageTransformsFilter::ImageType::Pointer ManageTransformsFilter::CropImage( ImageType::Pointer image )
+	template< typename TPixelType >
+	typename ManageTransformsFilter< TPixelType >::ImageType::Pointer ManageTransformsFilter< TPixelType >::CropImage(typename ImageType::Pointer image)
 	{
 		std::vector<float>::iterator it = m_ROI.begin();
 	
@@ -349,7 +360,8 @@ namespace itk
 	}
 
 	// extract point values from the slicer ROI file
-	void ManageTransformsFilter::ExtractROIPoints()
+	template< typename TPixelType >
+	void ManageTransformsFilter< TPixelType >::ExtractROIPoints()
 	{
 		// instantiate ROI array
 		bool fullROI = false; // denotes that ROI array is full

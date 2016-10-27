@@ -22,6 +22,7 @@ transform prior to validation.
 namespace itk
 {
 // class Validation
+template< typename TPixelType >
 class ManageTransformsFilter: public Object
 {
 public:
@@ -34,7 +35,7 @@ public:
 	// definitions
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
-	typedef itk::Image< short, 3 >			ImageType;
+	typedef itk::Image< TPixelType, 3 >				ImageType;
 	
 	// method for creation
 	itkNewMacro(Self);
@@ -99,8 +100,8 @@ public:
 
 	// perform function
 	void Update();
-	ImageType::Pointer ResampleImage( ImageType::Pointer image, TransformType::Pointer transform );
-	ImageType::Pointer ResampleImage(ImageType::Pointer image, CompositeTransformType::Pointer transform);
+	typename ImageType::Pointer ResampleImage(typename ImageType::Pointer image, TransformType::Pointer transform);
+	typename ImageType::Pointer ResampleImage(typename ImageType::Pointer image, CompositeTransformType::Pointer transform);
 
 	// use NN interpolation during resampling
 	void NearestNeighborInterpolateOn()
@@ -131,35 +132,35 @@ private:
 	TransformType::Pointer m_Transform;
 
 	// images
-	ImageType::Pointer m_FixedImage;
-	ImageType::Pointer m_FixedLabelMap;
-	ImageType::Pointer m_MovingImage;
-	ImageType::Pointer m_MovingLabelMap;
-	ImageType::Pointer m_TransformedImage;
-	ImageType::Pointer m_TransformedLabelMap;
-	ImageType::Pointer m_FixedCroppedImage;
-	ImageType::Pointer m_FixedCroppedLabelMap;
-	ImageType::Pointer m_MovingCroppedImage;
-	ImageType::Pointer m_MovingCroppedLabelMap;
+	typename ImageType::Pointer m_FixedImage;
+	typename ImageType::Pointer m_FixedLabelMap;
+	typename ImageType::Pointer m_MovingImage;
+	typename ImageType::Pointer m_MovingLabelMap;
+	typename ImageType::Pointer m_TransformedImage;
+	typename ImageType::Pointer m_TransformedLabelMap;
+	typename ImageType::Pointer m_FixedCroppedImage;
+	typename ImageType::Pointer m_FixedCroppedLabelMap;
+	typename ImageType::Pointer m_MovingCroppedImage;
+	typename ImageType::Pointer m_MovingCroppedLabelMap;
 
 	// flags
 	bool m_HardenTransform;
 	bool m_ResampleImage;
 	bool m_NearestNeighbor;
 	bool m_CropImage;
-	ImageType::RegionType m_CropRegion;
+	typename ImageType::RegionType m_CropRegion;
 
 	// ROI
 	const char * m_ROIFilename;
 	std::vector<float> m_ROI;
-	ImageType::Pointer CropImage( ImageType::Pointer image );	// used with reading in ROI from *.ascv file
+	typename ImageType::Pointer CropImage(typename ImageType::Pointer image);	// used with reading in ROI from *.ascv file
 	void ExtractROIPoints();	// used with reading in ROI from *.ascv file
 
-	ImageType::Pointer CropImage(ImageType::Pointer image, std::vector<float> roi);
+	typename ImageType::Pointer CropImage(typename ImageType::Pointer image, std::vector<float> roi);
 
 	// applying transform
 	void HardenTransform();
-	ImageType::Pointer ResampleImage( ImageType::Pointer image );
+	typename ImageType::Pointer ResampleImage(typename ImageType::Pointer image);
 };
 } // end namespace
 

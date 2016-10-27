@@ -111,7 +111,7 @@ int main( int argc, char * argv[] )
 	typedef itk::AffineTransform< double >	AffineTransformType;
 
 	// manage transforms/cropping/applying class
-	itk::ManageTransformsFilter::Pointer transforms = itk::ManageTransformsFilter::New();
+	itk::ManageTransformsFilter<PixelType>::Pointer transforms = itk::ManageTransformsFilter<PixelType>::New();
 
 	// validation
 	ImageType::Pointer fixedImageMask = ImageType::New();
@@ -460,13 +460,13 @@ int main( int argc, char * argv[] )
 		transforms->AddTransform(registration->GetFinalTransform());
 
 		// write out composite transform
-		WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(finalTransform.c_str(), transforms->GetCompositeTransform());
+		WriteOutTransform< itk::ManageTransformsFilter<PixelType>::CompositeTransformType >(finalTransform.c_str(), transforms->GetCompositeTransform());
 
 		// write out transforms
 		if (!debugDirectory.empty() && debugTransforms)
 		{
 			std::string transformFilename = debugDirectory + "\\Level" + std::to_string(level) + "Transform.tfm";
-			WriteOutTransform< itk::ManageTransformsFilter::CompositeTransformType >(transformFilename.c_str(), transforms->GetCompositeTransform());
+			WriteOutTransform< itk::ManageTransformsFilter<PixelType>::CompositeTransformType >(transformFilename.c_str(), transforms->GetCompositeTransform());
 		}
 
 		// write out images
