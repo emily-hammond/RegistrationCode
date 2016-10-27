@@ -6,7 +6,8 @@
 namespace itk
 {
 	// set up defaults in constructor
-	RegistrationFramework::RegistrationFramework() :
+	template< typename TPixelType >
+	RegistrationFramework< TPixelType >::RegistrationFramework() :
 		// images
 		m_FixedImage(ITK_NULLPTR),	// provided by user
 		m_MovingImage(ITK_NULLPTR),	// provided by user
@@ -43,7 +44,8 @@ namespace itk
 	}
 
 	// run through registration process
-	void RegistrationFramework::Update()
+	template< typename TPixelType >
+	void RegistrationFramework< TPixelType >::Update()
 	{
 		//set up components
 		this->Initialize();
@@ -109,7 +111,8 @@ namespace itk
 	}
 
 	// set up MMI metric for defaults
-	void RegistrationFramework::Initialize()
+	template< typename TPixelType >
+	void RegistrationFramework< TPixelType >::Initialize()
 	{
 		// ****DETERMINE IMAGES/TRANSFORMS****
 		if( !m_FixedImage )
@@ -177,7 +180,8 @@ namespace itk
 	}
 
 	// print out results
-	void RegistrationFramework::Print()
+	template< typename TPixelType >
+	void RegistrationFramework< TPixelType >::Print()
 	{
 		// Set up values
 		std::cout << "\nMetric values " << std::endl;

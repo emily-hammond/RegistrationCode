@@ -303,7 +303,7 @@ int main( int argc, char * argv[] )
 		std::cout << "*********************************************\n" << std::endl;
 
 		// prepare the Registration framework
-		itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
+		itk::RegistrationFramework<PixelType>::Pointer registration = itk::RegistrationFramework<PixelType>::New();
 
 		// apply transform from previous level 
 		transforms->ResampleImageOn();

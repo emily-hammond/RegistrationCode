@@ -30,6 +30,7 @@ Remaining to implement:
 namespace itk
 {
 // class RegistrationFramework
+template< typename TPixelType >
 class RegistrationFramework: public Object
 {
 public:
@@ -40,15 +41,15 @@ public:
 	typedef SmartPointer< const Self >	ConstPointer;
 	
 	// definitions
-	typedef itk::Image< short, 3 >			ImageType;
+	typedef itk::Image< TPixelType, 3 >				ImageType;
 	typedef itk::Image< unsigned char, 3 >			MaskImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 
 	// registration components
-	typedef itk::LinearInterpolateImageFunction< ImageType, double >	InterpolatorType;
-	typedef itk::MattesMutualInformationImageToImageMetric< ImageType, ImageType >	MetricType;
+	typedef itk::LinearInterpolateImageFunction< typename ImageType, double >	InterpolatorType;
+	typedef itk::MattesMutualInformationImageToImageMetric< typename ImageType, typename ImageType >	MetricType;
 	typedef itk::VersorTransformOptimizer								OptimizerType;
-	typedef itk::ImageRegistrationMethod< ImageType, ImageType >		RegistrationType;
+	typedef itk::ImageRegistrationMethod< typename ImageType, typename ImageType >		RegistrationType;
 
 	// method for creation
 	itkNewMacro(Self);
@@ -112,17 +113,17 @@ protected:
 	
 private:
 	// images
-	ImageType::Pointer m_FixedImage;
-	ImageType::Pointer m_MovingImage;
+	typename ImageType::Pointer m_FixedImage;
+	typename ImageType::Pointer m_MovingImage;
 
 	// transforms
 	TransformType::Pointer m_FinalTransform;
 	TransformType::Pointer m_InitialTransform;
 
 	// registration components
-	TransformType::Pointer m_Transform;
-	InterpolatorType::Pointer m_Interpolator;
-	RegistrationType::Pointer m_Registration;
+	typename TransformType::Pointer m_Transform;
+	typename InterpolatorType::Pointer m_Interpolator;
+	typename RegistrationType::Pointer m_Registration;
 	
 	// observer
 	RigidCommandIterationUpdate::Pointer m_Observer;
@@ -143,7 +144,7 @@ private:
 	float m_ScalingScale;
 
 	// metric
-	MetricType::Pointer m_Metric;
+	typename MetricType::Pointer m_Metric;
 	float m_PercentageOfSamples;
 	int m_HistogramBins;
 
