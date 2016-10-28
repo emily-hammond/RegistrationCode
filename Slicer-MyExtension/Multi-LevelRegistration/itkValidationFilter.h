@@ -48,6 +48,7 @@ public:
 
 	// definitions
 	typedef itk::Image< TPixelType, 3 >	ImageType;
+	typedef itk::Image< unsigned char, 3>	MaskImageType;
 	
 	// method for creation
 	itkNewMacro(Self);
@@ -78,9 +79,9 @@ public:
 
 	// set flags for computing label overlap measures
 	itkSetObjectMacro( Image1, ImageType );
-	itkSetObjectMacro( LabelMap1, ImageType );
+	itkSetObjectMacro( LabelMap1, MaskImageType );
 	itkSetObjectMacro( Image2, ImageType );
-	itkSetObjectMacro( LabelMap2, ImageType );
+	itkSetObjectMacro( LabelMap2, MaskImageType );
 	void LabelOverlapMeasuresOn()
 	{ 
 		m_LabelMapOverlapMeasures = true; 
@@ -114,9 +115,9 @@ protected:
 private:
 	// declare variables
 	typename ImageType::Pointer m_Image1;
-	typename ImageType::Pointer m_LabelMap1;
+	MaskImageType::Pointer m_LabelMap1;
 	typename ImageType::Pointer m_Image2;
-	typename ImageType::Pointer m_LabelMap2;
+	MaskImageType::Pointer m_LabelMap2;
 	char * m_FixedFiducialFilename;
 	char * m_MovingFiducialFilename;
 
@@ -127,9 +128,9 @@ private:
 	// overlap measures
 	bool m_LabelMapOverlapMeasures;
 	void LabelOverlapMeasures();
-	void LabelOverlapMeasuresByLabel(typename ImageType::Pointer source, typename ImageType::Pointer target, int label);
-	typename ImageType::Pointer IsolateLabel(typename ImageType::Pointer image, int label);
-	int GetStatistics(typename ImageType::Pointer image, typename ImageType::Pointer label);
+	void LabelOverlapMeasuresByLabel(MaskImageType::Pointer sourceLabel, MaskImageType::Pointer targetLabel, int label);
+	MaskImageType::Pointer IsolateLabel(MaskImageType::Pointer labelMap, int label);
+	int GetStatistics(typename ImageType::Pointer image, MaskImageType::Pointer label);
 	
 	// checkerboard images
 	bool m_CheckerboardImage;

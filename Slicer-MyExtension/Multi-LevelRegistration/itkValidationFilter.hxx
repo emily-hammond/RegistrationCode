@@ -84,11 +84,11 @@ namespace itk
 	void ValidationFilter< TPixelType >::LabelOverlapMeasures()
 	{
 		// create temp images
-		ImageType::Pointer source = ImageType::New();
-		ImageType::Pointer target = ImageType::New();
+		MaskImageType::Pointer source = MaskImageType::New();
+		MaskImageType::Pointer target = MaskImageType::New();
 
 		// find range of values in images
-		typedef itk::MinimumMaximumImageCalculator< ImageType >	MinMaxCalculatorType;
+		typedef itk::MinimumMaximumImageCalculator< MaskImageType >		MinMaxCalculatorType;
 		MinMaxCalculatorType::Pointer calculator = MinMaxCalculatorType::New();
 		calculator->SetImage( this->m_LabelMap1 );
 		calculator->Compute();
@@ -133,13 +133,13 @@ namespace itk
 
 	// calculate overlap measures according to the label in the image
 	template< typename TPixelType >
-	void ValidationFilter< TPixelType >::LabelOverlapMeasuresByLabel(typename ImageType::Pointer source, typename ImageType::Pointer target, int label)
+	void ValidationFilter< TPixelType >::LabelOverlapMeasuresByLabel( MaskImageType::Pointer sourceLabel, MaskImageType::Pointer targetLabel, int label)
 	{
 		// declare and input images
-		typedef itk::LabelOverlapMeasuresImageFilter< ImageType >	OverlapFilterType;
+		typedef itk::LabelOverlapMeasuresImageFilter< MaskImageType >	OverlapFilterType;
 		OverlapFilterType::Pointer overlapFilter = OverlapFilterType::New();
-		overlapFilter->SetSourceImage( source );
-		overlapFilter->SetTargetImage( target );
+		overlapFilter->SetSourceImage(sourceLabel);
+		overlapFilter->SetTargetImage(targetLabel);
 
 		// update filter
 		try
@@ -154,10 +154,10 @@ namespace itk
 		}
 
 		// calculate Hausdorff distances
-		typedef itk::HausdorffDistanceImageFilter< ImageType, ImageType >	DistanceFilterType;
+		typedef itk::HausdorffDistanceImageFilter< MaskImageType, MaskImageType >	DistanceFilterType;
 		DistanceFilterType::Pointer distanceFilter = DistanceFilterType::New();
-		distanceFilter->SetInput1( source );
-		distanceFilter->SetInput2( target );
+		distanceFilter->SetInput1(sourceLabel);
+		distanceFilter->SetInput2(targetLabel);
 		
 		// update filter
 		try
@@ -184,12 +184,12 @@ namespace itk
 	}
 
 	template< typename TPixelType >
-	typename ValidationFilter< TPixelType >::ImageType::Pointer ValidationFilter< TPixelType >::IsolateLabel(typename ImageType::Pointer image, int label)
+	typename ValidationFilter< TPixelType >::MaskImageType::Pointer ValidationFilter< TPixelType >::IsolateLabel(MaskImageType::Pointer labelMap, int label)
 	{
 		// set up thresholding
-		typedef itk::BinaryThresholdImageFilter< ImageType, ImageType >	ThresholdType;
+		typedef itk::BinaryThresholdImageFilter< MaskImageType, MaskImageType >	ThresholdType;
 		ThresholdType::Pointer threshold = ThresholdType::New();
-		threshold->SetInput( image );
+		threshold->SetInput( labelMap );
 		threshold->SetLowerThreshold( label );
 		threshold->SetUpperThreshold( label );
 		threshold->SetInsideValue( 1 );
@@ -214,16 +214,16 @@ namespace itk
 	}
 
 	template< typename TPixelType >
-	int ValidationFilter< TPixelType >::GetStatistics(typename ImageType::Pointer image, typename ImageType::Pointer label)
+	int ValidationFilter< TPixelType >::GetStatistics(typename ImageType::Pointer image, MaskImageType::Pointer label)
 	{
 		// convert label map to image type
-		typedef itk::CastImageFilter< ImageType, ImageType >	ConvertLabelMapFilterType;
+		typedef itk::CastImageFilter< MaskImageType, MaskImageType >	ConvertLabelMapFilterType;
 		ConvertLabelMapFilterType::Pointer convert = ConvertLabelMapFilterType::New();
 		convert->SetInput( label );
 		convert->Update();
 
 		// set up statistics filter
-		typedef itk::LabelStatisticsImageFilter< ImageType, ImageType > StatisticsFilterType;
+		typedef itk::LabelStatisticsImageFilter< ImageType, MaskImageType > StatisticsFilterType;
 		StatisticsFilterType::Pointer statistics = StatisticsFilterType::New();
 		statistics->SetLabelInput( convert->GetOutput() );
 		statistics->SetInput( image );

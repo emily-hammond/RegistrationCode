@@ -35,8 +35,9 @@ int DoIt( int argc, char * argv[], TPixel )
 
 	// instantiate image and transform types
 	typedef TPixel					PixelType;
+	typedef unsigned char			MaskPixelType;
 	typedef itk::Image< PixelType, 3 >	ImageType;
-	typedef itk::Image< unsigned char, 3 >	MaskImageType;
+	typedef itk::Image< MaskPixelType, 3 >	MaskImageType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	typedef itk::AffineTransform< double >	AffineTransformType;
 
@@ -44,8 +45,8 @@ int DoIt( int argc, char * argv[], TPixel )
 	itk::ManageTransformsFilter<PixelType>::Pointer transforms = itk::ManageTransformsFilter<PixelType>::New();
 
 	// validation
-	ImageType::Pointer fixedImageMask = ImageType::New();
-	ImageType::Pointer movingImageMask = ImageType::New();
+	MaskImageType::Pointer fixedImageMask = MaskImageType::New();
+	MaskImageType::Pointer movingImageMask = MaskImageType::New();
 	bool validation = false;
 	if (!fixedImageMaskFilename.empty() && !movingImageMaskFilename.empty())
 	{
@@ -58,7 +59,7 @@ int DoIt( int argc, char * argv[], TPixel )
 	ImageType::Pointer movingImage = ReadInImage< ImageType >(movingImageFilename.c_str());
 	if (validation)
 	{
-		movingImageMask = ReadInImage< ImageType >(movingImageMaskFilename.c_str());
+		movingImageMask = ReadInImage< MaskImageType >(movingImageMaskFilename.c_str());
 	}
 
 	// apply fixed initial transform if given
@@ -71,7 +72,7 @@ int DoIt( int argc, char * argv[], TPixel )
 		{
 			std::cout << "Applying initial transform to fixed image." << std::endl;
 			transforms->SetFixedImage(ReadInImage< ImageType >(referenceImage.c_str()));
-			fixedImage = transforms->ResampleImage(fixedImageTemp, initialFixedTransform);
+			fixedImage = transforms->ResampleImage< ImageType >(fixedImageTemp, initialFixedTransform);
 		}
 		catch (itk::ExceptionObject & err)
 		{
@@ -85,8 +86,8 @@ int DoIt( int argc, char * argv[], TPixel )
 		if (validation)
 		{
 			transforms->NearestNeighborInterpolateOn();
-			ImageType::Pointer fixedImageMaskTemp = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
-			fixedImageMask = transforms->ResampleImage(fixedImageMaskTemp, initialFixedTransform);
+			MaskImageType::Pointer fixedImageMaskTemp = ReadInImage< MaskImageType >(fixedImageMaskFilename.c_str());
+			fixedImageMask = transforms->ResampleImage< MaskImageType >(fixedImageMaskTemp, initialFixedTransform);
 			transforms->NearestNeighborInterpolateOff();
 		}
 	}
@@ -98,7 +99,7 @@ int DoIt( int argc, char * argv[], TPixel )
 
 		if (validation)
 		{
-			fixedImageMask = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
+			fixedImageMask = ReadInImage< MaskImageType >(fixedImageMaskFilename.c_str());
 		}
 	}
 
@@ -190,9 +191,9 @@ int DoIt( int argc, char * argv[], TPixel )
 	{
 		validationFilter->SetImage1(fixedImage);
 		validationFilter->SetLabelMap1(fixedImageMask);
-		validationFilter->SetImage2(transforms->ResampleImage(movingImage, initialTransform));
+		validationFilter->SetImage2(transforms->ResampleImage< ImageType >(movingImage, initialTransform));
 		transforms->NearestNeighborInterpolateOn();
-		validationFilter->SetLabelMap2(transforms->ResampleImage(movingImageMask, initialTransform));
+		validationFilter->SetLabelMap2(transforms->ResampleImage< MaskImageType >(movingImageMask, initialTransform));
 		transforms->NearestNeighborInterpolateOff();
 		validationFilter->LabelOverlapMeasuresOn();
 		try
@@ -403,15 +404,15 @@ int DoIt( int argc, char * argv[], TPixel )
 		if (!debugDirectory.empty() && debugImages)
 		{
 			std::string movingFilename = debugDirectory + "\\Level" + std::to_string(level) + "OuputMovingImage.nrrd";
-			WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->ResampleImage(movingImage, transforms->GetCompositeTransform()));
+			WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->ResampleImage< ImageType >(movingImage, transforms->GetCompositeTransform()));
 		}
 
 		// obtain validation measures
 		if (validation)
 		{
-			validationFilter->SetImage2(transforms->ResampleImage(movingImage, transforms->GetCompositeTransform()));
+			validationFilter->SetImage2(transforms->ResampleImage< ImageType >(movingImage, transforms->GetCompositeTransform()));
 			transforms->NearestNeighborInterpolateOn();
-			validationFilter->SetLabelMap2(transforms->ResampleImage(movingImageMask, transforms->GetCompositeTransform()));
+			validationFilter->SetLabelMap2(transforms->ResampleImage< MaskImageType >(movingImageMask, transforms->GetCompositeTransform()));
 			transforms->NearestNeighborInterpolateOff();
 			validationFilter->LabelOverlapMeasuresOn();
 			try

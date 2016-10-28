@@ -71,14 +71,14 @@ namespace itk
 		// perform functionality
 		if( this->m_ResampleImage )
 		{
-			this->m_TransformedImage = ResampleImage( this->m_MovingImage );
+			this->m_TransformedImage = ResampleImage< typename ImageType >( this->m_MovingImage );
 			std::cout << "Moving image resampled." << std::endl;
 
 			// repeat for label map with nearest neighbor interpolation
 			if( m_MovingLabelMap )
 			{
 				NearestNeighborInterpolateOn();
-				this->m_TransformedLabelMap = ResampleImage( this->m_MovingLabelMap );
+				this->m_TransformedLabelMap = ResampleImage< MaskImageType >( this->m_MovingLabelMap );
 				NearestNeighborInterpolateOff();
 				std::cout << "Moving label map resampled." << std::endl;
 			}
@@ -89,17 +89,17 @@ namespace itk
 		}
 		if( this->m_CropImage )
 		{
-			this->m_MovingCroppedImage = CropImage( this->m_TransformedImage );
-			this->m_FixedCroppedImage = CropImage( this->m_FixedImage );
+			this->m_MovingCroppedImage = CropImage< typename ImageType >( this->m_TransformedImage );
+			this->m_FixedCroppedImage = CropImage< typename ImageType >(this->m_FixedImage);
 			std::cout << "Images cropped." << std::endl;
 			if( m_MovingLabelMap ) 
 			{ 
-				this->m_MovingCroppedLabelMap = CropImage( this->m_TransformedLabelMap );
+				this->m_MovingCroppedLabelMap = CropImage< MaskImageType >( this->m_TransformedLabelMap );
 				std::cout << "Moving label map cropped." << std::endl;
 			} 
 			if( m_FixedLabelMap ) 
 			{ 
-				this->m_FixedCroppedLabelMap = CropImage( this->m_FixedLabelMap );
+				this->m_FixedCroppedLabelMap = CropImage< MaskImageType >( this->m_FixedLabelMap );
 				std::cout << "Fixed label map cropped." << std::endl;
 			}
 		}
@@ -167,7 +167,7 @@ namespace itk
 		return; 
 	}
 
-	template< typename TPixelType >
+	/*template< typename TPixelType >
 	typename ManageTransformsFilter< TPixelType >::ImageType::Pointer ManageTransformsFilter< typename TPixelType >::ResampleImage(typename ImageType::Pointer image)
 	{
 		// set up resampling object
@@ -210,9 +210,9 @@ namespace itk
 		resample->Update();
 
 		return resample->GetOutput();
-	}
+	}*/
 
-	template< typename TPixelType >
+	/*template< typename TPixelType >
 	typename ManageTransformsFilter< TPixelType >::ImageType::Pointer ManageTransformsFilter< TPixelType >::ResampleImage(typename ImageType::Pointer image, TransformType::Pointer transform)
 	{
 		// set up resampling object
@@ -254,9 +254,9 @@ namespace itk
 		resample->Update();
 
 		return resample->GetOutput();
-	}
+	}*/
 
-	template< typename TPixelType >
+	/*template< typename TPixelType >
 	typename ManageTransformsFilter< TPixelType >::ImageType::Pointer ManageTransformsFilter< TPixelType >::ResampleImage(typename ImageType::Pointer image, CompositeTransformType::Pointer transform)
 	{
 		// set up resampling object
@@ -298,10 +298,10 @@ namespace itk
 		resample->Update();
 
 		return resample->GetOutput();
-	}
+	}*/
 
 	// create the mask given an ROI filename
-	template< typename TPixelType >
+	/*template< typename TPixelType >
 	typename ManageTransformsFilter< TPixelType >::ImageType::Pointer ManageTransformsFilter< TPixelType >::CropImage(typename ImageType::Pointer image)
 	{
 		std::vector<float>::iterator it = m_ROI.begin();
@@ -357,7 +357,7 @@ namespace itk
 		}
 
 		return extract->GetOutput();
-	}
+	}*/
 
 	// extract point values from the slicer ROI file
 	template< typename TPixelType >

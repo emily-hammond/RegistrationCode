@@ -36,6 +36,7 @@ public:
 	typedef itk::CompositeTransform< double, 3 >	CompositeTransformType;
 	typedef itk::ScaleVersor3DTransform< double >	TransformType;
 	typedef itk::Image< TPixelType, 3 >				ImageType;
+	typedef itk::Image< unsigned char, 3 >			MaskImageType;
 	
 	// method for creation
 	itkNewMacro(Self);
@@ -51,20 +52,20 @@ public:
 	
 	// create/set images
 	itkSetObjectMacro( FixedImage, ImageType );
-	itkSetObjectMacro( FixedLabelMap, ImageType );
+	itkSetObjectMacro( FixedLabelMap, MaskImageType );
 	itkSetObjectMacro( MovingImage, ImageType );
-	itkSetObjectMacro( MovingLabelMap, ImageType );
+	itkSetObjectMacro( MovingLabelMap, MaskImageType );
 	void SetROIFilename(const char * filename);
 	void SetROI(std::vector<float> roi);
 
 	// get results
 	itkGetObjectMacro( TransformedImage, ImageType );
-	itkGetObjectMacro( TransformedLabelMap, ImageType );
+	itkGetObjectMacro( TransformedLabelMap, MaskImageType );
 	itkGetObjectMacro( CompositeTransform, CompositeTransformType );
 	itkGetObjectMacro( FixedCroppedImage, ImageType );
-	itkGetObjectMacro( FixedCroppedLabelMap, ImageType );
+	itkGetObjectMacro( FixedCroppedLabelMap, MaskImageType );
 	itkGetObjectMacro( MovingCroppedImage, ImageType );
-	itkGetObjectMacro( MovingCroppedLabelMap, ImageType );
+	itkGetObjectMacro( MovingCroppedLabelMap, MaskImageType );
 
 	// Harden transform flag
 	void HardenTransformOn()
@@ -100,8 +101,93 @@ public:
 
 	// perform function
 	void Update();
-	typename ImageType::Pointer ResampleImage(typename ImageType::Pointer image, TransformType::Pointer transform);
-	typename ImageType::Pointer ResampleImage(typename ImageType::Pointer image, CompositeTransformType::Pointer transform);
+	template< typename TImageType > 
+	typename TImageType::Pointer ResampleImage(typename TImageType::Pointer image, TransformType::Pointer transform)
+	{
+		// set up resampling object
+		typedef itk::ResampleImageFilter< TImageType, TImageType >	ResampleFilterType;
+		ResampleFilterType::Pointer resample = ResampleFilterType::New();
+
+		if (!this->m_FixedImage)
+		{
+			std::cout << "Fixed Image not defined. " << std::endl;
+			return image;
+		}
+
+		// define image resampling with respect to fixed image
+		resample->SetSize(this->m_FixedImage->GetLargestPossibleRegion().GetSize());
+		resample->SetOutputOrigin(this->m_FixedImage->GetOrigin());
+		resample->SetOutputSpacing(this->m_FixedImage->GetSpacing());
+		resample->SetOutputDirection(this->m_FixedImage->GetDirection());
+
+		// input parameters
+		resample->SetInput(image);
+		resample->SetTransform(transform);
+
+		// define interpolator
+		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
+		typedef itk::NearestNeighborInterpolateImageFunction< TImageType, double > NearestNeighborType;
+		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
+
+		if (this->m_NearestNeighbor)
+		{
+			resample->SetInterpolator(nnInterpolator);
+			std::cout << "Nearest neighbor interpolator." << std::endl;
+		}
+		else
+		{
+			resample->SetInterpolator(linInterpolator);
+		}
+
+		// apply
+		resample->Update();
+
+		return resample->GetOutput();
+	};
+
+	template< typename TImageType >
+	typename TImageType::Pointer ResampleImage(typename TImageType::Pointer image, CompositeTransformType::Pointer transform)
+	{
+		// set up resampling object
+		typedef itk::ResampleImageFilter< TImageType, TImageType >	ResampleFilterType;
+		ResampleFilterType::Pointer resample = ResampleFilterType::New();
+
+		if (!this->m_FixedImage)
+		{
+			std::cout << "Fixed Image not defined. " << std::endl;
+			return image;
+		}
+
+		// define image resampling with respect to fixed image
+		resample->SetSize(this->m_FixedImage->GetLargestPossibleRegion().GetSize());
+		resample->SetOutputOrigin(this->m_FixedImage->GetOrigin());
+		resample->SetOutputSpacing(this->m_FixedImage->GetSpacing());
+		resample->SetOutputDirection(this->m_FixedImage->GetDirection());
+
+		// input parameters
+		resample->SetInput(image);
+		resample->SetTransform(transform);
+
+		// define interpolator
+		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
+		typedef itk::NearestNeighborInterpolateImageFunction< TImageType, double > NearestNeighborType;
+		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
+
+		if (this->m_NearestNeighbor)
+		{
+			resample->SetInterpolator(nnInterpolator);
+			std::cout << "Nearest neighbor interpolator." << std::endl;
+		}
+		else
+		{
+			resample->SetInterpolator(linInterpolator);
+		}
+
+		// apply
+		resample->Update();
+
+		return resample->GetOutput();
+	};
 
 	// use NN interpolation during resampling
 	void NearestNeighborInterpolateOn()
@@ -133,15 +219,15 @@ private:
 
 	// images
 	typename ImageType::Pointer m_FixedImage;
-	typename ImageType::Pointer m_FixedLabelMap;
+	MaskImageType::Pointer m_FixedLabelMap;
 	typename ImageType::Pointer m_MovingImage;
-	typename ImageType::Pointer m_MovingLabelMap;
+	MaskImageType::Pointer m_MovingLabelMap;
 	typename ImageType::Pointer m_TransformedImage;
-	typename ImageType::Pointer m_TransformedLabelMap;
+	MaskImageType::Pointer m_TransformedLabelMap;
 	typename ImageType::Pointer m_FixedCroppedImage;
-	typename ImageType::Pointer m_FixedCroppedLabelMap;
+	MaskImageType::Pointer m_FixedCroppedLabelMap;
 	typename ImageType::Pointer m_MovingCroppedImage;
-	typename ImageType::Pointer m_MovingCroppedLabelMap;
+	MaskImageType::Pointer m_MovingCroppedLabelMap;
 
 	// flags
 	bool m_HardenTransform;
@@ -153,14 +239,114 @@ private:
 	// ROI
 	const char * m_ROIFilename;
 	std::vector<float> m_ROI;
-	typename ImageType::Pointer CropImage(typename ImageType::Pointer image);	// used with reading in ROI from *.ascv file
+	template< typename TImageType >
+	typename TImageType::Pointer CropImage(typename TImageType::Pointer image)	// used with reading in ROI from *.ascv file
+	{
+		std::vector<float>::iterator it = m_ROI.begin();
+
+		// extract center and radius
+		double c[3] = { -*(it), -*(it + 1), *(it + 2) };
+		double r[3] = { *(it + 3), *(it + 4), *(it + 5) };
+
+		// create size of mask according to the roi array
+		// set start index of mask according to the roi array
+		TImageType::PointType startPoint, endPoint;
+		startPoint[0] = c[0] - r[0];
+		startPoint[1] = c[1] - r[1];
+		startPoint[2] = c[2] - r[2];
+
+		// find end index
+		endPoint[0] = c[0] + r[0];
+		endPoint[1] = c[1] + r[1];
+		endPoint[2] = c[2] + r[2];
+
+		// convert to indices
+		TImageType::IndexType startIndex, endIndex;
+		image->TransformPhysicalPointToIndex(startPoint, startIndex);
+		image->TransformPhysicalPointToIndex(endPoint, endIndex);
+
+		// plug into region
+		TImageType::SizeType regionSize;
+		regionSize[0] = abs(startIndex[0] - endIndex[0]);
+		regionSize[1] = abs(startIndex[1] - endIndex[1]);
+		regionSize[2] = abs(startIndex[2] - endIndex[2]);
+
+		m_CropRegion.SetSize(regionSize);
+		m_CropRegion.SetIndex(startIndex);
+		m_CropRegion.Crop(image->GetLargestPossibleRegion());
+
+		// extract cropped image
+		typedef itk::ExtractImageFilter< TImageType, TImageType > ExtractFilterType;
+		ExtractFilterType::Pointer extract = ExtractFilterType::New();
+		extract->SetExtractionRegion(m_CropRegion);
+		extract->SetInput(image);
+		extract->SetDirectionCollapseToIdentity();
+
+		// update filter
+		try
+		{
+			extract->Update();
+		}
+		catch (itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
+
+		return extract->GetOutput();
+	};
+
 	void ExtractROIPoints();	// used with reading in ROI from *.ascv file
 
 	typename ImageType::Pointer CropImage(typename ImageType::Pointer image, std::vector<float> roi);
 
 	// applying transform
 	void HardenTransform();
-	typename ImageType::Pointer ResampleImage(typename ImageType::Pointer image);
+	template< typename TImageType >
+	typename TImageType::Pointer ResampleImage(typename TImageType::Pointer image)
+	{
+		// set up resampling object
+		typedef itk::ResampleImageFilter< TImageType, TImageType >	ResampleFilterType;
+		ResampleFilterType::Pointer resample = ResampleFilterType::New();
+
+		// define image resampling with respect to fixed image
+		resample->SetSize(this->m_FixedImage->GetLargestPossibleRegion().GetSize());
+		resample->SetOutputOrigin(this->m_FixedImage->GetOrigin());
+		resample->SetOutputSpacing(this->m_FixedImage->GetSpacing());
+		resample->SetOutputDirection(this->m_FixedImage->GetDirection());
+
+		// input parameters
+		resample->SetInput(image);
+		if (m_CompositeTransform->IsTransformQueueEmpty())
+		{
+			resample->SetTransform(m_InitialTransform);
+		}
+		else
+		{
+			resample->SetTransform(m_CompositeTransform);
+		}
+
+		// define interpolator
+		ResampleFilterType::InterpolatorType * linInterpolator = resample->GetInterpolator();
+		typedef itk::NearestNeighborInterpolateImageFunction< TImageType, double > NearestNeighborType;
+		NearestNeighborType::Pointer nnInterpolator = NearestNeighborType::New();
+
+		if (this->m_NearestNeighbor)
+		{
+			resample->SetInterpolator(nnInterpolator);
+			std::cout << "Nearest neighbor interpolator." << std::endl;
+		}
+		else
+		{
+			resample->SetInterpolator(linInterpolator);
+		}
+
+		// apply
+		resample->Update();
+
+		return resample->GetOutput();
+	};
 };
 } // end namespace
 
