@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Examples</category>
+  <title>Multi-LevelRegistration</title>
+  <description><![CDATA[This is a CLI module that can be bundled in an extension]]></description>
+  <version>0.0.1</version>
+  <documentation-url>http://www.example.com/Slicer/Modules/Multi-LevelRegistration</documentation-url>
+  <license>Slicer</license>
+  <contributor>FirstName LastName (Institution), FirstName LastName (Institution)</contributor>
+  <acknowledgements>This work was partially funded by NIH grant NXNNXXNNNNNN-NNXN</acknowledgements>
+  <parameters>
+    <label>InputImages</label>
+    <description>Input/Output parameters</description>
+    <image>
+      <name>fixedImageFilename</name>
+      <description>The fixed image for registration</description>
+      <label>Fixed image volume</label>
+      <longflag>fixedImage</longflag>
+      <channel>input</channel>
+    </image>
+    <image>
+      <name>movingImageFilename</name>
+      <description>The moving image for registration</description>
+      <label>Moving image volume</label>
+      <longflag>movingImage</longflag>
+      <channel>input</channel>
+    </image>
+    <transform fileExtensions=".txt">
+      <name>finalTransform</name>
+      <description>Final transformation to transform the moving image into fixed image space (composite transform)</description>
+      <label>Final transform</label>
+      <longflag>finalTransform</longflag>
+      <channel>output</channel>
+    </transform>
+  </parameters>
+
+  <parameters>
+    <label>Preprocessing</label>
+    <integer>
+      <name>upperThreshold</name>
+      <description>The upper value of the threshold (used in binary thresholding)</description>
+      <label>Upper threshold</label>
+      <longflag>upperThreshold</longflag>
+      <channel>input</channel>
+      <default>-1</default>
+      <minimum>0</minimum>
+    </integer>
+    <integer>
+      <name>lowerThreshold</name>
+      <description>The lower value of the threshold (used in binary thresholding)</description>
+      <label>Lower threshold</label>
+      <longflag>lowerThreshold</longflag>
+      <channel>input</channel>
+      <default>-1</default>
+      <minimum>0</minimum>
+    </integer>
+    <float>
+      <name>sigma</name>
+      <description>The width of the gaussian kernel used for smoothing</description>
+      <label>Smoothing sigma</label>
+      <longflag>sigma</longflag>
+      <channel>input</channel>
+      <default>-1</default>
+      <minimum>0</minimum>
+    </float>
+  </parameters>
+
+  <parameters>
+    <label>Number of levels</label>
+    <integer>
+      <name>numberOfLevels</name>
+      <description>The number of levels at which registration will be performed</description>
+      <label>Number of levels</label>
+      <longflag>numberOfLevels</longflag>
+      <channel>input</channel>
+      <default>0</default>
+      <minimum>0</minimum>
+      <maximum>3</maximum>
+    </integer>
+    <region multiple="true" coordinateSystem="ras">
+      <name>ROI</name>
+      <description>A list of ROIs in the order they should be applied where the last one is applied at the last level, moving up until there are no more</description>
+      <label>List of ROIs</label>
+      <longflag>ROI</longflag>
+      <channel>input</channel>
+    </region>
+  </parameters>
+
+  <parameters>
+    <label>Initialization</label>
+    <transform fileExtensions=".txt">
+      <name>fixedImageInitialTransform</name>
+      <description>Manually defined initial transform for the fixed image to define the desired image space</description>
+      <label>Fixed image initial transform</label>
+      <longflag>fixedImageInitialTranform</longflag>
+      <channel>input</channel>
+    </transform>
+    <image>
+      <name>referenceImage</name>
+      <description>The reference image for the fixed image initial transform</description>
+      <label>Reference image volume</label>
+      <longflag>referenceImage</longflag>
+      <channel>input</channel>
+    </image>
+    <transform fileExtensions=".txt">
+      <name>manualInitialTransformFilename</name>
+      <description>Manually defined initial transform</description>
+      <label>Moving image initial transform</label>
+      <longflag>initialTranform</longflag>
+      <channel>input</channel>
+    </transform>
+    <boolean>
+      <name>centerOfGeometry</name>
+      <description>Perform center of geometry initialization</description>
+      <label>Center of geometry</label>
+      <longflag>centerOfGeometry</longflag>
+      <default>true</default>
+    </boolean>
+    <boolean>
+      <name>iterativeAlignment</name>
+      <description>Perform initialization by iterating over 125 distinct points between the two images</description>
+      <label>Iterative alignment</label>
+      <longflag>iterativeAlignment</longflag>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>transX</name>
+      <description>Perform metric initialization in X direction</description>
+      <label>Metric: Translation X</label>
+      <longflag>transX</longflag>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>transY</name>
+      <description>Perform metric initialization in Y direction</description>
+      <label>Metric: Translation Y</label>
+      <longflag>transY</longflag>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>transZ</name>
+      <description>Perform metric initialization in Z direction</description>
+      <label>Metric: Translation Z</label>
+      <longflag>transZ</longflag>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>rotX</name>
+      <description>Perform metric initialization in X direction</description>
+      <label>Metric: Rotation X</label>
+      <longflag>rotX</longflag>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>rotY</name>
+      <description>Perform metric initialization in Y direction</description>
+      <label>Metric: Rotation Y</label>
+      <longflag>rotY</longflag>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>rotZ</name>
+      <description>Perform metric initialization in Z direction</description>
+      <label>Metric: Rotation Z</label>
+      <longflag>rotZ</longflag>
+      <default>false</default>
+    </boolean>
+  </parameters>
+
+  <parameters>
+    <label>Registration parameters (expert)</label>
+    <float>
+      <name>parameterRelaxation</name>
+      <description>Relaxation factor for parameters</description>
+      <label>Parameter relaxation factor</label>
+      <longflag>parameterRelaxation</longflag>
+      <default>2</default>
+    </float>
+    <float>
+      <name>rotationScale</name>
+      <description>Expected amount of rotation to occur</description>
+      <label>Rotation scale</label>
+      <longflag>rotationScale</longflag>
+      <default>0.001</default>
+    </float>
+    <float>
+      <name>translationScale</name>
+      <description>Expected amount of translation to occur</description>
+      <label>Translation scale</label>
+      <longflag>translationScale</longflag>
+      <default>10</default>
+    </float>
+    <float>
+      <name>scalingScale</name>
+      <description>Expected amount of scaling to occur</description>
+      <label>Scaling scale</label>
+      <longflag>scalingScale</longflag>
+      <default>0.001</default>
+    </float>
+    <integer>
+      <name>numberOfIterations</name>
+      <description>Number of iterations allowed at each level</description>
+      <label>Number of iterations</label>
+      <longflag>numberOfIterations</longflag>
+      <default>500</default>
+    </integer>
+    <float>
+      <name>maximumStepLength</name>
+      <description>Maximum step length allowed at level 1</description>
+      <label>Maximum step length</label>
+      <longflag>maximumStepLength</longflag>
+      <default>1</default>
+    </float>
+    <float>
+      <name>minimumStepLength</name>
+      <description>Minimum step length allowed</description>
+      <label>Minimum step length</label>
+      <longflag>minimumStepLength</longflag>
+      <default>0.001</default>
+    </float>
+    <float>
+      <name>relaxationFactor</name>
+      <description>Amount by which the step length decreases during optimization</description>
+      <label>Relaxation factor</label>
+      <longflag>relaxationFactor</longflag>
+      <default>0.5</default>
+    </float>
+    <float>
+      <name>gradientMagnitudeTolerance</name>
+      <description>The minimum gradient magnitude</description>
+      <label>Gradient magnitude tolerance</label>
+      <longflag>gradientMagnitudeTolerance</longflag>
+      <default>0.001</default>
+    </float>
+  </parameters>
+
+  <parameters>
+    <label>Validation</label>
+    <image type="label" reference="fixedImageFilename">
+      <name>fixedImageMaskFilename</name>
+      <description>The fixed image mask for validation</description>
+      <label>Fixed image mask</label>
+      <longflag>fixedImageMask</longflag>
+      <channel>input</channel>
+    </image>
+    <image type="label" reference="movingImageFilename">
+      <name>movingImageMaskFilename</name>
+      <description>The moving image mask for validation</description>
+      <label>Moving image mask</label>
+      <longflag>movingImageMask</longflag>
+      <channel>input</channel>
+    </image>
+  </parameters>
+
+  <parameters>
+    <label>Debugging parameters</label>
+    <boolean>
+      <name>observe</name>
+      <description>Output values from optimizer</description>
+      <label>Observe optimizer</label>
+      <longflag>observe</longflag>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>debugTransforms</name>
+      <description>Output transforms at each level</description>
+      <label>Transforms</label>
+      <longflag>debugTransforms</longflag>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>debugImages</name>
+      <description>Output images at each level</description>
+      <label>Images</label>
+      <longflag>debugImages</longflag>
+      <default>false</default>
+    </boolean>
+    <directory>
+      <name>debugDirectory</name>
+      <description>File location to store debugging images/transforms</description>
+      <label>Debug directory</label>
+      <longflag>debugDirectory</longflag>
+      <channel>input</channel>
+    </directory>
+  </parameters>
+</executable>
