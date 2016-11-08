@@ -274,6 +274,9 @@ int main(int argc, char * argv[])
 		WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
 	}
 
+	chronometer.Stop("Preprocessing");
+	memorymeter.Stop("Preprocessing");
+
 	// initialization
 	chronometer.Start("Initialization");
 	memorymeter.Start("Initialization");

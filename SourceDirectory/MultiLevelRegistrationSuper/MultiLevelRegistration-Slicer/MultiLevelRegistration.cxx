@@ -4,6 +4,7 @@ SLICER COMPATIBLE CODE
 
 // include files
 #include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\ReadWriteFunctions.hxx"
+#include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\PreprocessingFunctions.hxx"
 #include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkRegistrationFramework.h"
 #include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkInitializationFilter.h"
 #include "C:\Slicer\RegistrationCode\SourceDirectory\MultiLevelRegistrationSuper\itkValidationFilter.h"
@@ -71,7 +72,7 @@ int main( int argc, char * argv[] )
 	ImageType::Pointer movingImage = ReadInImage< ImageType >(movingImageFilename.c_str());
 	if (validation)
 	{
-		movingImageMask = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
+		movingImageMask = ReadInImage< ImageType >(movingImageMaskFilename.c_str());
 	}
 
 	// apply fixed initial transform if given
@@ -80,15 +81,25 @@ int main( int argc, char * argv[] )
 		// apply transform to fixed image
 		TransformType::Pointer initialFixedTransform = ReadInTransform< TransformType >( fixedImageInitialTransform.c_str() );
 		ImageType::Pointer fixedImageTemp = ReadInImage< ImageType >( fixedImageFilename.c_str() );
-		transforms->SetFixedImage( ReadInImage< ImageType >(referenceImage.c_str()) );
-		fixedImage = transforms->ResampleImage( fixedImageTemp, initialFixedTransform );
+		try
+		{
+			std::cout << "Applying initial transform to fixed image." << std::endl;
+			transforms->SetFixedImage(ReadInImage< ImageType >(referenceImage.c_str()));
+			fixedImage = transforms->ResampleImage(fixedImageTemp, initialFixedTransform);
+		}
+		catch (itk::ExceptionObject & err)
+		{
+			std::cerr << "Exception Object Caught!" << std::endl;
+			std::cerr << err << std::endl;
+			std::cerr << std::endl;
+		}
 		std::cout << "Initial transform applied to fixed image." << std::endl;
 		std::cout << "Moving image read in." << std::endl;
 
 		if (validation)
 		{
 			transforms->NearestNeighborInterpolateOn();
-			ImageType::Pointer fixedImageMaskTemp = ReadInImage< ImageType >( fixedImageMaskFilename.c_str() );
+			ImageType::Pointer fixedImageMaskTemp = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
 			fixedImageMask = transforms->ResampleImage(fixedImageMaskTemp, initialFixedTransform);
 			transforms->NearestNeighborInterpolateOff();
 		}
@@ -104,6 +115,38 @@ int main( int argc, char * argv[] )
 			fixedImageMask = ReadInImage< ImageType >(fixedImageMaskFilename.c_str());
 		}
 	}
+
+	// preprocessing
+	chronometer.Start("Preprocessing");
+	memorymeter.Start("Preprocessing");
+
+	// preprocessing
+	std::cout << "\n*********************************************" << std::endl;
+	std::cout << "              PREPROCESSING                  " << std::endl;
+	std::cout << "*********************************************\n" << std::endl;
+
+	if (upperThreshold > 0)
+	{
+		movingImage = UpperThresholdImage< ImageType >(movingImage, upperThreshold);
+	}
+	if (lowerThreshold > 0)
+	{
+		movingImage = LowerThresholdImage< ImageType >(movingImage, lowerThreshold);
+	}
+	if (sigma > 0)
+	{
+		movingImage = SmoothImage< ImageType >(movingImage, sigma);
+	}
+
+	// write out preprocessed images if debugging
+	if (!debugDirectory.empty() && debugImages)
+	{
+		std::string movingFilename = debugDirectory + "\\PreprocessedMovingImage.nrrd";
+		WriteOutImage< ImageType, ImageType >(movingFilename.c_str(), transforms->GetTransformedImage());
+	}
+
+	chronometer.Stop("Preprocessing");
+	memorymeter.Stop("Preprocessing");
 
 	// initialization
 	chronometer.Start( "Initialization" );
@@ -214,9 +257,6 @@ int main( int argc, char * argv[] )
 		
 	for (int level = 1; level < numberOfLevels+1;  ++level)
 	{
-		// prepare the Registration framework
-		itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
-		
 		// monitors
 		std::string message = "Level " + level;
 		chronometer.Start(message.c_str());
@@ -225,6 +265,9 @@ int main( int argc, char * argv[] )
 		std::cout << "\n*********************************************" << std::endl;
 		std::cout << "            REGISTRATION LEVEL " << level << "               " << std::endl;
 		std::cout << "*********************************************\n" << std::endl;
+
+		// prepare the Registration framework
+		itk::RegistrationFramework::Pointer registration = itk::RegistrationFramework::New();
 
 		// apply transform from previous level 
 		transforms->ResampleImageOn();
